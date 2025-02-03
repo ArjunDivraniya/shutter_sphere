@@ -99,8 +99,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require('cors')
 const dotenv = require("dotenv");
-const photographerRoutes = require("./routes/photographerRoutes");
-const signuproutes =require("./Routes/signuproutes");
+const photographerRoutes = require("./Paths/photographerRoutes");
+const signuproutes =require("./Paths/signuproutes");
 
 dotenv.config();
 const app = express();
