@@ -1,5 +1,5 @@
 const express = require("express");
-const { createPhotographer ,getPhotographers,updatePhotographer } = require("../Controllers/photographerController");
+const { createPhotographer ,getPhotographers,updatePhotographer } = require("../Controllers/photographerController.js");
 
 const router = express.Router();
 
