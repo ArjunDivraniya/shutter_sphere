@@ -35,7 +35,7 @@ function App() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("http://localhost:5000/api/photographers/add", formData);
+            const response = await axios.post("http://localhost:5000/api/add", formData);
             alert("Congratulations...   Your Profile Created");
             setFormData({ 
                 name: "", email: "", phone: "", city: "", specialization: "",
@@ -46,6 +46,7 @@ function App() {
             console.error("Error submitting form", error);
         }
     };
+    
 
 
   return (
@@ -75,7 +76,7 @@ function App() {
         <h2 className="text-2xl font-semibold text-center text-gray-700 mb-4">
           {isLogin ? "Login" : "Sign Up"}
         </h2>
-        <form onSubmit={whensubmit}>
+        <form>
           {!isLogin && (
             <div className="mb-4">
               <label className="block text-gray-600 text-sm mb-1">Name</label>
