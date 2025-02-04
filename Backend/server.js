@@ -116,6 +116,7 @@ mongoose.connect(process.env.URI, {
 
 app.use("/api", photographerRoutes);
 app.use("/api",loginrouter)
+app.use("/find",photographerRoutes)
 
 
 

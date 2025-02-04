@@ -1,5 +1,6 @@
 const Photographer = require("../Models/photographerModel");
 
+
 // Create Photographer Profile
 const createPhotographer = async (req, res) => {
     try {
@@ -39,4 +40,18 @@ const updatePhotographer = async (req, res) => {
     }
   };
 
-module.exports = { createPhotographer, getPhotographers,updatePhotographer };
+  const searchphotographer =async (req, res) => {
+    try {
+        const { location, specialization } = req.query;
+        const query = {};
+
+        if (location) query.city = { $regex: location, $options: "i" };
+        if (specialization) query.specialization = { $regex: specialization, $options: "i" };
+
+        const photographers = await Photographer.find(query);
+        res.json(photographers);
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
+}
+module.exports = { createPhotographer, getPhotographers,updatePhotographer ,searchphotographer};
