@@ -1,0 +1,160 @@
+
+body {
+    background-color: #1a202c;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+  
+  .container {
+    max-width: 1270px;
+    margin: auto;
+    padding: 20px;
+    height: 100%;
+    width: 100%;
+
+  }
+  
+  /* Profile Card */
+  .profile-card {
+    height: 251px;
+    width: 1390px;
+    background: #2d3748;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .profile-header {
+    display: flex;
+    align-items: center;
+  }
+  
+  .profile-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #facc15;
+  }
+  
+  .profile-img img {
+    width: 100%;
+  }
+  
+  .profile-info {
+    margin-left: 20px;
+  }
+  
+  .profile-info h1 {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  
+  .profile-info p {
+    color: #cbd5e0;
+  }
+  
+  .edit-btn {
+    margin-left: auto;
+    background: #4a5568;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .edit-btn:hover {
+    background: #718096;
+  }
+  
+  /* Navigation */
+  .profile-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+  }
+  
+  .nav-btn {
+   
+    background: #4a5568;
+    color: #facc15;
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    margin: 0 5px;
+    width: 190px;
+    height: 56px;
+    font-size: 24px;
+  }
+  
+  .nav-btn:hover {
+    background: #718096;
+  }
+  
+  /* Profile Content */
+  .profile-content {
+    display: flex;
+    gap: 20px;
+  }
+  
+  /* Personal Info */
+  .personal-info {
+    flex: 2;
+    background: #2d3748;
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  .personal-info h2 {
+    margin-bottom: 10px;
+  }
+  
+  .info-item {
+    margin-bottom: 10px;
+  }
+  
+  .info-item i {
+    color: #facc15;
+    margin-right: 5px;
+  }
+  
+  /* Quick Actions */
+  .quick-actions {
+    flex: 1;
+    background: #2d3748;
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  .quick-actions h2 {
+    margin-bottom: 10px;
+  }
+  
+  .action-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #4a5568;
+    color: #facc15;
+    padding: 10px;
+    width: 100%;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  
+  .action-btn:hover {
+    background: #718096;
+  }
+  
+  .badge {
+    background: #facc15;
+    color: #1a202c;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 50%;
+  }
+  
