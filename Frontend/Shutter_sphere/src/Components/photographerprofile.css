@@ -1,0 +1,111 @@
+/* Container styling */
+.photographer-form {
+    width: 100%;
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  /* Form Title */
+  .form-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Camera Icon */
+  .form-icon {
+    font-size: 28px;
+    color: #e63946;
+    margin-right: 10px;
+  }
+  
+  /* Form container */
+  .form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  /* Input fields */
+  .form-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  /* Input focus effect */
+  .form-input:focus {
+    border-color: #e63946;
+    box-shadow: 0px 0px 5px rgba(230, 57, 70, 0.5);
+  }
+  
+  /* Checkbox */
+  .form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+  }
+  
+  .form-checkbox input {
+    width: 18px;
+    height: 18px;
+    accent-color: #e63946;
+  }
+  
+  /* Submit Button */
+  .form-submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: #e63946;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+  }
+  
+  .form-submit-btn:hover {
+    background: #d62839;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 600px) {
+    .photographer-form {
+      padding: 15px;
+    }
+    
+    .form-title {
+      font-size: 20px;
+    }
+    
+    .form-icon {
+      font-size: 24px;
+    }
+  
+    .form-input {
+      font-size: 14px;
+    }
+    
+    .form-submit-btn {
+      font-size: 16px;
+    }
+  }
+  
