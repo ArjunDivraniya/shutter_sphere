@@ -5,7 +5,7 @@ import "./searchform.css";
 
 const SearchForm = () => {
   const [search, setSearch] = useState({ location: "", specialization: "" });
-  const [photographer, setPhotographers] = useState();
+  const [photographers, setPhotographers] = useState();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -15,10 +15,11 @@ const SearchForm = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get("http://localhost:5000/api/search", {
+      const response = await axios.get(`http://localhost:5000/api/search`, {
         params: search,
       });
       setPhotographers(response.data);
+      localStorage.setItem("photographers", JSON.stringify(response.data));
 
       if (response.status === 200 || response.status === 201) {
         navigate("/pgresult");

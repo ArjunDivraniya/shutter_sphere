@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import SearchForm from "../Components/searchform";
 
 const SearchResults = () => {
     const [photographers, setPhotographers] = useState([]);
-
+    useEffect(() => {
+        const photographers= localStorage.getItem("photographers");
+        if (photographers) {
+          setPhotographers(JSON.parse(photographers)); // Retrieve stored data
+        }
+      }, []);
     return (
         <div className="p-6">
             
-            <SearchForm/>
+          
             <div className="mt-6">
                 {photographers.length > 0 ? (
                     photographers.map((photographer) => (
