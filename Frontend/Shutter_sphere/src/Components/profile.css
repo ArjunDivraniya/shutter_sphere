@@ -1,160 +1,237 @@
+/* .profile-card{
+  
+}
+.profile-header{
+display: flex;
+height: 251px;
+width: 1390px;
+background-color: #1F2937;
+border-radius: 25px;
+align-items: center;
+
+
+}
+.profilecontainer{
+  width: 70%;
+  align-items: center;
+  padding-left: 300px;
+  margin-top: 100px;
+}
+.profile-img{
+  margin-left: 50px;
+
+}
+.profile-img img{
+  border-radius:94px;
+  height: 188px;
+  width: 188px;
+}
+.profile-info{
+  margin-left: 30px;
+  font-size: 30px;
+  font-weight: bolder;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.edit-btn{
+
+} */
 
 body {
-    background-color: #1a202c;
-    color: white;
-    font-family: Arial, sans-serif;
-  }
-  
-  .container {
-    max-width: 1270px;
-    margin: auto;
-    padding: 20px;
-    height: 100%;
-    width: 100%;
+  background-color: #1a202c;
+  color: white;
+  font-family: Arial, sans-serif;
+}
 
-  }
+.profilecontainer {
+  max-width: 1270px;
+  margin: auto;
+  padding: 20px;
+  height: 100%;
+  width: 100%;
+
+}
+
+/* Profile Card */
+
+
+.profile-header {
+  display: flex;
+  align-items: center;
+margin-top: 20px;
+height: 251px;
+width: 1390px;
+background: #2d3748;
+padding: 20px;
+  border-radius: 25px;
+  margin-bottom: 20px;
+}
+
+.profile-img {
+  width: 188px;
+  height: 188px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #facc15;
+}
+
+.profile-img img {
+  width: 100%;
+}
+
+.profile-info {
+  margin-left: 20px;
+}
+
+.profile-info h1 {
+  font-size: 40px;
+  margin-bottom: 3px;
+}
+
+.profile-info p {
+  color: #cbd5e0;
+  font-size: 20px;
+}
+
+.edit-btn {
+  margin-left: auto;
+  background: #4a5568;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 15px;
+  border: none;
+  cursor: pointer;
+  height: 50px;
+  width: 189px;
+  font-size: 20px;
+}
+
+.edit-btn:hover {
+  background: #718096;
+}
+
+/* Navigation */
+.profile-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   
-  /* Profile Card */
-  .profile-card {
-    height: 251px;
-    width: 1390px;
-    background: #2d3748;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-  }
+  height: 62px;
+  width: 1430px;
   
-  .profile-header {
-    display: flex;
-    align-items: center;
-  }
+}
+
+.nav-btn {
+ 
+  background: #1F2937;
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 15px;
+  border: none;
+  cursor: pointer;
+  margin: 0 10px;
+  width: 194px;
+  height: 60px;
+  font-size: 24px;
+}
+
+.nav-btn:hover {
+  background: #111827;
+}
+
+/* Profile Content */
+.profile-content {
+  display: flex;
+  gap: 20px;
+
+}
+
+/* Personal Info */
+.personal-info {
+  flex: 2;
+  background: #2d3748;
+  padding: 20px;
+  border-radius: 25px;
+  height: 487px;
+  width: 796px;
+  margin: 20px 0px 20px 0px;
   
-  .profile-img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid #facc15;
-  }
-  
-  .profile-img img {
-    width: 100%;
-  }
-  
-  .profile-info {
-    margin-left: 20px;
-  }
-  
-  .profile-info h1 {
-    font-size: 20px;
-    margin-bottom: 5px;
-  }
-  
-  .profile-info p {
-    color: #cbd5e0;
-  }
-  
-  .edit-btn {
-    margin-left: auto;
-    background: #4a5568;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .edit-btn:hover {
-    background: #718096;
-  }
-  
-  /* Navigation */
-  .profile-nav {
-    display: flex;
-    justify-content: center;
-    margin-top: 15px;
-  }
-  
-  .nav-btn {
-   
-    background: #4a5568;
-    color: #facc15;
-    padding: 8px 12px;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    margin: 0 5px;
-    width: 190px;
-    height: 56px;
-    font-size: 24px;
-  }
-  
-  .nav-btn:hover {
-    background: #718096;
-  }
-  
-  /* Profile Content */
-  .profile-content {
-    display: flex;
-    gap: 20px;
-  }
-  
-  /* Personal Info */
-  .personal-info {
-    flex: 2;
-    background: #2d3748;
-    padding: 20px;
-    border-radius: 10px;
-  }
-  
-  .personal-info h2 {
-    margin-bottom: 10px;
-  }
-  
-  .info-item {
-    margin-bottom: 10px;
-  }
-  
-  .info-item i {
-    color: #facc15;
-    margin-right: 5px;
-  }
-  
-  /* Quick Actions */
-  .quick-actions {
-    flex: 1;
-    background: #2d3748;
-    padding: 20px;
-    border-radius: 10px;
-  }
-  
-  .quick-actions h2 {
-    margin-bottom: 10px;
-  }
-  
-  .action-btn {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #4a5568;
-    color: #facc15;
-    padding: 10px;
-    width: 100%;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    margin-bottom: 10px;
-  }
-  
-  .action-btn:hover {
-    background: #718096;
-  }
-  
-  .badge {
-    background: #facc15;
-    color: #1a202c;
-    font-weight: bold;
-    padding: 3px 6px;
-    border-radius: 50%;
-  }
-  
+}
+
+.personal-info h2 {
+font-size: 34px;
+font-weight: bold;
+margin-left: 10px ;
+font-family: 'Poppins';
+
+}
+
+.info-item {
+  margin-bottom: 25px;
+  margin-left: 50px;
+}
+
+.info-item i {
+  color: #facc15;
+  margin-right: 15px;
+}
+.profilelable{
+  font-size: 20px;
+  margin-bottom: 5px;
+  font-weight: 400;
+  color: #8C93A0;
+}
+.profilevalue{
+  font-size: 24px;
+  font-weight: 600;
+
+  color:#FFFFFF ;
+}
+/* Quick Actions */
+.quick-actions {
+  flex: 1;
+  background: #2d3748;
+  padding: 20px;
+  border-radius: 25px;
+  height: 770px;
+  width: 461px;
+  margin: 20px 0px 20px 0px;
+}
+
+.quick-actions h2 {
+  margin-bottom: 10px;
+  font-size: 28px;
+  font-weight: bold;
+
+}
+.quickbtn{
+  margin: 40px 20px 20px 20px ;
+}
+
+.action-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #4a5568;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: normal;
+  padding: 10px;
+ height: 81px;
+ width: 375px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 25px;
+}
+
+.action-btn:hover {
+  background: #718096;
+}
+
+.badge {
+  background: #facc15;
+  color: #1a202c;
+  font-weight: bold;
+  padding: 3px 6px;
+  border-radius: 50%;
+}
