@@ -7,6 +7,7 @@ import Profile from "./Components/profile"
 import Editprofile from "./Components/photographerprofile"
 import Login from "../src/Components/login";
 import { BrowserRouter as Router, Routes, Route ,useNavigate } from "react-router-dom";
+import { PhotographerProvider } from "./Components/photographercontext";
 import Image from "./Components/claudinary"
 import Profile_p from "./Components/profile_p";
 import Profile_pay from "./Components/profile_pay";
@@ -29,6 +30,7 @@ function App() {
     <>
        
        {/* <Image/> */}
+<PhotographerProvider>
 
     <Router>
             <Routes>
@@ -46,6 +48,7 @@ function App() {
 
             </Routes>
         </Router> 
+        </PhotographerProvider>
     </>
   )
 
