@@ -1,13 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { usePhotographers } from "./photographercontext";
 import "./searchform.css";
 
 const SearchForm = () => {
   const [search, setSearch] = useState({ location: "", specialization: "" });
-  const [photographers, setPhotographers] = useState();
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
+  const { setPhotographers } = usePhotographers();
   const handleChange = (e) => {
     setSearch({ ...search, [e.target.name]: e.target.value });
   };
@@ -18,10 +19,12 @@ const SearchForm = () => {
       const response = await axios.get(`http://localhost:5000/api/search`, {
         params: search,
       });
-      setPhotographers(response.data);
-      localStorage.setItem("photographers", JSON.stringify(response.data));
+      
+     
 
       if (response.status === 200 || response.status === 201) {
+        setPhotographers(response.data);
+        console.log(response.data)
         navigate("/pgresult");
       }
       

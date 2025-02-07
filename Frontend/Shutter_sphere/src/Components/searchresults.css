@@ -1,0 +1,324 @@
+/* .custom-profile-container {
+    display: grid;
+
+    grid-template-columns: auto auto;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding: 20px;
+    background-color: #f3f4f6;
+    min-height: 100vh;
+  }
+  
+  .custom-profile-card {
+    background: white;
+    border-radius: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    width: 564px;
+    height: 468px;
+    text-align: left;
+  }
+  .ac-btn{
+    display: flex;
+    justify-content: end;
+
+  }
+  .Pesonal-card{
+    display: flex;
+  }
+  
+  .custom-profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .custom-profile-image {
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+  }
+  .text-card{
+    margin: 30px;
+  }
+
+  
+  .custom-status-badge {
+    background-color: green;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  
+  .custom-profile-name {
+    font-size: 30px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .custom-profile-studio {
+    color: gray;
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: 300;
+
+
+  }
+  
+  .custom-profile-rating,
+  .custom-profile-location,
+  .custom-profile-price {
+    display: flex;
+    align-items: center;
+    margin-top: 25px;
+    font-size: 20px;
+    font-weight: 550;
+    color: #333;
+  }
+  
+  .custom-star-icon {
+    color: #facc15;
+    margin-right: 6px;
+  }
+  
+  .custom-location-icon,
+  .custom-clock-icon {
+    color: gray;
+    margin-right: 6px;
+  }
+  
+  .custom-specializations {
+    margin-top: 12px;
+    color: #898D92;
+  }
+  
+  .custom-camera-icon {
+    color: #333;
+    margin-right: 6px;
+    height: 24px;
+    width: 24px;
+  }
+  
+  .custom-specialization-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+    background-color: #898D92;
+    color: black;
+    font-size: 16px;
+
+
+  }
+  
+  .custom-specialization {
+    background: #214285;
+    color: #ca2727;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+  
+  .custom-profile-actions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 25px;
+  }
+  
+  .custom-profile-button {
+    background: #f59e0b;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 14px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    height: 38px;
+    width: 154px;
+  }
+  
+  .custom-profile-button:hover {
+    background: #d97706;
+  }
+  .aemnam{
+    margin: 50px;
+  }
+   */
+
+
+   .custom-profile-container {
+    display: grid;
+    grid-template-columns: auto auto;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .aemnam {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  
+  .custom-profile-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 320px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  
+  .ac-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+  
+  .custom-status-badge {
+    background: #14c914;
+    color: white;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 20px;
+  }
+  
+  .Pesonal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .custom-profile-header img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ddd;
+  }
+  
+  .text-card {
+    margin-top: 10px;
+    text-align: center;
+  }
+  
+  .custom-profile-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+  }
+  
+  .custom-profile-studio {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .custom-profile-rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #ffa41c;
+    margin: 5px 0;
+  }
+  
+  .custom-star-icon {
+    color: #ffa41c;
+    margin-right: 5px;
+  }
+  
+  .custom-profile-location {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #555;
+    margin: 5px 0;
+  }
+  
+  .custom-location-icon {
+    margin-right: 5px;
+  }
+  
+  .custom-specializations {
+    text-align: center;
+    margin-top: 10px;
+  }
+  
+  .custom-camera-icon {
+    margin-right: 5px;
+  }
+  
+  .custom-specialization-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 5px;
+  }
+  
+  .custom-specialization {
+    background: #e5e5e5;
+    color: #333;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 16px;
+  }
+  
+  .custom-profile-price {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .custom-clock-icon {
+    margin-right: 5px;
+  }
+  
+  .custom-profile-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .custom-profile-button {
+    background: #ffc107;
+    color: black;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .custom-profile-button:hover {
+    background: #ffb300;
+  }
+  
+  .custom-profile-button:last-child {
+    background: #ff9800;
+    color: white;
+  }
+  
+  .custom-profile-button:last-child:hover {
+    background: #e68900;
+  }
+  
