@@ -4,7 +4,7 @@ Atelier of Photography is a modern web application designed to connect clients w
 
 ## Figma Design
 
-You can view the [Figma design of the website here]([https://www.figma.com/file/your-figma-link](https://www.figma.com/design/jF0jpwfvpwD2nnx1B1cDtG/Untitled?node-id=0-1&t=MYJIBFuCYTwp2yt6-1)). The design serves as the blueprint for the UI/UX of the application, ensuring a clean and engaging interface.
+You can view the [Figma design of the website here](https://www.figma.com/design/jF0jpwfvpwD2nnx1B1cDtG/Untitled?node-id=0-1&t=MYJIBFuCYTwp2yt6-1). The design serves as the blueprint for the UI/UX of the application, ensuring a clean and engaging interface.
 
 ## Features
 
