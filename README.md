@@ -2,9 +2,6 @@
 
 Shutter Sphere of Photography is a modern web application designed to connect clients with photographers based on their location and specialization. The platform offers a seamless experience for both photographers and clients, enabling them to manage profiles and book services efficiently.
 
-## Figma Design
-
-You can view the [Figma design of the website here](https://www.figma.com/design/rGMySFjXI7AcEytfM11DgC/Untitled?node-id=0-1&t=48AcqII7hu9NlZWW-1). The design serves as the blueprint for the UI/UX of the application, ensuring a clean and engaging interface.
 
 ## Features
 
