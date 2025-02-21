@@ -16,6 +16,6 @@ router.get("/find",control.getPhotographers); // get photographer data
 router.patch("/photographer/:id",control.updatePhotographer);
 
 // Search photographers by location and specialization
-router.get("/search",control.searchphotographer );
+router.get("/search",control.searchPhotographer );
 
 module.exports = router;
