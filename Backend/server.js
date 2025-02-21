@@ -101,6 +101,7 @@ const cors = require('cors')
 const dotenv = require("dotenv");
 const photographerRoutes = require("./Paths/photographerRoutes");
 const loginrouter=require("./Paths/signuproutes")
+const userRoutes=require("./Paths/userRoutes")
 
 dotenv.config();
 const app = express();
@@ -117,6 +118,7 @@ mongoose.connect(process.env.URI, {
 app.use("/api", photographerRoutes);
 app.use("/api",loginrouter)
 app.use("/find",photographerRoutes)
+app.use("/client", userRoutes);
 
 
 
