@@ -2,9 +2,9 @@ import { useState,useEffect,useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { usePhotographers } from "./photographercontext";
-import "./searchform.css";
-import {FaStar} from "react-icons/fa";
 
+import {FaStar} from "react-icons/fa";
+import Navbar from "./navbar2";
 
 const testimonials = [
   {
@@ -156,25 +156,25 @@ const SearchForm = () => {
 
   return (
     <>
-    
+    <Navbar/>
     <div
-      className="background-container"
+      className="relative bg-cover bg-center bg-no-repeat h-[800px] flex flex-col justify-center items-center text-white"
       style={{
         backgroundImage:
           'url("https://res.cloudinary.com/dncosrakg/image/upload/v1738661125/oj8rlnltxkx4hnhzbquz.png")',
       }}
     >
         
-      <div className="overlay">
-      <div className="profile-icon" onClick={goToProfile}>Profile</div>
-        <h2 className="title">ATELIER OF PHOTOGRAPHY</h2>
-        <h1 className="main-title">Where Moments Become Masterpieces</h1>
-        <p className="description">
+      <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center z-10 p-5 text-center">
+      
+        <h2 className="font-semibold text-[#fcd34d] uppercase tracking-wide text-xl">ATELIER OF PHOTOGRAPHY</h2>
+        <h1 className="font-[Libre_Baskerville] font-bold text-6xl my-6">Where Moments Become Masterpieces</h1>
+        <p className="text-lg mb-8">
           Experience Photography At Its Finest With Our Handpicked Selection Of Master Photographers
         </p>
-        <form onSubmit={handleSearch} className="search-form">
-          <div className="input-container">
-            <div className="input-group">
+        <form onSubmit={handleSearch} className="flex gap-2 justify-center items-center">
+          <div className="flex gap-2">
+            <div className="bg-[#fcd34d] rounded-full flex p-2 items-center">
               <i className="fas fa-search search-icon"></i>
               <input
                 type="text"
@@ -182,7 +182,7 @@ const SearchForm = () => {
                 placeholder="Enter Specialization"
                 value={search.specialization}
                 onChange={handleChange}
-                className="input-field"
+                className="bg-transparent border-none text-black pl-2 outline-none w-[200px] text-lg"
               />
             </div>
             <div className="input-group">
@@ -193,97 +193,96 @@ const SearchForm = () => {
                 placeholder="Enter Location"
                 value={search.location}
                 onChange={handleChange}
-                className="input-field"
+                className="bg-transparent border-none text-black pl-2 outline-none w-[200px] text-lg"
               />
             </div>
-            <button type="submit" className="submit-button">
+            <button type="submit" className="bg-[#fcd34d] text-black font-semibold py-3 px-6 rounded-full text-lg transition duration-300 hover:bg-[#fbbf24]">
               Search
             </button>
           </div>
         </form>
       </div>
     </div>
-    <div className="vision-container">
-      <div className="vision-content">
-        <h1 className="vision-title">Our Vision</h1>
-        <p className="vision-text">
+    <div className="bg-gray-900 text-white flex items-center justify-center text-center py-4 h-[500px]">
+      <div className="max-w-2xl p-4">
+        <h1 className="text-3xl font-bold mb-5">Our Vision</h1>
+        <p className="text-lg mb-10">
         At Shutter Sphere, our vision is to create a seamless platform that connects passionate
          photographers with clients seeking exceptional photography services. We aim to bridge the gap
           between creativity and opportunity, making it effortless for individuals and businesses to find
            the perfect photographer for their special moments.
         </p>
-        <p className="vision-text">Our goal is to build a trusted community where photographers can showcase 
+        <p className="text-lg mb-10">Our goal is to build a trusted community where photographers can showcase 
           their talent, grow their careers, and gain recognition, while clients can discover professionals 
           who align with their style and needs. By integrating cutting-edge technology, user-friendly search tools,
            and a seamless booking experience, we strive to revolutionize the way photography services are accessed and delivered.</p>
-        <div className="vision-link-container">
-          <div className="vision-divider"></div>
-          <a href="#" className="vision-link">Get in touch</a>
+        <div className="flex items-center justify-center">
+          <div className="border-r border-gray-600 h-6 mr-2"></div>
+          <a href="#" className="text-sm uppercase tracking-wide text-white transition duration-300 hover:text-blue-300">Get in touch</a>
         </div>
       </div>
     </div>
-    <div className="how-it-works-container">
-      <h2 className="how-it-works-title">How It Works</h2>
-      <div className="how-it-works-steps">
-        <div className="step">
-          <div className="step-icon">
-           
+    <div className="bg-gray-50 text-center h-[450px] py-12 px-4">
+      <h2 className="text-2xl font-bold mb-8">How It Works</h2>
+      <div className="flex flex-col md:flex-row justify-center gap-8">
+        <div className="flex flex-col items-center h-[300px] w-[400px]">
+          <div className="bg-gray-300 rounded-full p-4 mb-4 h-[60px] w-[60px]">
+          <span class="text-3xl text-blue-500">📷</span>
           </div>
-          <h3 className="step-title">Search</h3>
-          <p className="step-text">Find the perfect photographer based on your needs and location</p>
+          <h3 className="text-lg font-semibold text-black mb-2">Search</h3>
+          <p className="text-gray-600 text-lg max-w-[360px]">Find the perfect photographer based on your needs and location</p>
         </div>
-
-        <div className="step">
-          <div className="step-icon">
-           
+        <div className="flex flex-col items-center h-[300px] w-[400px]">
+          <div className="bg-gray-300 rounded-full p-4 mb-4 h-[60px] w-[60px]">
+          <span class="text-3xl text-blue-500">📷</span>
           </div>
-          <h3 className="step-title">Book</h3>
-          <p className="step-text">Schedule a session at your preferred date and time</p>
+          <h3 className="text-lg font-semibold text-black mb-2">Book</h3>
+          <p className="text-gray-600 text-lg max-w-[360px]">Schedule a session at your preferred date and time</p>
         </div>
-
-        <div className="step">
-          <div className="step-icon">
-            
+        <div className="flex flex-col items-center h-[300px] w-[400px]">
+          <div className="bg-gray-300 rounded-full p-4 mb-4 h-[60px] w-[60px]">
+          <span class="text-3xl text-blue-500">📷</span>
           </div>
-          <h3 className="step-title">Capture</h3>
-          <p className="step-text">Get amazing photos from your professional photographer</p>
+          <h3 className="text-lg font-semibold text-black mb-2">Capture</h3>
+          <p className="text-gray-600 text-lg max-w-[360px]">Get amazing photos from your professional photographer</p>
         </div>
+      
       </div>
     </div>
    
     <div>
       {/* Categories Section */}
-      <div className="top-categories-container">
-        <h1 className="top-categories-title">Top Categories</h1>
-        <div className="categories-scroll-container" ref={scrollRef}>
-          <div className="categories-wrapper">
+      <div className="text-center mb-10 overflow-hidden">
+        <h1 className="text-4xl font-bold my-10">Top Categories</h1>
+        <div className="flex overflow-hidden whitespace-nowrap" ref={scrollRef}>
+          <div className="flex whitespace-nowrap w-max">
             {[...categories, ...categories].map((category, index) => (
-              <div className="category-card" key={index}>
-                <img src={category.image} alt={category.name} className="category-image" />
-                <div className="category-overlay">{category.name}</div>
+              <div className="w-[350px] h-[500px] relative rounded-lg shadow-md flex-shrink-0 mx-2" key={index}>
+                <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
+                <div className="absolute bottom-0 bg-black bg-opacity-60 text-white w-full text-center py-1 text-lg">{category.name}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="featured-container">
-      <h1 className="featured-title">Featured Photographers</h1>
-      <div className="photographers-grid">
+      <div className="bg-gray-100 min-h-screen py-12 px-4 text-center">
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Featured Photographers</h1>
+      <div className="flex flex-wrap justify-center gap-5">
         {photographers.map((photographer) => (
-          <div key={photographer.id} className="photographer-card">
-            <img src={photographer.image} alt={photographer.name} className="photographer-image" />
-            <div className="card-content">
-              <h2 className="photographer-name">{photographer.name}</h2>
-              <p className="photographer-specialty">{photographer.specialty}</p>
-              <div className="photographer-rating">
+          <div key={photographer.id} className="bg-white rounded-lg shadow-md overflow-hidden w-[390px] h-[632px] transition-transform duration-300 hover:scale-105">
+            <img src={photographer.image} alt={photographer.name} className="w-full h-[420px] object-cover" />
+            <div className="p-5">
+              <h2 className="text-2xl font-bold text-gray-900">{photographer.name}</h2>
+              <p className="text-gray-600 mt-1">{photographer.specialty}</p>
+              <div className="flex justify-center mt-2">
                 {[...Array(Math.floor(photographer.rating))].map((_, i) => (
                
                <FaStar size={30} color="gold" />
                 ))}
-                {photographer.rating % 1 !== 0 && <FaStar className="star-icon half-star" />}
+                {photographer.rating % 1 !== 0 && <FaStar className="text-yellow-400 text-lg" />}
               </div>
-              <a href="#" className="view-profile">View Profile</a>
+              <a href="#" className="mt-3 inline-block text-lg font-semibold text-blue-800 hover:text-blue-600">View Profile</a>
             </div>
           </div>
         ))}
@@ -291,23 +290,23 @@ const SearchForm = () => {
     </div>
 
       {/* Testimonials Section */}
-      <div className="testimonials-container">
-        <h1 className="reviewtitle">What Our Clients Say</h1>
-        <div className="testimonials-slider">
+      <div className="text-center py-10">
+        <h1 className="text-4xl font-bold mb-10">What Our Clients Say</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {visibleTestimonials.map((testimonial, index) => (
-            <div key={index} className="testimonial-card">
+            <div key={index} className="w-[350px] h-[200px] bg-white p-4 rounded-lg shadow-md">
               <div className="stars">
                 {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <span key={i} className="star">⭐</span>
+                  <span key={i} className="text-yellow-400 text-2xl">⭐</span>
                 ))}
               </div>
-              <p className="feedback">"{testimonial.feedback}"</p>
-              <p className="name">{testimonial.name}</p>
-              <p className="role">{testimonial.role}</p>
+              <p className="italic text-gray-900 text-lg">"{testimonial.feedback}"</p>
+              <p className="font-bold text-xl mt-2">{testimonial.name}</p>
+              <p className="text-gray-500 text-sm">{testimonial.role}</p>
             </div>
           ))}
         </div>
-        <button className="view-more-btn" onClick={() => navigatere("/reviews")}>View More</button>
+        <button className="mt-5 px-5 py-2 bg-orange-500 text-white rounded-md cursor-pointer hover:bg-orange-600" onClick={() => navigatere("/reviews")}>View More</button>
       </div>
     </div>
  
