@@ -15,7 +15,8 @@ import Profile_r from "./Components/profile_r";
 import Profile_w from "./Components/profile_w";
 import Profile_s from "./Components/profile_s";
 import Profile_b from "./Components/profile_b";
-
+import LandingPage from "./Components/landingpage";
+import Reviews from "./Components/ourreviewpage";
 
 
 function App() {
@@ -35,9 +36,11 @@ function App() {
     <Router>
             <Routes>
                 <Route path="/search" element={<Searchform />} />
-                <Route path="/" element={<Login />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/pgresult" element={<SearchResults />} />
                 <Route path="/profile" element={<Profile/>} />
+                <Route path="/reviews" element={<Reviews/>} />
                 <Route path="/editprofile" element={<Editprofile/>}/>
                 <Route path="/profile_profile" element={<><Profile/> <Profile_p/></>}/>
                 <Route path="/profile_booking" element={<><Profile/> <Profile_b/></>}/>
