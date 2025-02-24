@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
+ourreviewpage.jsx
 dist-ssr
 *.local
 
