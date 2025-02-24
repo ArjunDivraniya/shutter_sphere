@@ -1,11 +1,112 @@
-import React from 'react'
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { FaCreditCard, FaCcPaypal, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
-const profile_pay = () => {
+const pastPayments = [
+  {
+    id: 1,
+    photographer: "Rajesh Patel",
+    date: "Feb 15, 2025",
+    amount: 5000,
+    status: "Completed",
+  },
+  {
+    id: 2,
+    photographer: "Sneha Mehta",
+    date: "Jan 28, 2025",
+    amount: 3500,
+    status: "Completed",
+  },
+  {
+    id: 3,
+    photographer: "Amit Sharma",
+    date: "Dec 10, 2024",
+    amount: 6000,
+    status: "Pending",
+  },
+];
+
+const Payment = () => {
+  const [paymentMethod, setPaymentMethod] = useState("credit-card");
+
+  const handlePayment = (e) => {
+    e.preventDefault();
+    alert("Payment Successful! 🎉");
+  };
+
   return (
-    <div>
-      
-    </div>
-  )
-}
+    <motion.div 
+      className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
+      <div className="w-full max-w-4xl bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 className="text-2xl font-bold text-yellow-400 text-center mb-6">💰 Payment Dashboard</h2>
 
-export default profile_pay
+        {/* Past Payments Section */}
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold mb-3">📜 Payment History</h3>
+          <div className="space-y-4">
+            {pastPayments.map((payment) => (
+              <div key={payment.id} className="bg-gray-700 p-4 rounded-lg flex justify-between items-center shadow">
+                <div>
+                  <p className="text-lg font-semibold">{payment.photographer}</p>
+                  <p className="text-sm text-gray-400">{payment.date}</p>
+                </div>
+                <p className="font-semibold text-yellow-400">₹{payment.amount}</p>
+                <span className={`text-sm px-3 py-1 rounded-full ${
+                  payment.status === "Completed" ? "bg-green-500" : "bg-red-500"
+                }`}>
+                  {payment.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Payment Methods */}
+        <h3 className="text-xl font-semibold mb-3">💳 Make a Payment</h3>
+        <div className="flex justify-center gap-6 mb-4">
+          <button
+            className={`p-3 rounded-lg ${paymentMethod === "credit-card" ? "bg-yellow-400 text-black" : "bg-gray-700"}`}
+            onClick={() => setPaymentMethod("credit-card")}
+          >
+            <FaCreditCard size={24} />
+          </button>
+          <button
+            className={`p-3 rounded-lg ${paymentMethod === "paypal" ? "bg-yellow-400 text-black" : "bg-gray-700"}`}
+            onClick={() => setPaymentMethod("paypal")}
+          >
+            <FaCcPaypal size={24} />
+          </button>
+        </div>
+
+        {/* Payment Form */}
+        <form onSubmit={handlePayment} className="space-y-4">
+          <input
+            type="text"
+            className="w-full p-3 rounded bg-gray-700 text-white border-none outline-none"
+            placeholder="Photographer Name"
+            required
+          />
+          <input
+            type="number"
+            className="w-full p-3 rounded bg-gray-700 text-white border-none outline-none"
+            placeholder="Amount (₹)"
+            required
+          />
+          <motion.button
+            type="submit"
+            className="w-full p-3 bg-yellow-400 text-black rounded-lg font-semibold hover:bg-yellow-500 transition"
+            whileTap={{ scale: 0.95 }}
+          >
+            Pay Now
+          </motion.button>
+        </form>
+      </div>
+    </motion.div>
+  );
+};
+
+export default Payment;
