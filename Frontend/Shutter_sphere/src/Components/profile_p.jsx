@@ -1,52 +1,33 @@
-import React from 'react'
-
-
-const profile_p = () => {
-
+import React from 'react';
+import { motion } from "framer-motion";
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBell, FaComments, FaHeart, FaQuestionCircle, FaCamera } from "react-icons/fa";
+const ProfileP = () => {
   return (
-    <>
-    <div className="profile-content">
-        <div className="personal-info">
-          <h2>Personal Information</h2>
-          {[
-            { icon: "fa-user", label: "Full Name", value: "Arjun Divraniya" },
-            { icon: "fa-envelope", label: "Email", value: "arjundivnainya8@gmail.com" },
-            { icon: "fa-phone", label: "Phone", value: "+91 6351565043" },
-            { icon: "fa-map-marker-alt", label: "Location", value: "Junagadh" },
-          ].map((info, index) => (
-            <div key={index} className="info-item">
-              <i className={`fas ${info.icon}`}></i>
-              <div className="setinfo">
-              <div className="profilelable">{info.label} </div><div className="profilevalue">{info.value}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="quick-actions">
-          <h2>Quick Actions</h2>
-          <div className="quickbtn">
-        
-          {[
-            { icon: "fa-brands fa-instagram", label: "Notifications", count: 4 },
-            { icon: "fa-brands fa-instagram", label: "Messages", count: 4 },
-            { icon: "fa-brands fa-instagram", label: "Wishlist", count: 4 },
-            { icon: "fa-brands fa-instagram", label: "Wishlist", count: 4 },
-            { icon: "fa-brands fa-instagram", label: "Wishlist", count: 4 },
-           
-            { icon: "fa-brands fa-instagram", label: "Support", count: 0 },
-          ].map((action, index) => (
-            <button key={index} className="action-btn">
-              <i  className={action.icon} ></i>{action.label}
-              {action.count > 0 && <span className="badge">{action.count}</span>}
-            </button>
-          ))}
+    <motion.div 
+    className="text-lg"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.5 }}
+  >
+    <h2 className="text-xl font-bold">Personal Information</h2>
+    <div className="mt-4 space-y-3">
+      {[
+        { icon: <FaUser />, label: "Full Name", value: "Arjun Divraniya" },
+        { icon: <FaEnvelope />, label: "Email", value: "arjundivnainya8@gmail.com" },
+        { icon: <FaPhone />, label: "Phone", value: "+91 6351565043" },
+        { icon: <FaMapMarkerAlt />, label: "Location", value: "Junagadh" },
+      ].map((info, index) => (
+        <div key={index} className="flex items-center gap-3 bg-gray-700 p-3 rounded-lg">
+          {info.icon}
+          <div>
+            <p className="text-gray-400">{info.label}</p>
+            <p className="font-semibold">{info.value}</p>
           </div>
         </div>
-      </div>
-    </>
-  )
-}
+      ))}
+    </div>
+  </motion.div>
+  );
+};
 
-export default profile_p
-
+export default ProfileP;
