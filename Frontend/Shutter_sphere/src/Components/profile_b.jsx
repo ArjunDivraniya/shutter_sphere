@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaUser, FaClock, FaMoneyBillWave, FaComments, FaHeart, FaEye, FaBan } from "react-icons/fa";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { FaClock, FaMoneyBillWave, FaComments, FaHeart, FaEye, FaBan, FaCheckCircle } from "react-icons/fa";
 
 const Bookings = () => {
   const [bookings, setBookings] = useState([
@@ -13,72 +9,58 @@ const Bookings = () => {
     { id: 3, name: "Michael Brown", type: "Fashion Photographer", price: "$250/hr", hours: "2 hours", date: "2025-02-15", status: "completed", img: "https://via.placeholder.com/100" },
   ]);
 
-  useEffect(() => {
-    gsap.from(".booking-section", {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      stagger: 0.3,
-      scrollTrigger: {
-        trigger: ".booking-container",
-        start: "top 80%",
-      },
-    });
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col gap-6 booking-container">
-      <h2 className="text-3xl font-bold text-center">📅 My Bookings</h2>
+    <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col gap-6">
+      <motion.h2 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-3xl font-bold text-center"
+      >
+        📅 My Bookings
+      </motion.h2>
 
       {/* Pending Bookings */}
-      <motion.div className="booking-section bg-yellow-500 p-6 rounded-lg shadow-lg">
-        <h3 className="text-xl font-bold mb-4">⏳ Pending Bookings</h3>
-        <div className="space-y-4">
-          {bookings.filter(b => b.status === "pending").length > 0 ? (
-            bookings.filter(b => b.status === "pending").map(booking => (
-              <BookingCard key={booking.id} booking={booking} actions={['chat', 'cancel']} />
-            ))
-          ) : (
-            <p className="text-gray-800">No pending bookings.</p>
-          )}
-        </div>
-      </motion.div>
+      <BookingSection title="⏳ Pending Bookings" color="yellow-500" bookings={bookings} status="pending" actions={['chat', 'cancel']} />
 
       {/* Confirmed Bookings */}
-      <motion.div className="booking-section bg-green-500 p-6 rounded-lg shadow-lg">
-        <h3 className="text-xl font-bold mb-4">✅ Confirmed Bookings</h3>
-        <div className="space-y-4">
-          {bookings.filter(b => b.status === "confirmed").length > 0 ? (
-            bookings.filter(b => b.status === "confirmed").map(booking => (
-              <BookingCard key={booking.id} booking={booking} actions={['chat']} />
-            ))
-          ) : (
-            <p className="text-gray-200">No confirmed bookings.</p>
-          )}
-        </div>
-      </motion.div>
+      <BookingSection title="✅ Confirmed Bookings" color="green-500" bookings={bookings} status="confirmed" actions={['chat']} />
 
       {/* Completed Bookings */}
-      <motion.div className="booking-section bg-blue-500 p-6 rounded-lg shadow-lg">
-        <h3 className="text-xl font-bold mb-4">🎉 Completed Bookings</h3>
-        <div className="space-y-4">
-          {bookings.filter(b => b.status === "completed").length > 0 ? (
-            bookings.filter(b => b.status === "completed").map(booking => (
-              <BookingCard key={booking.id} booking={booking} actions={['review', 'wishlist', 'view']} />
-            ))
-          ) : (
-            <p className="text-gray-200">No completed bookings.</p>
-          )}
-        </div>
-      </motion.div>
+      <BookingSection title="🎉 Completed Bookings" color="blue-500" bookings={bookings} status="completed" actions={['review', 'wishlist', 'view']} />
     </div>
+  );
+};
+
+const BookingSection = ({ title, color, bookings, status, actions }) => {
+  const filteredBookings = bookings.filter(b => b.status === status);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8 }}
+      className={`bg-${color} p-6 rounded-lg shadow-lg`}
+    >
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
+      <div className="space-y-4">
+        {filteredBookings.length > 0 ? (
+          filteredBookings.map(booking => (
+            <BookingCard key={booking.id} booking={booking} actions={actions} />
+          ))
+        ) : (
+          <p className="text-gray-800">No bookings available.</p>
+        )}
+      </div>
+    </motion.div>
   );
 };
 
 const BookingCard = ({ booking, actions }) => {
   return (
     <motion.div 
-      className="flex items-center justify-between   p-4 rounded-lg shadow-lg w-full"
+      className="flex items-center justify-between bg-gray-800 p-4 rounded-lg shadow-lg w-full"
       whileHover={{ scale: 1.05 }}
       transition={{ duration: 0.3 }}
     >
@@ -106,9 +88,13 @@ const BookingCard = ({ booking, actions }) => {
 
 const ActionButton = ({ icon, text }) => {
   return (
-    <button className="bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-500 transition duration-300">
+    <motion.button 
+      whileHover={{ scale: 1.1 }}
+      transition={{ duration: 0.2 }}
+      className="bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-500 transition"
+    >
       {icon} {text}
-    </button>
+    </motion.button>
   );
 };
 
