@@ -104,7 +104,7 @@ const SearchForm = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get(`https://shutter-sphere.onrender.com/api/search`, {
+      const response = await axios.get(`http://localhost:5000/api/photographers/search`, {
         params: search,
       });
       
@@ -120,10 +120,7 @@ const SearchForm = () => {
       console.error("Error searching photographers", error);
     }
   };
-  const goToProfile = () => {
-    navigate("/profile"); // Change "/profile" to your actual profile page route
-  };
-  
+
   const scrollRef = useRef(null);
   const navigatere = useNavigate();
   const [visibleTestimonials, setVisibleTestimonials] = useState([]);
@@ -185,7 +182,7 @@ const SearchForm = () => {
                 className="bg-transparent border-none text-black pl-2 outline-none w-[200px] text-lg"
               />
             </div>
-            <div className="input-group">
+            <div className="bg-[#fcd34d] rounded-full flex p-2 items-center">
               <i className="fas fa-map-marker-alt location-icon"></i>
               <input
                 type="text"
