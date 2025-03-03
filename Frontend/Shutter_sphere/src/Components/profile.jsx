@@ -10,13 +10,13 @@ import Payment from "./profile_pay";
 import Review from "./profile_r";
 import Settings from "./profile_s";
 import Wishlist from "./profile_w";
-
+import { useNavigate } from "react-router-dom";
 gsap.registerPlugin(ScrollTrigger);
 
 const ProfilePage = () => {
   const quickActionsRef = useRef(null);
   const [activeSection, setActiveSection] = useState("profile");
-
+  const navigate = useNavigate();
   useEffect(() => {
     gsap.from(quickActionsRef.current, {
       opacity: 0,
@@ -38,7 +38,9 @@ const ProfilePage = () => {
     payments: <Payment />,
     settings: <Settings />,
   };
-
+const change= ()=>{
+  navigate("/editprofile")
+}
   return (
     <div className="min-h-screen bg-gray-900 flex justify-center items-center p-6 relative">
       <div className="w-4/5 bg-gray-900 text-white p-6 relative">
@@ -62,7 +64,7 @@ const ProfilePage = () => {
       <FaEnvelope className="inline-block mr-2" /> arjundivnainya8@gmail.com
     </p>
   </div>
-  <button className="ml-auto px-5 py-3 bg-gray-700 text-lg rounded-lg hover:bg-yellow-500 transition duration-300">
+  <button className="ml-auto px-5 py-3 bg-gray-700 text-lg rounded-lg hover:bg-yellow-500 transition duration-300" onClick={change}>
     ✏️ Edit Profile
   </button>
 </motion.div>
