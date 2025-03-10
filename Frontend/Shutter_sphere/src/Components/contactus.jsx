@@ -1,11 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaFacebook, FaInstagram, FaTwitter, FaCameraRetro } from "react-icons/fa";
-import { useTranslation } from "react-i18next"; // Import i18next hook
+import { useTranslation } from "react-i18next"; 
 import Navbar from "./navbar2";
 
 const ContactUs = () => {
-  const { t } = useTranslation(); // Initialize translation function
+  const { t } = useTranslation(); 
 
   return (
     <>
@@ -57,7 +57,7 @@ const ContactUs = () => {
               <FaEnvelope className="text-yellow-400" /> support@photobooking.com
             </p>
             <p className="flex items-center justify-center gap-3 text-gray-300">
-              <FaMapMarkerAlt className="text-yellow-400" /> {t("location")}
+              <FaMapMarkerAlt className="text-yellow-400" /> {t("hq_location")}
             </p>
           </div>
         </motion.div>

@@ -159,10 +159,13 @@
 
 // export default photographerprofile
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 // import { Button, Input, Label, Card, CardContent } from "@/components/ui";
 
 export default function UpdateUserProfile() {
+  const { t } = useTranslation(); // i18next hook
+
   const [profile, setProfile] = useState({
     fullName: "",
     phoneNumber: "",
@@ -171,7 +174,7 @@ export default function UpdateUserProfile() {
     country: "",
     photographerType: "",
     budgetRange: "",
-    profilePicture: ""
+    profilePicture: "",
   });
 
   const handleChange = (e) => {
@@ -187,51 +190,48 @@ export default function UpdateUserProfile() {
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-lg p-6 shadow-lg rounded-xl bg-white">
         <CardContent>
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="text-2xl font-semibold text-center mb-4"
           >
-            Update Profile
+            {t("updateProfile")}
           </motion.h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label>Full Name</Label>
+              <Label>{t("fullName")}</Label>
               <Input name="fullName" value={profile.fullName} onChange={handleChange} required />
             </div>
             <div>
-              <Label>Phone Number</Label>
+              <Label>{t("phoneNumber")}</Label>
               <Input name="phoneNumber" value={profile.phoneNumber} onChange={handleChange} required />
             </div>
             <div>
-              <Label>City</Label>
+              <Label>{t("city")}</Label>
               <Input name="city" value={profile.city} onChange={handleChange} required />
             </div>
             <div>
-              <Label>State</Label>
+              <Label>{t("state")}</Label>
               <Input name="state" value={profile.state} onChange={handleChange} required />
             </div>
             <div>
-              <Label>Country</Label>
+              <Label>{t("country")}</Label>
               <Input name="country" value={profile.country} onChange={handleChange} required />
             </div>
             <div>
-              <Label>Photographer Type</Label>
+              <Label>{t("photographerType")}</Label>
               <Input name="photographerType" value={profile.photographerType} onChange={handleChange} />
             </div>
             <div>
-              <Label>Budget Range</Label>
+              <Label>{t("budgetRange")}</Label>
               <Input name="budgetRange" value={profile.budgetRange} onChange={handleChange} />
             </div>
 
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md transition-all">
-                Save Changes
+                {t("saveChanges")}
               </Button>
             </motion.div>
           </form>

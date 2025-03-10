@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FaUser, FaEnvelope, FaHeart, FaBell, FaCamera, FaComments, FaQuestionCircle } from "react-icons/fa";
+import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useNavigate } from "react-router-dom";
 import Bookings from "./profile_b";
 import Details from "./profile_p";
 import Quick from "./quick";
@@ -10,13 +12,15 @@ import Payment from "./profile_pay";
 import Review from "./profile_r";
 import Settings from "./profile_s";
 import Wishlist from "./profile_w";
-import { useNavigate } from "react-router-dom";
+
 gsap.registerPlugin(ScrollTrigger);
 
 const ProfilePage = () => {
+  const { t } = useTranslation(); // Initialize translation
   const quickActionsRef = useRef(null);
   const [activeSection, setActiveSection] = useState("profile");
   const navigate = useNavigate();
+
   useEffect(() => {
     gsap.from(quickActionsRef.current, {
       opacity: 0,
@@ -38,47 +42,46 @@ const ProfilePage = () => {
     payments: <Payment />,
     settings: <Settings />,
   };
-const change= ()=>{
-  navigate("/editprofile")
-}
+
+  const change = () => {
+    navigate("/editprofile");
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 flex justify-center items-center p-6 relative">
       <div className="w-4/5 bg-gray-900 text-white p-6 relative">
-        
         {/* Profile Header */}
-       {/* Profile Header */}
-<motion.div
-  className="bg-gray-800 p-8 rounded-2xl flex items-center gap-8 shadow-lg min-h-[180px]"
-  initial={{ opacity: 0, y: -50 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 1 }}
->
-  <img 
-    src="https://res.cloudinary.com/dncosrakg/image/upload/v1739947688/knvhoxnne30jofr8vrci.jpg" 
-    alt="Profile" 
-    className="w-28 h-28 rounded-full border-4 border-yellow-400"
-  />
-  <div>
-    <h1 className="text-3xl font-bold">Arjun Divraniya</h1>
-    <p className="text-gray-400 text-lg">
-      <FaEnvelope className="inline-block mr-2" /> arjundivnainya8@gmail.com
-    </p>
-  </div>
-  <button className="ml-auto px-5 py-3 bg-gray-700 text-lg rounded-lg hover:bg-yellow-500 transition duration-300" onClick={change}>
-    ✏️ Edit Profile
-  </button>
-</motion.div>
-
+        <motion.div
+          className="bg-gray-800 p-8 rounded-2xl flex items-center gap-8 shadow-lg min-h-[180px]"
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+        >
+          <img 
+            src="https://res.cloudinary.com/dncosrakg/image/upload/v1739947688/knvhoxnne30jofr8vrci.jpg" 
+            alt="Profile" 
+            className="w-28 h-28 rounded-full border-4 border-yellow-400"
+          />
+          <div>
+            <h1 className="text-3xl font-bold">Arjun Divraniya</h1>
+            <p className="text-gray-400 text-lg">
+              <FaEnvelope className="inline-block mr-2" /> arjundivnainya8@gmail.com
+            </p>
+          </div>
+          <button className="ml-auto px-5 py-3 bg-gray-700 text-lg rounded-lg hover:bg-yellow-500 transition duration-300" onClick={change}>
+            ✏️ {t("editProfile")}
+          </button>
+        </motion.div>
 
         {/* Navigation Tabs */}
         <div className="flex gap-4 mt-6">
           {[
-            { id: "profile", icon: <FaUser />, label: "Profile" },
-            { id: "bookings", icon: <FaCamera />, label: "Bookings" },
-            { id: "wishlist", icon: <FaHeart />, label: "Wishlist" },
-            { id: "reviews", icon: <FaBell />, label: "Reviews" },
-            { id: "payments", icon: <FaComments />, label: "Payments" },
-            { id: "settings", icon: <FaQuestionCircle />, label: "Settings" },
+            { id: "profile", icon: <FaUser />, label: t("profile") },
+            { id: "bookings", icon: <FaCamera />, label: t("bookings") },
+            { id: "wishlist", icon: <FaHeart />, label: t("wishlist") },
+            { id: "reviews", icon: <FaBell />, label: t("reviews") },
+            { id: "payments", icon: <FaComments />, label: t("payments") },
+            { id: "settings", icon: <FaQuestionCircle />, label: t("settings_word") },
           ].map((tab) => (
             <motion.button
               key={tab.id}

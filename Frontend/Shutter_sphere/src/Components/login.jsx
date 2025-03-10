@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const Login = () => {
+  const { t } = useTranslation(); // Importing translation hook
   const [isLogin, setIsLogin] = useState(true);
   const [loginData, setLoginData] = useState({
     name: "",
@@ -37,16 +39,16 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          {isLogin ? "Login" : "Sign Up"}
+          {isLogin ? t("login.title") : t("signup.title")}
         </h2>
         <form onSubmit={loginSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="block text-gray-700 font-medium">Name</label>
+              <label className="block text-gray-700 font-medium">{t("signup.name")}</label>
               <input
                 type="text"
                 name="name"
-                placeholder="Enter your name"
+                placeholder={t("signup.name_placeholder")}
                 value={loginData.name}
                 onChange={loginChange}
                 required
@@ -56,25 +58,25 @@ const Login = () => {
           )}
           {!isLogin && (
             <div>
-              <label className="block text-gray-700 font-medium">Role</label>
+              <label className="block text-gray-700 font-medium">{t("signup.role")}</label>
               <select
                 name="role"
                 value={loginData.role}
                 onChange={(e) => setLoginData({ ...loginData, role: e.target.value })}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
-                <option value="">Select Role</option>
-                <option value="client">Client</option>
-                <option value="photographer">Photographer</option>
+                <option value="">{t("signup.role_placeholder")}</option>
+                <option value="client">{t("signup.client")}</option>
+                <option value="photographer">{t("signup.photographer")}</option>
               </select>
             </div>
           )}
           <div>
-            <label className="block text-gray-700 font-medium">Email</label>
+            <label className="block text-gray-700 font-medium">{t("login.email")}</label>
             <input
               type="email"
               name="email"
-              placeholder="Enter your email"
+              placeholder={t("login.email_placeholder")}
               value={loginData.email}
               onChange={loginChange}
               required
@@ -82,11 +84,11 @@ const Login = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium">Password</label>
+            <label className="block text-gray-700 font-medium">{t("login.password")}</label>
             <input
               type="password"
               name="password"
-              placeholder="Enter your password"
+              placeholder={t("login.password_placeholder")}
               value={loginData.password}
               onChange={loginChange}
               required
@@ -97,16 +99,16 @@ const Login = () => {
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition"
           >
-            {isLogin ? "Login" : "Sign Up"}
+            {isLogin ? t("login.button") : t("signup.button")}
           </button>
         </form>
         <p className="text-center text-gray-600 mt-4">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          {isLogin ? t("signup.prompt") : t("login.prompt")}{" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-blue-500 hover:underline font-medium"
           >
-            {isLogin ? "Sign Up" : "Login"}
+            {isLogin ? t("signup.switch") : t("login.switch")}
           </button>
         </p>
       </div>

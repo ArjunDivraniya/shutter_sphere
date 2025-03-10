@@ -2,16 +2,18 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUserCircle } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 const LoggedInNavbar = ({ handleLogout }) => {
+  const { t } = useTranslation(); // Importing translation hook
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const navLinks = [
-    { to: "/", label: "Home" },
-    { to: "/categories", label: "Top Categories" },
-    { to: "/reviews", label: "Reviews" },
-    { to: "/about", label: "About Us" },
+    { to: "/", label: t("navbar.home") },
+    { to: "/categories", label: t("navbar.categories") },
+    { to: "/reviews", label: t("navbar.reviews") },
+    { to: "/about", label: t("navbar.about") }
   ];
 
   return (
@@ -21,7 +23,7 @@ const LoggedInNavbar = ({ handleLogout }) => {
         className="text-2xl font-bold cursor-pointer hover:text-yellow-500 transition"
         onClick={() => navigate("/")}
       >
-        📸 Photo Booking
+        📸 {t("navbar.logo")}
       </h1>
 
       {/* Navigation Links */}
@@ -73,20 +75,20 @@ const LoggedInNavbar = ({ handleLogout }) => {
                 className="block px-4 py-2 hover:bg-gray-600 transition"
                 onClick={() => setDropdownOpen(false)}
               >
-                Profile
+                {t("navbar.profile")}
               </NavLink>
               <NavLink
                 to="/settings"
                 className="block px-4 py-2 hover:bg-gray-600 transition"
                 onClick={() => setDropdownOpen(false)}
               >
-                Settings
+                {t("navbar.settings")}
               </NavLink>
               <button
                 onClick={handleLogout}
                 className="block w-full text-left px-4 py-2 hover:bg-red-500 transition"
               >
-                Logout
+                {t("navbar.logout")}
               </button>
             </motion.div>
           )}
