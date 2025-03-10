@@ -1,9 +1,55 @@
 {
-    "Home": "الرئيسية",
-    "Top Categories": "أفضل الفئات",
-    "Reviews": "المراجعات",
-    "About Us": "معلومات عنا",
-    "Logout": "تسجيل الخروج",
-    "Sign Up / Login": "التسجيل / تسجيل الدخول",
-    "Log in to explore amazing features.": "قم بتسجيل الدخول لاستكشاف الميزات الرائعة."
+    "home": "Home",
+    "top_categories": "Top Categories",
+    "reviews": "Reviews",
+    "about_us": "About Us",
+    "logout": "Logout",
+    "sign_up_login": "Sign Up / Login",
+    "login_explore": "Log in to explore amazing features.",
+    "broken_camera": "Broken Camera",
+    "error_404": "Error 404",
+    "error_message": "Oops! It looks like **the camera lost focus** and **the drone crashed**!",
+    "go_home": "Go to Home Page",
+    "upload_to_cloudinary": "Upload to Cloudinary",
+    "uploaded_image": "Uploaded Image:",
+    "contact_us": "Contact Us",
+    "get_in_touch": "Get in Touch",
+    "contact_message": "Have any questions? We’d love to hear from you.",
+    "location": "Junagadh, Gujarat, India",
+    "send_message": "Send Us a Message",
+    "your_name": "Your Name",
+    "your_email": "Your Email",
+    "your_message": "Your Message",
+    "send_message_btn": "Send Message",
+    "all_rights_reserved": "All rights reserved.",
+    "hero": {
+        "title": "Find & Book the Best Photographers",
+        "subtitle": "Capture your best moments with the most talented photographers.",
+        "cta": "Get Started"
+    },
+    "vision": {
+        "title": "Our Vision",
+        "description": "We aim to connect people with professional photographers effortlessly, ensuring every special moment is beautifully captured."
+    },
+    "features": {
+        "title": "Why Choose Us?",
+        "topPhotographers": "Top Photographers",
+        "topPhotographersDesc": "Handpicked professionals for all occasions.",
+        "easyBooking": "Easy Booking",
+        "easyBookingDesc": "Hassle-free booking in a few clicks.",
+        "affordablePackages": "Affordable Packages",
+        "affordablePackagesDesc": "Best rates for premium photography."
+    },
+    "review": {
+        "title": "What Our Clients Say",
+        "review1": "The best photography platform!",
+        "review2": "Highly recommended!"
+    },
+    "cta": {
+        "title": "Start Your Journey Today",
+        "button": "Join Now"
+    },
+    "footer": {
+        "copy": "Photography Hub. All Rights Reserved."
+    }
 }

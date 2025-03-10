@@ -1,11 +1,55 @@
 {
-    "Home": "Inicio",
-    "Top Categories": "Categorías principales",
-    "Reviews": "Reseñas",
-    "About Us": "Sobre nosotros",
-    "Logout": "Cerrar sesión",
-    "Sign Up / Login": "Registrarse / Iniciar sesión",
-    "Log in to explore amazing features.": "Inicia sesión para explorar funciones increíbles."
-  
-  }
-  
+    "home": "Inicio",
+    "top_categories": "Categorías Principales",
+    "reviews": "Reseñas",
+    "about_us": "Sobre Nosotros",
+    "logout": "Cerrar sesión",
+    "sign_up_login": "Registrarse / Iniciar sesión",
+    "login_explore": "Inicia sesión para explorar funciones increíbles.",
+    "broken_camera": "Cámara Rota",
+    "error_404": "Error 404",
+    "error_message": "¡Ups! Parece que **la cámara perdió el enfoque** y **el dron se estrelló**.",
+    "go_home": "Ir a la Página de Inicio",
+    "upload_to_cloudinary": "Subir a Cloudinary",
+    "uploaded_image": "Imagen Subida:",
+    "contact_us": "Contáctanos",
+    "get_in_touch": "Ponte en Contacto",
+    "contact_message": "¿Tienes alguna pregunta? ¡Nos encantaría escucharte!",
+    "location": "Junagadh, Gujarat, India",
+    "send_message": "Envíanos un Mensaje",
+    "your_name": "Tu Nombre",
+    "your_email": "Tu Correo Electrónico",
+    "your_message": "Tu Mensaje",
+    "send_message_btn": "Enviar Mensaje",
+    "all_rights_reserved": "Todos los derechos reservados.",
+    "hero": {
+        "title": "Encuentra y Reserva a los Mejores Fotógrafos",
+        "subtitle": "Captura tus mejores momentos con los fotógrafos más talentosos.",
+        "cta": "Comenzar"
+    },
+    "vision": {
+        "title": "Nuestra Visión",
+        "description": "Nuestro objetivo es conectar a las personas con fotógrafos profesionales de manera sencilla, asegurando que cada momento especial sea capturado con perfección."
+    },
+    "features": {
+        "title": "¿Por qué elegirnos?",
+        "topPhotographers": "Los Mejores Fotógrafos",
+        "topPhotographersDesc": "Profesionales seleccionados para toda ocasión.",
+        "easyBooking": "Reserva Fácil",
+        "easyBookingDesc": "Reserva sin complicaciones en unos pocos clics.",
+        "affordablePackages": "Paquetes Asequibles",
+        "affordablePackagesDesc": "Las mejores tarifas para una fotografía premium."
+    },
+    "review": {
+        "title": "Lo que dicen nuestros clientes",
+        "review1": "¡La mejor plataforma de fotografía!",
+        "review2": "¡Muy recomendable!"
+    },
+    "cta": {
+        "title": "Empieza tu Viaje Hoy",
+        "button": "Únete Ahora"
+    },
+    "footer": {
+        "copy": "Photography Hub. Todos los derechos reservados."
+    }
+}

@@ -17,6 +17,7 @@ import Profile_r from "./Components/profile_r";
 import Profile_w from "./Components/profile_w";
 import Profile_s from "./Components/profile_s";
 import Profile_b from "./Components/profile_b";
+import Error404 from "./Components/404" 
 
 function App() {
   useEffect(() => {
@@ -25,7 +26,7 @@ function App() {
   
     if (i18n.language === "ar") {
       document.documentElement.setAttribute("dir", "rtl"); 
-      document.body.style.direction = "ltr"; // Layout flip hone se rokta hai
+      document.body.style.direction = "ltr"; 
     } else {
       document.documentElement.setAttribute("dir", "ltr");
       document.body.style.direction = "ltr"; 
@@ -50,6 +51,7 @@ function App() {
           <Route path="/profile_reviews" element={<><Profile /><Profile_r /></>} />
           <Route path="/profile_settings" element={<><Profile /><Profile_s /></>} />
           <Route path="/profile_Whishlist" element={<><Profile /><Profile_w /></>} />
+          <Route path='*' element={<Error404 />}/>
         </Routes>
       </Router>
     </PhotographerProvider>

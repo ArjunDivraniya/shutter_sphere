@@ -38,8 +38,8 @@ const AboutUs = () => {
       </motion.section>
 
       <motion.section initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1 }} className="bg-black bg-opacity-70 p-8 rounded-lg shadow-lg max-w-3xl">
-        <h2 className="text-3xl font-bold flex items-center gap-3"><FaCalendarCheck /> Get Started</h2>
-        <p className="mt-4 text-lg">Join our platform today and connect with the best photographers in your area. Whether you need wedding, event, or portrait photography, we’ve got you covered.</p>
+        <h2 className="text-3xl font-bold flex items-center gap-3"><FaCalendarCheck /> {t('Get Started')}</h2>
+        <p className="mt-4 text-lg">{t('Join our platform today and connect with the best photographers in your area. Whether you need wedding, event, or portrait photography, we’ve got you covered.')}</p>
         <button className="mt-6 bg-yellow-400 px-8 py-3 rounded-lg font-bold text-black hover:bg-yellow-500 transition text-lg">
           Join Now
         </button>

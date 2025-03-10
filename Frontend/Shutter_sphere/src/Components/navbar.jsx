@@ -18,13 +18,15 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
   };
 
   const navLinks = [
-    { label: "Home" },
-    { label: "Top Categories" },
-    { label: "Reviews" },
-    { label: "About Us" },
+    { label: "home" },
+    { label: "top_categories" },
+    { label: "reviews" },
+    { label: "about_us" }
   ];
 
-  const redirect=()=> {
+
+
+  const redirect = () => {
     navigate("/login")
   }
   return (
@@ -42,8 +44,8 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
             onClick={!isAuthenticated ? showLoginMessage : null}
             className="relative px-4 py-2 text-lg font-medium transition-all duration-300 hover:text-yellow-500"
           >
-{t(label)}
-</button>
+            {t(label)}
+          </button>
         ))}
         <LanguageSelector />
       </div>
@@ -102,7 +104,7 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 hover:bg-red-500"
                   >
-                   {t('Logout')}
+                    {t('logout')}
                   </button>
                 </motion.div>
               )}
@@ -115,36 +117,36 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
             animate={{ scale: loginMessage ? 1.1 : 1 }}
             transition={{ duration: 0.3 }}
           >
-            {t('Sign Up / Login')}
+            {t('sign_up_login')}
           </motion.button>
         )}
       </div>
 
       {/* Login Message Popup */}
       <AnimatePresence>
-  {loginMessage && (
-    <motion.div
-      initial={{ opacity: 0, x: 50, scale: 0.9 }} // Slide in from the right
-      animate={{ opacity: 1, x: 0, scale: 1 }} // Appear smoothly
-      exit={{ opacity: 0, x: 50, scale: 0.9 }} // Slide out to the right
-      transition={{ duration: 0.5, ease: "easeOut", bounce: 0.3 }} // Smooth + bounce
-      className="absolute top-20 right-5 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 border border-yellow-500 shadow-yellow-400/50"
-    >
-      {/* Camera Icon & Message */}
-      
-        <span className="font-medium">📸 {t('Log in to explore amazing features.')}</span>
-     
+        {loginMessage && (
+          <motion.div
+            initial={{ opacity: 0, x: 50, scale: 0.9 }} // Slide in from the right
+            animate={{ opacity: 1, x: 0, scale: 1 }} // Appear smoothly
+            exit={{ opacity: 0, x: 50, scale: 0.9 }} // Slide out to the right
+            transition={{ duration: 0.5, ease: "easeOut", bounce: 0.3 }} // Smooth + bounce
+            className="absolute top-20 right-5 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 border border-yellow-500 shadow-yellow-400/50"
+          >
+            {/* Camera Icon & Message */}
 
-      {/* Enhanced Progress Bar */}
-      <motion.div
-        initial={{ width: "100%" }}
-        animate={{ width: "0%" }}
-        transition={{ duration: 3, ease: "linear" }}
-        className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-yellow-400 to-red-500"
-      />
-    </motion.div>
-  )}
-</AnimatePresence>
+            <span className="font-medium">📸 {t('login_explore')}</span>
+
+
+            {/* Enhanced Progress Bar */}
+            <motion.div
+              initial={{ width: "100%" }}
+              animate={{ width: "0%" }}
+              transition={{ duration: 3, ease: "linear" }}
+              className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-yellow-400 to-red-500"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </nav>
   );
