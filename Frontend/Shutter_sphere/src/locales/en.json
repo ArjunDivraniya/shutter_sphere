@@ -191,25 +191,22 @@
     "search_photographer": "Find the perfect photographer based on your needs and location",
     "book_session": "Schedule a session at your preferred date and time",
     "capture_moments": "Get amazing photos from your professional photographer",
-    
-        "findYourPhotographer": "Find Your Photographer",
-        "available": "Available",
-        "reviews_count": "{{count}} Reviews",
-        "specializations": "Specializations",
-        "specialization": {
-          "wedding": "Wedding Photography",
-          "portrait": "Portrait Photography",
-          "nature": "Nature Photography",
-          "fashion": "Fashion Photography"
-        },
-        "pricePerHour": "₹{{price}} / Hour",
-        "viewProfile": "View Profile",
-        "bookNow": "Book Now",
-        "noPhotographersFound": "No photographers found",
-        "book": "Book",
-        "capture": "Capture",
-        "view_more":"View More",
-        "featured_photographers": "Featured Photographers"
-      
-      
+    "findYourPhotographer": "Find Your Photographer",
+    "available": "Available",
+    "reviews_count": "{{count}} Reviews",
+    "specializations": "Specializations",
+    "specialization": {
+        "wedding": "Wedding Photography",
+        "portrait": "Portrait Photography",
+        "nature": "Nature Photography",
+        "fashion": "Fashion Photography"
+    },
+    "pricePerHour": "₹{{price}} / Hour",
+    "viewProfile": "View Profile",
+    "bookNow": "Book Now",
+    "noPhotographersFound": "No photographers found",
+    "book": "Book",
+    "capture": "Capture",
+    "view_more": "View More",
+    "featured_photographers": "Featured Photographers"
 }
