@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "./LanguageSelector";
 
 const Navbar = ({ isAuthenticated, handleLogout }) => {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loginMessage, setLoginMessage] = useState(false);
@@ -22,7 +25,7 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
   ];
 
   const redirect=()=> {
-    Navigate("/login")
+    navigate("/login")
   }
   return (
     <nav className="bg-gray-900 p-4 flex justify-between items-center text-white shadow-lg relative">
@@ -39,9 +42,10 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
             onClick={!isAuthenticated ? showLoginMessage : null}
             className="relative px-4 py-2 text-lg font-medium transition-all duration-300 hover:text-yellow-500"
           >
-            {label}
-          </button>
+{t(label)}
+</button>
         ))}
+        <LanguageSelector />
       </div>
 
       {/* Mobile Menu Button */}
@@ -67,7 +71,7 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
                 }}
                 className="py-2 text-lg hover:text-yellow-500 transition"
               >
-                {label}
+                {t(label)}
               </button>
             ))}
           </motion.div>
@@ -98,7 +102,7 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 hover:bg-red-500"
                   >
-                    Logout
+                   {t('Logout')}
                   </button>
                 </motion.div>
               )}
@@ -111,7 +115,7 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
             animate={{ scale: loginMessage ? 1.1 : 1 }}
             transition={{ duration: 0.3 }}
           >
-            Sign Up / Login
+            {t('Sign Up / Login')}
           </motion.button>
         )}
       </div>
@@ -128,7 +132,7 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
     >
       {/* Camera Icon & Message */}
       
-        <span className="font-medium">📸 Log in to explore amazing features.</span>
+        <span className="font-medium">📸 {t('Log in to explore amazing features.')}</span>
      
 
       {/* Enhanced Progress Bar */}
