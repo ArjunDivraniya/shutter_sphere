@@ -33,7 +33,7 @@ const LanguageSelector = () => {
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
             >
-                <span class="material-symbols-outlined">
+                <span className="material-symbols-outlined">
                     g_translate
                 </span>        <span className="mr-1">{currentLanguage.flag}</span>
                 <span>{currentLanguage.name}</span>

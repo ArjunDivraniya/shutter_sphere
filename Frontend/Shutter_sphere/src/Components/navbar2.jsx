@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUserCircle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
+import LanguageSelector from "./LanguageSelector";
 
 const LoggedInNavbar = ({ handleLogout }) => {
   const { t } = useTranslation(); // Importing translation hook
@@ -23,7 +24,7 @@ const LoggedInNavbar = ({ handleLogout }) => {
         className="text-2xl font-bold cursor-pointer hover:text-yellow-500 transition"
         onClick={() => navigate("/")}
       >
-        📸 {t("navbar.logo")}
+        📸 Photo Booking
       </h1>
 
       {/* Navigation Links */}
@@ -33,8 +34,7 @@ const LoggedInNavbar = ({ handleLogout }) => {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `relative px-4 py-2 text-lg font-medium transition-all duration-300 ${
-                isActive ? "text-yellow-500" : "text-white"
+              `relative px-4 py-2 text-lg font-medium transition-all duration-300 ${isActive ? "text-yellow-500" : "text-white"
               }`
             }
           >
@@ -51,8 +51,12 @@ const LoggedInNavbar = ({ handleLogout }) => {
             )}
           </NavLink>
         ))}
+      <div className="z-50">
+      <LanguageSelector />
+      </div>
       </div>
 
+  
       {/* Profile Section */}
       <div className="relative">
         {/* Profile Icon */}
@@ -94,6 +98,7 @@ const LoggedInNavbar = ({ handleLogout }) => {
           )}
         </AnimatePresence>
       </div>
+
     </nav>
   );
 };

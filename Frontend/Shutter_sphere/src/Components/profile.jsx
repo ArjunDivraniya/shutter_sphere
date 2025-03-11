@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FaUser, FaEnvelope, FaHeart, FaBell, FaCamera, FaComments, FaQuestionCircle } from "react-icons/fa";
-import { useTranslation } from "react-i18next"; // Import useTranslation
 import { useNavigate } from "react-router-dom";
 import Bookings from "./profile_b";
 import Details from "./profile_p";
@@ -57,15 +57,15 @@ const ProfilePage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-          <img 
-            src="https://res.cloudinary.com/dncosrakg/image/upload/v1739947688/knvhoxnne30jofr8vrci.jpg" 
-            alt="Profile" 
+          <img
+            src="https://res.cloudinary.com/dncosrakg/image/upload/v1739947688/knvhoxnne30jofr8vrci.jpg"
+            alt="Profile"
             className="w-28 h-28 rounded-full border-4 border-yellow-400"
           />
           <div>
-            <h1 className="text-3xl font-bold">Arjun Divraniya</h1>
+            <h1 className="text-3xl font-bold">{t("photographerNameArjun")}</h1>
             <p className="text-gray-400 text-lg">
-              <FaEnvelope className="inline-block mr-2" /> arjundivnainya8@gmail.com
+              <FaEnvelope className="inline-block mr-2" /> {t("photographerEmailArjun")}
             </p>
           </div>
           <button className="ml-auto px-5 py-3 bg-gray-700 text-lg rounded-lg hover:bg-yellow-500 transition duration-300" onClick={change}>
@@ -85,9 +85,8 @@ const ProfilePage = () => {
           ].map((tab) => (
             <motion.button
               key={tab.id}
-              className={`px-4 py-2 flex items-center gap-2 rounded-lg transition-all duration-300 ${
-                activeSection === tab.id ? "bg-yellow-500" : "bg-gray-700 hover:bg-gray-600"
-              }`}
+              className={`px-4 py-2 flex items-center gap-2 rounded-lg transition-all duration-300 ${activeSection === tab.id ? "bg-yellow-500" : "bg-gray-700 hover:bg-gray-600"
+                }`}
               onClick={() => setActiveSection(tab.id)}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}

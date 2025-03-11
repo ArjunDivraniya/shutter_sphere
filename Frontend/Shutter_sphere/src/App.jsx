@@ -39,10 +39,10 @@ function App() {
       <Router>
         <Routes>
           <Route path="/search" element={<Searchform />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/pgresult" element={<SearchResults />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/login" element={<Login />} /> //*
+          <Route path="/" element={<LandingPage />} /> //*
+          <Route path="/pgresult" element={<SearchResults />} /> //*
+          <Route path="/profile" element={<Profile />} /> //*
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/editprofile" element={<Editprofile />} />
           <Route path="/profile_profile" element={<><Profile /><Profile_p /></>} />
@@ -51,7 +51,7 @@ function App() {
           <Route path="/profile_reviews" element={<><Profile /><Profile_r /></>} />
           <Route path="/profile_settings" element={<><Profile /><Profile_s /></>} />
           <Route path="/profile_Whishlist" element={<><Profile /><Profile_w /></>} />
-          <Route path='*' element={<Error404 />}/>
+          <Route path='*' element={<Error404 />}/> //*
         </Routes>
       </Router>
     </PhotographerProvider>

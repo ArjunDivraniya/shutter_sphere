@@ -25,12 +25,12 @@ const Homepage1 = () => {
           }}
         >
           <motion.h1
-            className="text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500"
+            className="text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500 p-2 leading-[1.2]"
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
           >
-            <div className="flex">{t("hero.title")} <RiCameraAiLine /></div>
+            <div className="flex z-10">{t("hero.title")} <RiCameraAiLine /></div>
           </motion.h1>
           <motion.p
             className="mt-4 text-xl bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500 max-w-xl"

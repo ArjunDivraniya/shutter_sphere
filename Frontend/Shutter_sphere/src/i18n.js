@@ -28,6 +28,7 @@ i18n
     interpolation: {
       escapeValue: false,
     },
+    returnObjects: true, 
   });
 
 i18n.on('languageChanged', (lng) => {

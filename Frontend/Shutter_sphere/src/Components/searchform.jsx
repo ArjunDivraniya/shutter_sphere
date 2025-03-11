@@ -3,54 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { usePhotographers } from "./photographercontext";
 import { useTranslation } from "react-i18next";
-
 import { FaStar } from "react-icons/fa";
 import Navbar from "./navbar2";
-
-const testimonials = [
-  {
-    name: "John Smith",
-    role: "Wedding Client",
-    feedback: "Amazing experience! Our wedding photos turned out better than we could have ever imagined.",
-    rating: 5,
-  },
-  {
-    name: "Lisa Wong",
-    role: "Business Owner",
-    feedback: "The product photography service was exceptional. Highly professional and creative.",
-    rating: 4,
-  },
-  {
-    name: "David Miller",
-    role: "Travel Blogger",
-    feedback: "Found an incredible photographer for my travel shoots. The process was smooth and efficient.",
-    rating: 5,
-  },
-  {
-    name: "Sophia Brown",
-    role: "Fashion Model",
-    feedback: "The portraits captured my best angles and were absolutely stunning. Highly recommended!",
-    rating: 5,
-  },
-  {
-    name: "Michael Johnson",
-    role: "Food Critic",
-    feedback: "The food photography was mouth-watering and beautifully shot. Great work!",
-    rating: 4,
-  },
-  {
-    name: "Sophia Brown",
-    role: "Fashion Model",
-    feedback: "The portraits captured my best angles and were absolutely stunning. Highly recommended!",
-    rating: 5,
-  },
-  {
-    name: "Michael Johnson",
-    role: "Food Critic",
-    feedback: "The food photography was mouth-watering and beautifully shot. Great work!",
-    rating: 4,
-  },
-];
 
 const photographers = [
   {
@@ -81,7 +35,9 @@ const photographers = [
 
 const SearchForm = () => {
   const [search, setSearch] = useState({ location: "", specialization: "" });
-  const { t } = useTranslation();
+  const [testimonials, setTestimonials] = useState([]);
+
+  const { t, i18n } = useTranslation();
 
   const categories = [
     { name: "Wedding", image: "https://storage.googleapis.com/a1aa/image/J03TfbI5gI5GX894uV6hVWQYOdwgNzTklZEasR6eUn8.jpg" },
@@ -95,7 +51,6 @@ const SearchForm = () => {
     { name: "Architecture", image: "https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?q=80&w=2020&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
     { name: "Event", image: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=2012&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
   ];
-
 
 
   const navigate = useNavigate();
@@ -127,6 +82,18 @@ const SearchForm = () => {
   const scrollRef = useRef(null);
   const navigatere = useNavigate();
   const [visibleTestimonials, setVisibleTestimonials] = useState([]);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/reviews");
+        setTestimonials(response.data.slice(0, 6)); // Limit to 6 testimonials
+      } catch (error) {
+        console.error("Error fetching testimonials:", error);
+      }
+    };
+    fetchTestimonials();
+  }, []);
 
   useEffect(() => {
     const scrollContainer = scrollRef.current;
@@ -178,7 +145,7 @@ const SearchForm = () => {
                 <input
                   type="text"
                   name="specialization"
-                  placeholder="Enter Specialization"
+                  placeholder={t("enterSpecialization")}
                   value={search.specialization}
                   onChange={handleChange}
                   className="bg-transparent border-none text-black pl-2 outline-none w-[200px] text-lg"
@@ -189,7 +156,7 @@ const SearchForm = () => {
                 <input
                   type="text"
                   name="location"
-                  placeholder="Enter Location"
+                  placeholder={t("enterLocation")}
                   value={search.location}
                   onChange={handleChange}
                   className="bg-transparent border-none text-black pl-2 outline-none w-[200px] text-lg"
@@ -222,21 +189,21 @@ const SearchForm = () => {
         <div className="flex flex-col md:flex-row justify-center gap-8">
           <div className="flex flex-col items-center h-[300px] w-[400px]">
             <div className="bg-gray-300 rounded-full p-4 mb-4 h-[60px] w-[60px]">
-              <span class="text-3xl text-blue-500">📷</span>
+              <span className="text-3xl text-blue-500">📷</span>
             </div>
             <h3 className="text-lg font-semibold text-black mb-2">{t("search")}</h3>
             <p className="text-gray-600 text-lg max-w-[360px]">{t("search_photographer")}</p>
           </div>
           <div className="flex flex-col items-center h-[300px] w-[400px]">
             <div className="bg-gray-300 rounded-full p-4 mb-4 h-[60px] w-[60px]">
-              <span class="text-3xl text-blue-500">📷</span>
+              <span className="text-3xl text-blue-500">📷</span>
             </div>
-            <h3 className="text-lg font-semibold text-black mb-2">t{("book")}</h3>
+            <h3 className="text-lg font-semibold text-black mb-2">{t("book")}</h3>
             <p className="text-gray-600 text-lg max-w-[360px]">{t("book_session")}</p>
           </div>
           <div className="flex flex-col items-center h-[300px] w-[400px]">
             <div className="bg-gray-300 rounded-full p-4 mb-4 h-[60px] w-[60px]">
-              <span class="text-3xl text-blue-500">📷</span>
+              <span className="text-3xl text-blue-500">📷</span>
             </div>
             <h3 className="text-lg font-semibold text-black mb-2">{t("capture")}</h3>
             <p className="text-gray-600 text-lg max-w-[360px]">{t("capture_moments")}</p>
@@ -295,16 +262,21 @@ const SearchForm = () => {
                     <span key={i} className="text-yellow-400 text-2xl">⭐</span>
                   ))}
                 </div>
-                <p className="italic text-gray-900 text-lg">"{testimonial.feedback}"</p>
-                <p className="font-bold text-xl mt-2">{testimonial.name}</p>
-                <p className="text-gray-500 text-sm">{testimonial.role}</p>
+                <p className="italic text-gray-900 text-lg">
+                "{t("reviewDynamic.text", { review: testimonial.review })}"
+                  </p>
+                <p className="font-bold text-xl mt-2">
+                {t("reviewDynamic.name", { name: testimonial.name })}
+                  </p>
+                <p className="text-gray-500 text-sm">
+                {t("reviewDynamic.role", { role: testimonial.role })}
+                  </p>
               </div>
             ))}
           </div>
           <button className="mt-5 px-5 py-2 bg-orange-500 text-white rounded-md cursor-pointer hover:bg-orange-600" onClick={() => navigatere("/reviews")}>{t("view_more")}</button>
         </div>
       </div>
-
     </>
   );
 };

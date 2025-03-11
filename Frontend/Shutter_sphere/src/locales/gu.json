@@ -75,7 +75,6 @@
         "switch": "લૉગિન"
     },
     "navbar": {
-        "logo": "ફોટો બુકિંગ",
         "home": "હોમ",
         "categories": "ટોચની શ્રેણીઓ",
         "reviews": "સમીક્ષાઓ",
@@ -208,5 +207,12 @@
     "book": "બુક",
     "capture": "કેપ્ચર",
     "view_more": "વધુ જુઓ",
-    "featured_photographers": "વિશિષ્ટ ફોટોગ્રાફર્સ"
+    "featured_photographers": "વિશિષ્ટ ફોટોગ્રાફર્સ",
+    
+        "photographerNameArjun": "અર્જુન દિવરાનિયા",
+        "photographerEmailArjun": "arjundivnainya8@gmail.com"
+          
+          
+      
+      
 }
