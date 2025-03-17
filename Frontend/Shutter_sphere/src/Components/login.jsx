@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import React from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const Login = () => {
+const LoginSignup = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [loginData, setLoginData] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
@@ -13,99 +14,97 @@ const Login = () => {
   });
   const navigate = useNavigate();
 
-  const loginChange = (e) => {
-    setLoginData({ ...loginData, [e.target.name]: e.target.value });
+  const showToast = (message, type) => {
+    toast[type](message, {
+      position: "top-center",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: false,
+      theme: "colored",
+      style: { textDecoration: "underline" }
+    });
   };
 
-  const loginSubmit = async (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const validateForm = () => {
+    if (!formData.email || !formData.password || (!isLogin && (!formData.name || !formData.role))) {
+      showToast("All fields are required!", "error");
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      showToast("Invalid email format!", "error");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      showToast("Password must be at least 6 characters!", "error");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     try {
-      const endpoint = isLogin
-        ? "http://localhost:5000/api/login"
-        : "http://localhost:5000/api/signup";
-      const response = await axios.post(endpoint, loginData);
+      const endpoint = isLogin ? "http://localhost:5000/api/login" : "http://localhost:5000/api/signup";
+      const response = await axios.post(endpoint, formData);
 
       if (response.status === 200 || response.status === 201) {
-        navigate("/search");
+        if (isLogin) {
+          showToast("Login successful!", "success");
+          navigate("/search");
+        } else {
+          showToast(`Welcome, ${formData.name}!`, "success");
+          setIsLogin(true);
+          setFormData({ name: "", email: "", password: "", role: "" });
+        }
       }
     } catch (error) {
-      console.error("Authentication failed", error);
+      showToast(error.response?.data?.message || "Something went wrong!", "error");
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <ToastContainer />
       <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           {isLogin ? "Login" : "Sign Up"}
         </h2>
-        <form onSubmit={loginSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
-            <div>
+            <>
               <label className="block text-gray-700 font-medium">Name</label>
-              <input
-                type="text"
-                name="name"
-                placeholder="Enter your name"
-                value={loginData.name}
-                onChange={loginChange}
-                required
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-          )}
-          {!isLogin && (
-            <div>
+              <input type="text" name="name" placeholder="Enter your name" value={formData.name} onChange={handleChange} required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+
               <label className="block text-gray-700 font-medium">Role</label>
-              <select
-                name="role"
-                value={loginData.role}
-                onChange={(e) => setLoginData({ ...loginData, role: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
+              <select name="role" value={formData.role} onChange={handleChange} required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400">
                 <option value="">Select Role</option>
                 <option value="client">Client</option>
                 <option value="photographer">Photographer</option>
               </select>
-            </div>
+            </>
           )}
-          <div>
-            <label className="block text-gray-700 font-medium">Email</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={loginData.email}
-              onChange={loginChange}
-              required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium">Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={loginData.password}
-              onChange={loginChange}
-              required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition"
-          >
+          
+          <label className="block text-gray-700 font-medium">Email</label>
+          <input type="email" name="email" placeholder="Enter your email" value={formData.email} onChange={handleChange} required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+
+          <label className="block text-gray-700 font-medium">Password</label>
+          <input type="password" name="password" placeholder="Enter your password" value={formData.password} onChange={handleChange} required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+
+          <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">
             {isLogin ? "Login" : "Sign Up"}
           </button>
         </form>
         <p className="text-center text-gray-600 mt-4">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-blue-500 hover:underline font-medium"
-          >
+          <button onClick={() => setIsLogin(!isLogin)} className="text-blue-500 hover:underline font-medium">
             {isLogin ? "Sign Up" : "Login"}
           </button>
         </p>
@@ -114,4 +113,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginSignup;

@@ -5,6 +5,23 @@ import { useNavigate } from "react-router-dom";
 import { RiCameraAiLine } from "react-icons/ri";
 import Navbar from "./navbar";
 
+const topPhotographers = [
+  {
+    name: "Wedding Photographer",
+    image: "https://plus.unsplash.com/premium_photo-1675129779554-dc86569708c8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBwb3J0cmFpdHxlbnwwfHwwfHx8MA%3D%3D",
+    rating: "4.9",
+  },
+  {
+    name: "Portrait Photographer",
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aHVtYW4lMjBwb3J0cmFpdHxlbnwwfHwwfHx8MA%3D%3D",
+    rating: "4.8",
+  },
+  {
+    name: "Cinematographer",
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aHVtYW4lMjBwb3J0cmFpdHxlbnwwfHwwfHx8MA%3D%3D",
+    rating: "4.7",
+  },
+];
 const Homepage1 = () => {
   const navigate = useNavigate();
   const heroRef = useRef(null);
@@ -70,26 +87,36 @@ const Homepage1 = () => {
       </div>
 
       {/* Top Photographers */}
-      <div className="py-20 px-6 bg-gray-800">
-        <h2 className="text-4xl font-bold text-center mb-10">Top Photographers</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {["Wedding", "Portrait", "Cinemetographer"].map((name, index) => (
-            <div key={index} className="bg-gray-700 p-6 rounded-lg text-center shadow-lg hover:scale-105 transition duration-300">
-              <img src="https://source.unsplash.com/100x100/?portrait" alt={name} className="w-24 h-24 rounded-full mx-auto mb-4" />
-              <h3 className="text-xl font-semibold">{name}</h3>
-              <p className="text-yellow-400 flex justify-center items-center gap-1 mt-2"><FaStar /> 4.9 Rating</p>
-            </div>
-          ))}
-        </div>
+      <div className="py-20 px-6 bg-gray-900 text-white">
+      <h2 className="text-4xl font-bold text-center mb-10">Top Photographers</h2>
+      
+      <div className="grid md:grid-cols-3 gap-8">
+        {topPhotographers.map((photographer, index) => (
+          <div
+            key={index}
+            className="bg-gray-800 p-6 rounded-lg text-center shadow-lg hover:scale-105 hover:bg-gray-700 transition duration-300"
+          >
+            <img
+              src={photographer.image}
+              alt={photographer.name}
+              className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-yellow-400 shadow-lg"
+            />
+            <h3 className="text-xl font-semibold">{photographer.name}</h3>
+            <p className="text-yellow-400 flex justify-center items-center gap-1 mt-2">
+              <FaStar className="text-yellow-500" /> {photographer.rating} Rating
+            </p>
+          </div>
+        ))}
       </div>
+    </div>
 
       {/* Client Reviews */}
       <div className="py-20 px-6 text-center">
         <h2 className="text-4xl font-bold">What Our Clients Say</h2>
         <div className="mt-10 grid md:grid-cols-2 gap-8">
-          {[{ name: "John Doe", review: "The best photography platform!", img: "https://source.unsplash.com/100x100/?man" },
-            { name: "Sarah Lee", review: "Highly recommended!", img: "https://source.unsplash.com/100x100/?woman" },
-            { name: "Sarah Lee", review: "Highly recommended!", img: "https://source.unsplash.com/100x100/?woman" }].map((testimonial, index) => (
+          {[{ name: "John Doe", review: "The best photography platform!", img: "https://images.unsplash.com/photo-1727278465739-b3b5266e18de?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" },
+            { name: "Sarah Lee", review: "Highly recommended!", img: "https://images.unsplash.com/photo-1725072616840-02cf666406f6?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjh8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" },
+            { name: "Sarah Lee", review: "Highly recommended!", img: "https://images.unsplash.com/photo-1605789324372-e2d18680046c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzl8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" }].map((testimonial, index) => (
             <motion.div key={index} className="bg-gray-800 p-6 rounded-lg shadow-lg hover:scale-105 transition duration-300">
               <FaQuoteLeft className="text-yellow-400 text-3xl mb-2" />
               <p className="text-lg">"{testimonial.review}"</p>
