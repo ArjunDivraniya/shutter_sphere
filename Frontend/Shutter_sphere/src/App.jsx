@@ -17,7 +17,11 @@ import Profile_s from "./Components/profile_s";
 import Profile_b from "./Components/profile_b";
 import LandingPage from "./Components/landingpage";
 import Reviews from "./Components/ourreviewpage";
-
+import ErrorPage from "./Components/404";
+import AboutUs from "./Components/aboutus";
+import ContactUs from "./Components/contactus";
+import Photographerpro from "./Components/photographerpro"
+import PhotographerLanding from "./Components/Photographerlandingpage";
 
 function App() {
  
@@ -35,11 +39,16 @@ function App() {
 
     <Router>
             <Routes>
-                <Route path="/search" element={<Searchform />} />
+                <Route path="/search" element={<Searchform/>} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={<LandingPage />} />
+                <Route path="*" element={<ErrorPage />} />
                 <Route path="/pgresult" element={<SearchResults />} />
                 <Route path="/profile" element={<Profile/>} />
+                <Route path="/profile" element={<Profile/>} />
+                <Route path="/about" element={<AboutUs/>} />
+                <Route path="/contact" element={<ContactUs/>} />
+                <Route path="/pp" element={<Photographerpro/>} />
                 <Route path="/reviews" element={<Reviews/>} />
                 <Route path="/editprofile" element={<Editprofile/>}/>
                 <Route path="/profile_profile" element={<><Profile/> <Profile_p/></>}/>
