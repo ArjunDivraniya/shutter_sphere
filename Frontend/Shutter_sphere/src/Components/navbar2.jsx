@@ -8,10 +8,11 @@ const LoggedInNavbar = ({ handleLogout }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const navLinks = [
-    { to: "/", label: "Home" },
+    { to: "/search", label: "Home" },
     { to: "/categories", label: "Top Categories" },
     { to: "/reviews", label: "Reviews" },
     { to: "/about", label: "About Us" },
+    { to: "/contact", label: "Contact Us" }
   ];
 
   return (
