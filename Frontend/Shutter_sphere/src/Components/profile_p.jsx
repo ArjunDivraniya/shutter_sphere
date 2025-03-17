@@ -24,14 +24,14 @@ const ProfileP = ({ user = { name: "Arjun Divraniya", email: "arjun@example.com"
       <h2 className="text-xl font-bold">{t("personalInfo")}</h2>
       <div className="mt-4 space-y-3">
         {[
-          { icon: <FaUser />, label: t("fullName"), value: t("photographerNameUser", { name: user.name || "N/A" }) },
-          { icon: <FaEnvelope />, label: t("email"), value: t("photographerEmailUser", { email: user.email || "N/A" }) },
+          { icon: <FaUser />, label: t("fullName"), value: t("Arjun Divraniya", { name: user.name || "N/A" }) },
+          { icon: <FaEnvelope />, label: t("email"), value: t("arjundivraniya8@gmail.com", { email: user.email || "N/A" }) },
           { 
             icon: <FaPhone />, 
             label: t("phone"), 
-            value: t("phoneNumberPhone", { phone: `+${formatPhoneNumber(user.phone)}` }) 
+            value: t("9157118743", { phone: `+${formatPhoneNumber(user.phone)}` }) 
           },
-          { icon: <FaMapMarkerAlt />, label: t("location"), value: t("locationCityUser", { city: user.location || "N/A" }) },
+          { icon: <FaMapMarkerAlt />, label: t("location"), value: t("Junagadh", { city: user.location || "N/A" }) },
         ].map((info, index) => (
           <div key={index} className="flex items-center gap-3 bg-gray-700 p-3 rounded-lg">
             {info.icon}
@@ -43,7 +43,6 @@ const ProfileP = ({ user = { name: "Arjun Divraniya", email: "arjun@example.com"
         ))}
       </div>
 
-{console.log(t("photographerNameUser", { name: user.name }))}
     </motion.div>
   );
 };

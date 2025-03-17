@@ -5,6 +5,7 @@ import { usePhotographers } from "./photographercontext";
 import { useTranslation } from "react-i18next";
 import { FaStar } from "react-icons/fa";
 import Navbar from "./navbar2";
+import { transliterate } from "transliteration";
 
 const photographers = [
   {
@@ -38,7 +39,7 @@ const SearchForm = () => {
   const [testimonials, setTestimonials] = useState([]);
 
   const { t, i18n } = useTranslation();
-
+  const selectedLanguage = i18n.language;
   const categories = [
     { name: "Wedding", image: "https://storage.googleapis.com/a1aa/image/J03TfbI5gI5GX894uV6hVWQYOdwgNzTklZEasR6eUn8.jpg" },
     { name: "Portrait", image: "https://storage.googleapis.com/a1aa/image/YLssOgkW2a68SAQqVnwyLwcXwXKq0UbPiQ0DIHPr03c.jpg" },
@@ -120,6 +121,40 @@ const SearchForm = () => {
     // Show only 6 reviews
     setVisibleTestimonials(testimonials.slice(0, 6));
   }, [testimonials]);
+  const transliterateNameAndRole = (name, role) => {
+    // Use let because you need to reassign these variables
+    let transliteratedName = name;
+    let transliteratedRole = role;
+  
+    // Transliterate based on the selected language
+    switch (selectedLanguage) {
+      case 'hi': // Hindi: Transliterate to Hindi
+        transliteratedName = transliterate(name);
+        transliteratedRole = transliterate(role);
+        break;
+      case 'gu': // Gujarati: Transliterate to Gujarati
+        transliteratedName = transliterate(name, { to: 'gu' });
+        transliteratedRole = transliterate(role, { to: 'gu' });
+        break;
+      case 'ar': // Arabic: Do not transliterate; keep Arabic script as-is
+        transliteratedName = name;
+        transliteratedRole = role;
+        break;
+      default:
+        transliteratedName = name;
+        transliteratedRole = role;
+    }
+  
+  
+    return { transliteratedName, transliteratedRole };
+  };
+  const testName = "Sarah Johnson";
+const testRole = "Wedding Photography";
+const { transliteratedName, transliteratedRole } = transliterateNameAndRole(testName, testRole);
+
+console.log(transliterate("Sarah Johnson", { to: 'hi' }));
+
+
 
   return (
     <>
@@ -207,6 +242,7 @@ const SearchForm = () => {
             </div>
             <h3 className="text-lg font-semibold text-black mb-2">{t("capture")}</h3>
             <p className="text-gray-600 text-lg max-w-[360px]">{t("capture_moments")}</p>
+            
           </div>
 
         </div>
@@ -255,7 +291,10 @@ const SearchForm = () => {
         <div className="text-center py-10">
           <h1 className="text-4xl font-bold mb-10">{t("review.title")}</h1>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            {visibleTestimonials.map((testimonial, index) => (
+          {visibleTestimonials.map((testimonial, index) => {
+            const { transliteratedName, transliteratedRole } = transliterateNameAndRole(testimonial.name, testimonial.role);
+
+            return (
               <div key={index} className="w-[350px] h-[200px] bg-white p-4 rounded-lg shadow-md">
                 <div className="stars">
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
@@ -263,17 +302,18 @@ const SearchForm = () => {
                   ))}
                 </div>
                 <p className="italic text-gray-900 text-lg">
-                "{t("reviewDynamic.text", { review: testimonial.review })}"
-                  </p>
+                  "{testimonial.review}"
+                </p>
                 <p className="font-bold text-xl mt-2">
-                {t("reviewDynamic.name", { name: testimonial.name })}
-                  </p>
+                  {transliteratedName}
+                </p>
                 <p className="text-gray-500 text-sm">
-                {t("reviewDynamic.role", { role: testimonial.role })}
-                  </p>
+                  {transliteratedRole}
+                </p>
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
           <button className="mt-5 px-5 py-2 bg-orange-500 text-white rounded-md cursor-pointer hover:bg-orange-600" onClick={() => navigatere("/reviews")}>{t("view_more")}</button>
         </div>
       </div>

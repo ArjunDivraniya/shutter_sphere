@@ -5,7 +5,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 const Login = () => {
-  const { t } = useTranslation(); // Importing translation hook
+  const { t } = useTranslation(); 
   const [isLogin, setIsLogin] = useState(true);
   const [loginData, setLoginData] = useState({
     name: "",
@@ -23,8 +23,8 @@ const Login = () => {
     e.preventDefault();
     try {
       const endpoint = isLogin
-        ? "http://localhost:5000/api/login"
-        : "http://localhost:5000/api/signup";
+        ? "http://localhost:8080/api/login"
+        : "http://localhost:8080/api/signup";
       const response = await axios.post(endpoint, loginData);
 
       if (response.status === 200 || response.status === 201) {

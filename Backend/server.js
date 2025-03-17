@@ -102,11 +102,19 @@ const dotenv = require("dotenv");
 const photographerRoutes = require("./Paths/photographerRoutes");
 const loginrouter=require("./Paths/signuproutes")
 const userRoutes=require("./Paths/userRoutes")
+const reviewRoutes = require("./Paths/ourreview"); 
+const eventRoutes = require("./Paths/eventRoutes");
 
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+app.use(cors({
+  origin: 'http://localhost:5174',  // Allow only the frontend origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Specify the allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify the allowed headers
+}));
+
 
 
 mongoose.connect(process.env.URI, {
@@ -119,8 +127,8 @@ app.use("/api", photographerRoutes);
 app.use("/api",loginrouter)
 app.use("/find",photographerRoutes)
 app.use("/client", userRoutes);
-
-
+app.use("/api", reviewRoutes)
+app.use("/calendar", eventRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

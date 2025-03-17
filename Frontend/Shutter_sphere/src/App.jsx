@@ -17,7 +17,8 @@ import Profile_r from "./Components/profile_r";
 import Profile_w from "./Components/profile_w";
 import Profile_s from "./Components/profile_s";
 import Profile_b from "./Components/profile_b";
-import Error404 from "./Components/404" 
+import Error404 from "./Components/404" ;
+import Calendar from "./Components/calendar";
 
 function App() {
   useEffect(() => {
@@ -51,6 +52,7 @@ function App() {
           <Route path="/profile_reviews" element={<><Profile /><Profile_r /></>} />
           <Route path="/profile_settings" element={<><Profile /><Profile_s /></>} />
           <Route path="/profile_Whishlist" element={<><Profile /><Profile_w /></>} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path='*' element={<Error404 />}/> //*
         </Routes>
       </Router>

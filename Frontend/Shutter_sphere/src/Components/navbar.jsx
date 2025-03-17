@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import LanguageSelector from "./LanguageSelector";
+import LanguageSelector from "./languageSelector";
 
 const Navbar = ({ isAuthenticated, handleLogout }) => {
   const { t } = useTranslation();
