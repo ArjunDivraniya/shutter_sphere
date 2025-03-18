@@ -17,8 +17,14 @@ import Profile_r from "./Components/profile_r";
 import Profile_w from "./Components/profile_w";
 import Profile_s from "./Components/profile_s";
 import Profile_b from "./Components/profile_b";
-import Error404 from "./Components/404" ;
 import Calendar from "./Components/calendar";
+import Reviews from "./Components/ourreviewpage";
+import ErrorPage from "./Components/404";
+import AboutUs from "./Components/aboutus";
+import ContactUs from "./Components/contactus";
+import Photographerpro from "./Components/photographerpro"
+import PhotographerLanding from "./Components/Photographerlandingpage";
+
 
 function App() {
   useEffect(() => {
@@ -36,28 +42,38 @@ function App() {
   
 
   return (
-    <PhotographerProvider>
-      <Router>
-        <Routes>
-          <Route path="/search" element={<Searchform />} />
-          <Route path="/login" element={<Login />} /> //*
-          <Route path="/" element={<LandingPage />} /> //*
-          <Route path="/pgresult" element={<SearchResults />} /> //*
-          <Route path="/profile" element={<Profile />} /> //*
-          <Route path="/reviews" element={<Reviews />} />
-          <Route path="/editprofile" element={<Editprofile />} />
-          <Route path="/profile_profile" element={<><Profile /><Profile_p /></>} />
-          <Route path="/profile_booking" element={<><Profile /><Profile_b /></>} />
-          <Route path="/profile_payment" element={<><Profile /><Profile_pay /></>} />
-          <Route path="/profile_reviews" element={<><Profile /><Profile_r /></>} />
-          <Route path="/profile_settings" element={<><Profile /><Profile_s /></>} />
-          <Route path="/profile_Whishlist" element={<><Profile /><Profile_w /></>} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path='*' element={<Error404 />}/> //*
-        </Routes>
-      </Router>
-    </PhotographerProvider>
-  );
+    <>
+       
+       {/* <Image/> */}
+<PhotographerProvider>
+
+    <Router>
+            <Routes>
+                <Route path="/search" element={<Searchform/>} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="*" element={<ErrorPage />} />
+                <Route path="/pgresult" element={<SearchResults />} />
+                <Route path="/profile" element={<Profile/>} />
+                <Route path="/profile" element={<Profile/>} />
+                <Route path="/about" element={<AboutUs/>} />
+                <Route path="/contact" element={<ContactUs/>} />
+                <Route path="/pp" element={<Photographerpro/>} />
+                <Route path="/reviews" element={<Reviews/>} />
+                <Route path="/editprofile" element={<Editprofile/>}/>
+                <Route path="/profile_profile" element={<><Profile/> <Profile_p/></>}/>
+                <Route path="/profile_booking" element={<><Profile/> <Profile_b/></>}/>
+                <Route path="/profile_payment" element={<><Profile/> <Profile_pay/></>}/>
+                <Route path="/profile_reviews" element={<><Profile/> <Profile_r/></>}/>
+                <Route path="/profile_settings" element={<><Profile/> <Profile_s/></>}/>
+                <Route path="/profile_Whishlist" element={<><Profile/> <Profile_w/></>}/>
+                <Route path="/calendar" element={<Calendar />} />
+            </Routes>
+        </Router> 
+        </PhotographerProvider>
+    </>
+  )
+
 }
 
 export default App;

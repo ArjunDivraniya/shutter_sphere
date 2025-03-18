@@ -11,10 +11,13 @@ const LoggedInNavbar = ({ handleLogout }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const navLinks = [
-    { to: "/", label: t("navbar.home") },
+
+    { to: "/search", label: t("navbar.home") },
     { to: "/categories", label: t("navbar.categories") },
     { to: "/reviews", label: t("navbar.reviews") },
     { to: "/about", label: t("navbar.about") }
+    { to: "/contact", label: "Contact Us" }
+
   ];
 
   return (

@@ -1,170 +1,20 @@
 
-
-// import React from 'react'
-// import axios from 'axios';
-// import { useNavigate } from 'react-router-dom';
-// import { useState } from 'react';
-// import "./photographerprofile.css"
-
-// const photographerprofile = () => {
-
-//     const [formData, setFormData] = useState({
-//         name: "",
-//         email: "",
-//         phone: "",
-//         city: "",
-//         specialization: "",
-//         experience: "",
-//         pricePerHour: "",
-//         availability: true,
-//         rating: "",
-//         portfolio: "",
-//         profileImage: ""
-//     });
-   
-// const navigate=useNavigate()
-//     // Handle Input Changes
-//     const handleChange = (e) => {
-//         const { name, value, type, checked } = e.target;
-//         setFormData({
-//             ...formData,
-//             [name]: type === "checkbox" ? checked : value
-//         });
-//     };
-   
-
-//     // Handle Form Submit
-//     const handleSubmit = async (e) => {
-//         e.preventDefault();
-//         try {
-//             const response = await axios.post("http://localhost:5000/api/add", formData);
-//             alert("Congratulations...   Your Profile Created");
-//             setFormData({ 
-//                 name: "", email: "", phone: "", city: "", specialization: "",
-//                 experience: "", pricePerHour: "", availability: true, rating: "",
-//                 portfolio: "", profileImage: ""
-//             });
-//         } catch (error) {
-//             console.error("Error submitting form", error);
-//         }
-//     };
-   
-//   return (
-//    <>
-   
-//    <div className="photographer-form">
-//       <h2 className="form-title">
-//         <i className="fas fa-camera form-icon"></i> Register as a Photographer
-//       </h2>
-//       <form onSubmit={handleSubmit} className="form-container">
-//         <input
-//           type="text"
-//           name="name"
-//           className="form-input"
-//           placeholder="Name"
-//           value={formData.name}
-//           onChange={handleChange}
-//           required
-//         />
-//         <input
-//           type="email"
-//           name="email"
-//           className="form-input"
-//           placeholder="Email"
-//           value={formData.email}
-//           onChange={handleChange}
-//           required
-//         />
-//         <input
-//           type="text"
-//           name="phone"
-//           className="form-input"
-//           placeholder="Phone"
-//           value={formData.phone}
-//           onChange={handleChange}
-//           required
-//         />
-//         <input
-//           type="text"
-//           name="city"
-//           className="form-input"
-//           placeholder="City"
-//           value={formData.city}
-//           onChange={handleChange}
-//           required
-//         />
-//         <input
-//           type="text"
-//           name="specialization"
-//           className="form-input"
-//           placeholder="Specialization"
-//           value={formData.specialization}
-//           onChange={handleChange}
-//         />
-//         <input
-//           type="number"
-//           name="experience"
-//           className="form-input"
-//           placeholder="Experience (Years)"
-//           value={formData.experience}
-//           onChange={handleChange}
-//         />
-//         <input
-//           type="number"
-//           name="pricePerHour"
-//           className="form-input"
-//           placeholder="Price Per Hour"
-//           value={formData.pricePerHour}
-//           onChange={handleChange}
-//         />
-//         <input
-//           type="number"
-//           name="rating"
-//           className="form-input"
-//           placeholder="Rating (1-5)"
-//           value={formData.rating}
-//           onChange={handleChange}
-//         />
-//         <input
-//           type="url"
-//           name="portfolio"
-//           className="form-input"
-//           placeholder="Portfolio URL"
-//           value={formData.portfolio}
-//           onChange={handleChange}
-//         />
-//         <input
-//           type="url"
-//           name="profileImage"
-//           className="form-input"
-//           placeholder="Profile Image URL"
-//           value={formData.profileImage}
-//           onChange={handleChange}
-//         />
-//         <label className="form-checkbox">
-//           <input
-//             type="checkbox"
-//             name="availability"
-//             checked={formData.availability}
-//             onChange={handleChange}
-//           />
-//           Available for Booking
-//         </label>
-//         <button type="submit" className="form-submit-btn">Create Profile</button>
-//       </form>
-//     </div>
-//    </>
-//   )
-// }
-
-// export default photographerprofile
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-// import { Button, Input, Label, Card, CardContent } from "@/components/ui";
-
-export default function UpdateUserProfile() {
-  const { t } = useTranslation(); // i18next hook
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { FiArrowLeft, FiUser } from "react-icons/fi";
+import { MdEmail } from "react-icons/md";
+import PersonalDetails from "./personal";
+import Portfolio from "./portfolio";
+import PastWork from "./pastwork";
+import TopCategoryShoot from "./catogarywork";
+import Reviews from "./review";
+import Bookings from "./bookings";
+import Achievements from "./achivment";
+import Blogs from "./blogs";
 
   const [profile, setProfile] = useState({
     fullName: "",
@@ -177,16 +27,25 @@ export default function UpdateUserProfile() {
     profilePicture: "",
   });
 
-  const handleChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Updated Profile:", profile);
-  };
+const sections = [
+  "Personal Details",
+  "Portfolio",
+  "Past Work",
+  "Top Category Shoot",
+  "Blogs & Stories",
+  "Review",
+  "Bookings",
+  "Packages",
+  "Achievements",
+];
 
+const PhotographerProfile = () => {
+  const [section, setSection] = useState("Personal Details");
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
+
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-lg p-6 shadow-lg rounded-xl bg-white">
         <CardContent>
@@ -237,6 +96,74 @@ export default function UpdateUserProfile() {
           </form>
         </CardContent>
       </Card>
+
+    <div className="min-h-screen bg-[#0f1116] text-white flex">
+      {/* Sidebar with Scrollbar */}
+      <div className="w-1/4 bg-[#13161d] p-6 border-r border-gray-700 overflow-y-auto h-screen custom-scrollbar">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/search")}
+          className="self-start text-white text-2xl p-2 rounded-full hover:bg-gray-700 transition"
+        >
+          <FiArrowLeft />
+        </button>
+
+        {/* Profile Header */}
+        <div className="flex items-center gap-3 text-white text-xl font-semibold mb-6">
+          <FiUser className="text-2xl" />
+          <span>Profile</span>
+        </div>
+
+        {/* Profile Section */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-20 h-20 bg-gray-500 rounded-full mb-4"></div>
+          <h2 className="text-lg font-semibold">Arjun Divraniya</h2>
+          <div className="flex items-center gap-2 text-gray-400 text-sm">
+            <MdEmail />
+            <p>arjundivraniya8@gmail.com</p>
+          </div>
+        </div>
+
+        {/* Sidebar Buttons */}
+        <div className="w-full flex flex-col gap-4">
+          {sections.map((item) => (
+            <button
+              key={item}
+              onClick={() => setSection(item)}
+              className={`w-full py-4 text-lg font-semibold rounded-lg border border-amber-400 transition-all
+                ${
+                  section === item
+                    ? "bg-amber-400 text-black shadow-md"
+                    : "text-gray-400 hover:bg-amber-400 hover:text-black"
+                }`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content Area with Separate Scrollbar */}
+      <div className="flex-1 p-10 overflow-y-auto h-screen custom-scrollbar">
+        <motion.div
+          className="bg-[#1a1e29] p-8 rounded-2xl shadow-lg border border-gray-700"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {section === "Personal Details" && <PersonalDetails />}
+          {section === "Portfolio" && <Portfolio />}
+          {section === "Past Work" && <PastWork />}
+          {section === "Top Category Shoot" && <TopCategoryShoot />}
+          {section === "Blogs & Stories" && <Blogs />}
+          {section === "Review" && <Reviews />}
+          {section === "Bookings" && <Bookings />}
+          {section === "Achievements" && <Achievements />}
+        </motion.div>
+      </div>
+
     </div>
   );
-}
+};
+
+export default PhotographerProfile;

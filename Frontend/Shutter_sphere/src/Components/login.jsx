@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const Login = () => {
+const LoginSignup = () => {
   const { t } = useTranslation(); 
   const [isLogin, setIsLogin] = useState(true);
-  const [loginData, setLoginData] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
@@ -15,42 +17,83 @@ const Login = () => {
   });
   const navigate = useNavigate();
 
-  const loginChange = (e) => {
-    setLoginData({ ...loginData, [e.target.name]: e.target.value });
+  const showToast = (message, type) => {
+    toast[type](message, {
+      position: "top-center",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: false,
+      theme: "colored",
+      style: { textDecoration: "underline" }
+    });
   };
 
-  const loginSubmit = async (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const validateForm = () => {
+    if (!formData.email || !formData.password || (!isLogin && (!formData.name || !formData.role))) {
+      showToast("All fields are required!", "error");
+      return false;
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      showToast("Invalid email format!", "error");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      showToast("Password must be at least 6 characters!", "error");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     try {
-      const endpoint = isLogin
-        ? "http://localhost:8080/api/login"
-        : "http://localhost:8080/api/signup";
-      const response = await axios.post(endpoint, loginData);
+
+
+      const endpoint = isLogin ? "http://localhost:5000/api/login" : "http://localhost:5000/api/signup";
+      const response = await axios.post(endpoint, formData);
+
 
       if (response.status === 200 || response.status === 201) {
-        navigate("/search");
+        if (isLogin) {
+          showToast("Login successful!", "success");
+          navigate("/search");
+        } else {
+          showToast(`Welcome, ${formData.name}!`, "success");
+          setIsLogin(true);
+          setFormData({ name: "", email: "", password: "", role: "" });
+        }
       }
     } catch (error) {
-      console.error("Authentication failed", error);
+      showToast(error.response?.data?.message || "Something went wrong!", "error");
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <ToastContainer />
       <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
           {isLogin ? t("login.title") : t("signup.title")}
         </h2>
-        <form onSubmit={loginSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
+
             <div>
               <label className="block text-gray-700 font-medium">{t("signup.name")}</label>
               <input
                 type="text"
                 name="name"
                 placeholder={t("signup.name_placeholder")}
-                value={loginData.name}
-                onChange={loginChange}
+                value={formData.name}
+                onChange={(e) => setLoginData({ ...loginData, role: e.target.value })}
                 required
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
@@ -61,16 +104,17 @@ const Login = () => {
               <label className="block text-gray-700 font-medium">{t("signup.role")}</label>
               <select
                 name="role"
-                value={loginData.role}
-                onChange={(e) => setLoginData({ ...loginData, role: e.target.value })}
+                value={formData.role}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 <option value="">{t("signup.role_placeholder")}</option>
                 <option value="client">{t("signup.client")}</option>
                 <option value="photographer">{t("signup.photographer")}</option>
+
               </select>
-            </div>
+            </>
           )}
+
           <div>
             <label className="block text-gray-700 font-medium">{t("login.email")}</label>
             <input
@@ -116,4 +160,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginSignup;
