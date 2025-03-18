@@ -21,7 +21,8 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
     { label: "home" },
     { label: "top_categories" },
     { label: "reviews" },
-    { label: "about_us" }
+    { label: "about_us" },
+    {label: "contact_us"}
   ];
 
 
