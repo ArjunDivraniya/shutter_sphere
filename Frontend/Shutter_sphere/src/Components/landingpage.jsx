@@ -123,62 +123,63 @@ const Homepage1 = () => {
           >
             {t("cta.button")}
           </motion.button>
+        </div>
+        {/* Top Photographers */}
+        <div className="py-20 px-6 bg-gray-900 text-white">
+          <h2 className="text-4xl font-bold text-center mb-10">Top Photographers</h2>
 
-      {/* Top Photographers */}
-      <div className="py-20 px-6 bg-gray-900 text-white">
-      <h2 className="text-4xl font-bold text-center mb-10">Top Photographers</h2>
-      
-      <div className="grid md:grid-cols-3 gap-8">
-        {topPhotographers.map((photographer, index) => (
-          <div
-            key={index}
-            className="bg-gray-800 p-6 rounded-lg text-center shadow-lg hover:scale-105 hover:bg-gray-700 transition duration-300"
-          >
-            <img
-              src={photographer.image}
-              alt={photographer.name}
-              className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-yellow-400 shadow-lg"
-            />
-            <h3 className="text-xl font-semibold">{photographer.name}</h3>
-            <p className="text-yellow-400 flex justify-center items-center gap-1 mt-2">
-              <FaStar className="text-yellow-500" /> {photographer.rating} Rating
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-
-      {/* Client Reviews */}
-      <div className="py-20 px-6 text-center">
-        <h2 className="text-4xl font-bold">What Our Clients Say</h2>
-        <div className="mt-10 grid md:grid-cols-2 gap-8">
-          {[{ name: "John Doe", review: "The best photography platform!", img: "https://images.unsplash.com/photo-1727278465739-b3b5266e18de?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" },
-            { name: "Sarah Lee", review: "Highly recommended!", img: "https://images.unsplash.com/photo-1725072616840-02cf666406f6?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjh8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" },
-            { name: "Sarah Lee", review: "Highly recommended!", img: "https://images.unsplash.com/photo-1605789324372-e2d18680046c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzl8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" }].map((testimonial, index) => (
-            <motion.div key={index} className="bg-gray-800 p-6 rounded-lg shadow-lg hover:scale-105 transition duration-300">
-              <FaQuoteLeft className="text-yellow-400 text-3xl mb-2" />
-              <p className="text-lg">"{testimonial.review}"</p>
-              <div className="mt-4 flex items-center justify-center gap-3">
-                <img src={testimonial.img} alt={testimonial.name} className="w-12 h-12 rounded-full" />
-                <p className="text-yellow-400 font-semibold">- {testimonial.name}</p>
+          <div className="grid md:grid-cols-3 gap-8">
+            {topPhotographers.map((photographer, index) => (
+              <div
+                key={index}
+                className="bg-gray-800 p-6 rounded-lg text-center shadow-lg hover:scale-105 hover:bg-gray-700 transition duration-300"
+              >
+                <img
+                  src={photographer.image}
+                  alt={photographer.name}
+                  className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-yellow-400 shadow-lg"
+                />
+                <h3 className="text-xl font-semibold">{photographer.name}</h3>
+                <p className="text-yellow-400 flex justify-center items-center gap-1 mt-2">
+                  <FaStar className="text-yellow-500" /> {photographer.rating} Rating
+                </p>
               </div>
-            </motion.div>
-          ))}
-
+            ))}
+          </div>
         </div>
 
-        {/* Footer */}
-        <footer className="py-10 text-center">
-          <p className="text-gray-400">&copy; {new Date().getFullYear()} {t("footer.copy")}</p>
-          <div className="flex justify-center gap-4 mt-4 text-xl text-yellow-400">
-            <FaFacebook className="hover:text-white transition-all duration-300 cursor-pointer" />
-            <FaInstagram className="hover:text-white transition-all duration-300 cursor-pointer" />
-            <FaTwitter className="hover:text-white transition-all duration-300 cursor-pointer" />
+        {/* Client Reviews */}
+        <div className="py-20 px-6 text-center">
+          <h2 className="text-4xl font-bold">What Our Clients Say</h2>
+          <div className="mt-10 grid md:grid-cols-2 gap-8">
+            {[{ name: "John Doe", review: "The best photography platform!", img: "https://images.unsplash.com/photo-1727278465739-b3b5266e18de?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" },
+            { name: "Sarah Lee", review: "Highly recommended!", img: "https://images.unsplash.com/photo-1725072616840-02cf666406f6?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjh8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" },
+            { name: "Sarah Lee", review: "Highly recommended!", img: "https://images.unsplash.com/photo-1605789324372-e2d18680046c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzl8fGh1bWFuJTIwcG9ydHJhaXQlMjBpbmRpYXxlbnwwfHwwfHx8MA%3D%3D" }].map((testimonial, index) => (
+              <motion.div key={index} className="bg-gray-800 p-6 rounded-lg shadow-lg hover:scale-105 transition duration-300">
+                <FaQuoteLeft className="text-yellow-400 text-3xl mb-2" />
+                <p className="text-lg">"{testimonial.review}"</p>
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <img src={testimonial.img} alt={testimonial.name} className="w-12 h-12 rounded-full" />
+                  <p className="text-yellow-400 font-semibold">- {testimonial.name}</p>
+                </div>
+              </motion.div>
+            ))}
+
           </div>
-        </footer>
-      </div>
-    </>
-  );
+
+          {/* Footer */}
+          <footer className="py-10 text-center">
+            <p className="text-gray-400">&copy; {new Date().getFullYear()} {t("footer.copy")}</p>
+            <div className="flex justify-center gap-4 mt-4 text-xl text-yellow-400">
+              <FaFacebook className="hover:text-white transition-all duration-300 cursor-pointer" />
+              <FaInstagram className="hover:text-white transition-all duration-300 cursor-pointer" />
+              <FaTwitter className="hover:text-white transition-all duration-300 cursor-pointer" />
+            </div>
+          </footer>
+        </div>
+        </div>
+      </>
+      );
 };
 
-export default Homepage1;
+      export default Homepage1;

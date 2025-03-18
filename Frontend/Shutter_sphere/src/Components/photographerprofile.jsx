@@ -1,9 +1,6 @@
-
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiUser } from "react-icons/fi";
 import { MdEmail } from "react-icons/md";
@@ -16,6 +13,8 @@ import Bookings from "./bookings";
 import Achievements from "./achivment";
 import Blogs from "./blogs";
 
+
+const PhotographerProfile = () => {
   const [profile, setProfile] = useState({
     fullName: "",
     phoneNumber: "",
@@ -26,9 +25,9 @@ import Blogs from "./blogs";
     budgetRange: "",
     profilePicture: "",
   });
-
-
-const sections = [
+  
+  
+  const sections = [
   "Personal Details",
   "Portfolio",
   "Past Work",
@@ -38,9 +37,7 @@ const sections = [
   "Bookings",
   "Packages",
   "Achievements",
-];
-
-const PhotographerProfile = () => {
+  ];
   const [section, setSection] = useState("Personal Details");
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -162,6 +159,7 @@ const PhotographerProfile = () => {
         </motion.div>
       </div>
 
+    </div>
     </div>
   );
 };

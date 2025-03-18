@@ -63,7 +63,7 @@ const SearchForm = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get(`http://localhost:5000/api/photographers/search`, {
+      const response = await axios.get(`http://localhost:8080/api/photographers/search`, {
         params: search,
       });
 
