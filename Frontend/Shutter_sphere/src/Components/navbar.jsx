@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "./languageSelector";
 
 const Navbar = ({ isAuthenticated, handleLogout }) => {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loginMessage, setLoginMessage] = useState(false);
@@ -15,14 +18,16 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
   };
 
   const navLinks = [
-    { label: "Home" },
-    { label: "Top Categories" },
-    { label: "Reviews" },
-    { label: "About Us" },
+    { label: "home" },
+    { label: "top_categories" },
+    { label: "reviews" },
+    { label: "about_us" }
   ];
 
-  const redirect=()=> {
-    Navigate("/login")
+
+
+  const redirect = () => {
+    navigate("/login")
   }
   return (
     <nav className="bg-gray-900 p-4 flex justify-between items-center text-white shadow-lg relative">
@@ -39,9 +44,10 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
             onClick={!isAuthenticated ? showLoginMessage : null}
             className="relative px-4 py-2 text-lg font-medium transition-all duration-300 hover:text-yellow-500"
           >
-            {label}
+            {t(label)}
           </button>
         ))}
+        <LanguageSelector />
       </div>
 
       {/* Mobile Menu Button */}
@@ -67,7 +73,7 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
                 }}
                 className="py-2 text-lg hover:text-yellow-500 transition"
               >
-                {label}
+                {t(label)}
               </button>
             ))}
           </motion.div>
@@ -98,7 +104,7 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 hover:bg-red-500"
                   >
-                    Logout
+                    {t('logout')}
                   </button>
                 </motion.div>
               )}
@@ -111,36 +117,36 @@ const Navbar = ({ isAuthenticated, handleLogout }) => {
             animate={{ scale: loginMessage ? 1.1 : 1 }}
             transition={{ duration: 0.3 }}
           >
-            Sign Up / Login
+            {t('sign_up_login')}
           </motion.button>
         )}
       </div>
 
       {/* Login Message Popup */}
       <AnimatePresence>
-  {loginMessage && (
-    <motion.div
-      initial={{ opacity: 0, x: 50, scale: 0.9 }} // Slide in from the right
-      animate={{ opacity: 1, x: 0, scale: 1 }} // Appear smoothly
-      exit={{ opacity: 0, x: 50, scale: 0.9 }} // Slide out to the right
-      transition={{ duration: 0.5, ease: "easeOut", bounce: 0.3 }} // Smooth + bounce
-      className="absolute top-20 right-5 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 border border-yellow-500 shadow-yellow-400/50"
-    >
-      {/* Camera Icon & Message */}
-      
-        <span className="font-medium">📸 Log in to explore amazing features.</span>
-     
+        {loginMessage && (
+          <motion.div
+            initial={{ opacity: 0, x: 50, scale: 0.9 }} // Slide in from the right
+            animate={{ opacity: 1, x: 0, scale: 1 }} // Appear smoothly
+            exit={{ opacity: 0, x: 50, scale: 0.9 }} // Slide out to the right
+            transition={{ duration: 0.5, ease: "easeOut", bounce: 0.3 }} // Smooth + bounce
+            className="absolute top-20 right-5 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 border border-yellow-500 shadow-yellow-400/50"
+          >
+            {/* Camera Icon & Message */}
 
-      {/* Enhanced Progress Bar */}
-      <motion.div
-        initial={{ width: "100%" }}
-        animate={{ width: "0%" }}
-        transition={{ duration: 3, ease: "linear" }}
-        className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-yellow-400 to-red-500"
-      />
-    </motion.div>
-  )}
-</AnimatePresence>
+            <span className="font-medium">📸 {t('login_explore')}</span>
+
+
+            {/* Enhanced Progress Bar */}
+            <motion.div
+              initial={{ width: "100%" }}
+              animate={{ width: "0%" }}
+              transition={{ duration: 3, ease: "linear" }}
+              className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-yellow-400 to-red-500"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </nav>
   );

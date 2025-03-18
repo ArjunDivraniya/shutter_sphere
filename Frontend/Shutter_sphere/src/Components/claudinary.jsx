@@ -42,10 +42,10 @@ const ImageUploader = () => {
     <div>
       <input type="file" accept="image/*" onChange={handleFileChange} />
       {preview && <img src={preview} alt="Preview" style={{ width: "300px", marginTop: "10px" }} />}
-      <button onClick={handleUpload}>Upload to Cloudinary</button>
+      <button onClick={handleUpload}>{t('upload_to_cloudinary')}</button>
       {uploadedUrl && (
         <div>
-          <p>Uploaded Image:</p>
+          <p>{t('uploaded_image:')}</p>
           <img src={uploadedUrl} alt="Uploaded" style={{ width: "300px", marginTop: "10px" }} />
         </div>
       )}

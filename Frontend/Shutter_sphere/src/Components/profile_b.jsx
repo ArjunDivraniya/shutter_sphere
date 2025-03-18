@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { FaClock, FaMoneyBillWave, FaComments, FaHeart, FaEye, FaBan, FaCheckCircle } from "react-icons/fa";
 
 const Bookings = () => {
+  const { t } = useTranslation(); // i18next hook
+
   const [bookings, setBookings] = useState([
     { id: 1, name: "John Doe", type: "Wedding Photographer", price: "$200/hr", hours: "3 hours", date: "2025-03-10", status: "pending", img: "https://via.placeholder.com/100" },
     { id: 2, name: "Jane Smith", type: "Event Photographer", price: "$150/hr", hours: "4 hours", date: "2025-03-12", status: "confirmed", img: "https://via.placeholder.com/100" },
@@ -17,22 +20,23 @@ const Bookings = () => {
         transition={{ duration: 0.8 }}
         className="text-3xl font-bold text-center"
       >
-        📅 My Bookings
+        📅 {t("myBookings")}
       </motion.h2>
 
       {/* Pending Bookings */}
-      <BookingSection title="⏳ Pending Bookings" color="yellow-500" bookings={bookings} status="pending" actions={['chat', 'cancel']} />
+      <BookingSection title={t("pendingBookings")} color="yellow-500" bookings={bookings} status="pending" actions={['chat', 'cancel']} />
 
       {/* Confirmed Bookings */}
-      <BookingSection title="✅ Confirmed Bookings" color="green-500" bookings={bookings} status="confirmed" actions={['chat']} />
+      <BookingSection title={t("confirmedBookings")} color="green-500" bookings={bookings} status="confirmed" actions={['chat']} />
 
       {/* Completed Bookings */}
-      <BookingSection title="🎉 Completed Bookings" color="blue-500" bookings={bookings} status="completed" actions={['review', 'wishlist', 'view']} />
+      <BookingSection title={t("completedBookings")} color="blue-500" bookings={bookings} status="completed" actions={['review', 'wishlist', 'view']} />
     </div>
   );
 };
 
 const BookingSection = ({ title, color, bookings, status, actions }) => {
+  const { t } = useTranslation(); // Translation hook
   const filteredBookings = bookings.filter(b => b.status === status);
 
   return (
@@ -50,7 +54,7 @@ const BookingSection = ({ title, color, bookings, status, actions }) => {
             <BookingCard key={booking.id} booking={booking} actions={actions} />
           ))
         ) : (
-          <p className="text-gray-800">No bookings available.</p>
+          <p className="text-gray-800">{t("noBookings")}</p>
         )}
       </div>
     </motion.div>
@@ -58,6 +62,7 @@ const BookingSection = ({ title, color, bookings, status, actions }) => {
 };
 
 const BookingCard = ({ booking, actions }) => {
+  const { t } = useTranslation(); // Translation hook
   return (
     <motion.div 
       className="flex items-center justify-between bg-gray-800 p-4 rounded-lg shadow-lg w-full"
@@ -76,11 +81,11 @@ const BookingCard = ({ booking, actions }) => {
         </div>
       </div>
       <div className="flex gap-3">
-        {actions.includes('chat') && <ActionButton icon={<FaComments />} text="Chat" />}
-        {actions.includes('cancel') && <ActionButton icon={<FaBan />} text="Cancel" />}
-        {actions.includes('review') && <ActionButton icon={<FaCheckCircle />} text="Review" />}
-        {actions.includes('wishlist') && <ActionButton icon={<FaHeart />} text="Wishlist" />}
-        {actions.includes('view') && <ActionButton icon={<FaEye />} text="View" />}
+        {actions.includes('chat') && <ActionButton icon={<FaComments />} text={t("chat")} />}
+        {actions.includes('cancel') && <ActionButton icon={<FaBan />} text={t("cancel")} />}
+        {actions.includes('review') && <ActionButton icon={<FaCheckCircle />} text={t("review_word")} />}
+        {actions.includes('wishlist') && <ActionButton icon={<FaHeart />} text={t("wishlist")} />}
+        {actions.includes('view') && <ActionButton icon={<FaEye />} text={t("view")} />}
       </div>
     </motion.div>
   );

@@ -1,21 +1,23 @@
-import React, { useState } from "react";
-
-// import "./App.css"
-import Searchform from "../src/Components/searchform";
-import SearchResults from "../src/Components/searchresult";
-import Profile from "./Components/profile"
-import Editprofile from "./Components/photographerprofile"
-import Login from "../src/Components/login";
-import { BrowserRouter as Router, Routes, Route ,useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import i18n from './i18n';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { PhotographerProvider } from "./Components/photographercontext";
-import Image from "./Components/claudinary"
+
+// Import Components
+import Searchform from "./Components/searchform";
+import SearchResults from "./Components/searchresult";
+import Profile from "./Components/profile";
+import Editprofile from "./Components/photographerprofile";
+import Login from "./Components/login";
+import LandingPage from "./Components/landingpage";
+import Reviews from "./Components/ourreviewpage";
 import Profile_p from "./Components/profile_p";
 import Profile_pay from "./Components/profile_pay";
 import Profile_r from "./Components/profile_r";
 import Profile_w from "./Components/profile_w";
 import Profile_s from "./Components/profile_s";
 import Profile_b from "./Components/profile_b";
-import LandingPage from "./Components/landingpage";
+import Calendar from "./Components/calendar";
 import Reviews from "./Components/ourreviewpage";
 import ErrorPage from "./Components/404";
 import AboutUs from "./Components/aboutus";
@@ -23,14 +25,22 @@ import ContactUs from "./Components/contactus";
 import Photographerpro from "./Components/photographerpro"
 import PhotographerLanding from "./Components/Photographerlandingpage";
 
-function App() {
- 
- 
-   
 
+function App() {
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("lng") || "en";
+    i18n.changeLanguage(savedLanguage);
   
-   
+    if (i18n.language === "ar") {
+      document.documentElement.setAttribute("dir", "rtl"); 
+      document.body.style.direction = "ltr"; 
+    } else {
+      document.documentElement.setAttribute("dir", "ltr");
+      document.body.style.direction = "ltr"; 
+    }
+  }, [i18n.language]);
   
+
   return (
     <>
        
@@ -57,7 +67,7 @@ function App() {
                 <Route path="/profile_reviews" element={<><Profile/> <Profile_r/></>}/>
                 <Route path="/profile_settings" element={<><Profile/> <Profile_s/></>}/>
                 <Route path="/profile_Whishlist" element={<><Profile/> <Profile_w/></>}/>
-
+                <Route path="/calendar" element={<Calendar />} />
             </Routes>
         </Router> 
         </PhotographerProvider>
@@ -65,5 +75,5 @@ function App() {
   )
 
 }
-export default App
 
+export default App;

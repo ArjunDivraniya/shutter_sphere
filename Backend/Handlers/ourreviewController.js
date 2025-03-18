@@ -1,9 +1,8 @@
 const Review = require("../Models/ourreview");
 const User = require("../Models/UserModel");
-const Photographer=require("../Models/photographerModel")
-const Signup =require("../Models/signupmodel") // Import User model
+const Photographer = require("../Models/photographerModel");
+const Signup = require("../Models/signupmodel"); // Import User model
 
-// Get all reviews
 exports.getReviews = async (req, res) => {
   try {
     const reviews = await Review.find().sort({ createdAt: -1 });
@@ -16,7 +15,15 @@ exports.getReviews = async (req, res) => {
 // Add a new review
 exports.addReview = async (req, res) => {
   try {
-    const { name, email, role, review } = req.body;
+    let { name, email, role, review, rating } = req.body;
+
+    if (rating === undefined) {
+      rating = 5; 
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5." });
+    }
 
     // Find user by email
     const user = await Signup.findOne({ email });
@@ -28,7 +35,6 @@ exports.addReview = async (req, res) => {
     let clientId = null;
     let photographerId = null;
 
-    // Assign ID based on user role
     if (role.toLowerCase() === "client") {
       clientId = user._id;
     } else if (role.toLowerCase() === "photographer") {
@@ -37,18 +43,17 @@ exports.addReview = async (req, res) => {
       return res.status(400).json({ error: "Invalid role" });
     }
 
-    // Create a new review
     const newReview = new Review({
       name,
       email,
       role,
       review,
+      rating,  
       clientId,
       photographerId,
       profilePhoto: user.profilePhoto || "",
     });
 
-    // Save the review
     const savedReview = await newReview.save();
     res.json(savedReview);
   } catch (err) {

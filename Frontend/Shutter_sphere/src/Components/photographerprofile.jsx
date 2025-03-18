@@ -1,3 +1,7 @@
+
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +15,18 @@ import Reviews from "./review";
 import Bookings from "./bookings";
 import Achievements from "./achivment";
 import Blogs from "./blogs";
+
+  const [profile, setProfile] = useState({
+    fullName: "",
+    phoneNumber: "",
+    city: "",
+    state: "",
+    country: "",
+    photographerType: "",
+    budgetRange: "",
+    profilePicture: "",
+  });
+
 
 const sections = [
   "Personal Details",
@@ -27,8 +43,60 @@ const sections = [
 const PhotographerProfile = () => {
   const [section, setSection] = useState("Personal Details");
   const navigate = useNavigate();
-
+  const { t } = useTranslation();
   return (
+
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <Card className="w-full max-w-lg p-6 shadow-lg rounded-xl bg-white">
+        <CardContent>
+          <motion.h2
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-2xl font-semibold text-center mb-4"
+          >
+            {t("updateProfile")}
+          </motion.h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>{t("fullName")}</Label>
+              <Input name="fullName" value={profile.fullName} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label>{t("phoneNumber")}</Label>
+              <Input name="phoneNumber" value={profile.phoneNumber} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label>{t("city")}</Label>
+              <Input name="city" value={profile.city} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label>{t("state")}</Label>
+              <Input name="state" value={profile.state} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label>{t("country")}</Label>
+              <Input name="country" value={profile.country} onChange={handleChange} required />
+            </div>
+            <div>
+              <Label>{t("photographerType")}</Label>
+              <Input name="photographerType" value={profile.photographerType} onChange={handleChange} />
+            </div>
+            <div>
+              <Label>{t("budgetRange")}</Label>
+              <Input name="budgetRange" value={profile.budgetRange} onChange={handleChange} />
+            </div>
+
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md transition-all">
+                {t("saveChanges")}
+              </Button>
+            </motion.div>
+          </form>
+        </CardContent>
+      </Card>
+
     <div className="min-h-screen bg-[#0f1116] text-white flex">
       {/* Sidebar with Scrollbar */}
       <div className="w-1/4 bg-[#13161d] p-6 border-r border-gray-700 overflow-y-auto h-screen custom-scrollbar">
@@ -93,6 +161,7 @@ const PhotographerProfile = () => {
           {section === "Achievements" && <Achievements />}
         </motion.div>
       </div>
+
     </div>
   );
 };

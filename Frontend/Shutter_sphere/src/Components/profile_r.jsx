@@ -1,6 +1,21 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import { FaStar, FaStarHalfAlt, FaQuoteLeft, FaUserCircle } from "react-icons/fa";
+import { FaStar, FaStarHalfAlt, FaQuoteLeft } from "react-icons/fa";
+
+// Function to Render Star Ratings (Moved Above)
+const renderStars = (rating) => {
+  const fullStars = Math.floor(rating);
+  const halfStar = rating % 1 !== 0;
+  return (
+    <>
+      {[...Array(fullStars)].map((_, i) => (
+        <FaStar key={i} className="text-yellow-400 text-lg mr-1" />
+      ))}
+      {halfStar && <FaStarHalfAlt className="text-yellow-400 text-lg mr-1" />}
+    </>
+  );
+};
 
 const initialReviews = [
   {
@@ -27,6 +42,7 @@ const initialReviews = [
 ];
 
 const Review = () => {
+  const { t } = useTranslation();
   const [reviews, setReviews] = useState(initialReviews);
   const [newReview, setNewReview] = useState({ name: "", rating: 5, comment: "" });
 
@@ -49,7 +65,9 @@ const Review = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      <h2 className="text-3xl font-bold text-yellow-400 text-center mb-6">✨ User Reviews</h2>
+      <h2 className="text-3xl font-bold text-yellow-400 text-center mb-6">
+        ✨ {t("reviewsTitle")}
+      </h2>
 
       {/* Reviews List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
@@ -84,12 +102,12 @@ const Review = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h3 className="text-xl font-semibold mb-3 text-center">📝 Add Your Review</h3>
+        <h3 className="text-xl font-semibold mb-3 text-center">📝 {t("addReview")}</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             className="w-full p-3 rounded bg-gray-700 text-white border-none outline-none"
-            placeholder="Your Name"
+            placeholder={t("namePlaceholder")}
             value={newReview.name}
             onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
             required
@@ -100,15 +118,15 @@ const Review = () => {
             onChange={(e) => setNewReview({ ...newReview, rating: parseFloat(e.target.value) })}
             required
           >
-            <option value="5">⭐⭐⭐⭐⭐ - Excellent</option>
-            <option value="4.5">⭐⭐⭐⭐✨ - Very Good</option>
-            <option value="4">⭐⭐⭐⭐ - Good</option>
-            <option value="3.5">⭐⭐⭐✨ - Average</option>
-            <option value="3">⭐⭐⭐ - Okay</option>
+            <option value="5">⭐⭐⭐⭐⭐ - {t("excellent")}</option>
+            <option value="4.5">⭐⭐⭐⭐✨ - {t("veryGood")}</option>
+            <option value="4">⭐⭐⭐⭐ - {t("good")}</option>
+            <option value="3.5">⭐⭐⭐✨ - {t("average")}</option>
+            <option value="3">⭐⭐⭐ - {t("okay")}</option>
           </select>
           <textarea
             className="w-full p-3 rounded bg-gray-700 text-white border-none outline-none"
-            placeholder="Write your review..."
+            placeholder={t("commentPlaceholder")}
             rows="3"
             value={newReview.comment}
             onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
@@ -119,25 +137,11 @@ const Review = () => {
             className="w-full p-3 bg-yellow-400 text-black rounded-lg font-semibold hover:bg-yellow-500 transition"
             whileTap={{ scale: 0.95 }}
           >
-            Submit Review
+            {t("submit")}
           </motion.button>
         </form>
       </motion.div>
     </motion.div>
-  );
-};
-
-// Function to Render Star Ratings
-const renderStars = (rating) => {
-  const fullStars = Math.floor(rating);
-  const halfStar = rating % 1 !== 0;
-  return (
-    <>
-      {[...Array(fullStars)].map((_, i) => (
-        <FaStar key={i} className="text-yellow-400 text-lg mr-1" />
-      ))}
-      {halfStar && <FaStarHalfAlt className="text-yellow-400 text-lg mr-1" />}
-    </>
   );
 };
 

@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+
+  
+  [dir="rtl"] .text {
+    text-align: right;
+
 /* Custom Scrollbar */
 .custom-scrollbar {
     scrollbar-width: thin;
@@ -31,5 +36,6 @@
     100% {
       box-shadow: 0px 0px 15px rgba(255, 69, 0, 0.9);
     }
+
   }
   

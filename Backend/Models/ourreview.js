@@ -9,6 +9,7 @@ const ReviewSchema = new mongoose.Schema(
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     photographerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     profilePhoto: { type: String, default: "" },
+    rating: {type: Number, default:5, required: true}
   },
   { timestamps: true }
 );

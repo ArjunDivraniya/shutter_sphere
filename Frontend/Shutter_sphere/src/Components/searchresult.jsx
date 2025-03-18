@@ -1,13 +1,17 @@
+import { useTranslation } from "react-i18next";
 import { usePhotographers } from "./photographercontext";
 import { motion } from "framer-motion";
 import { FaStar, FaMapMarkerAlt, FaCamera, FaClock } from "react-icons/fa";
 
 const SearchResults = () => {
+  const { t } = useTranslation();
   const { photographers } = usePhotographers();
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">📸 Find Your Photographer</h2>
+      <h2 className="text-3xl font-bold text-gray-800 mb-6">
+        📸 {t("findYourPhotographer")}
+      </h2>
       <motion.div 
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         initial={{ opacity: 0, y: 50 }}
@@ -27,7 +31,7 @@ const SearchResults = () => {
             >
               {/* Availability Badge */}
               <span className="absolute top-3 right-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
-                Available
+                {t("available")}
               </span>
 
               {/* Profile Image */}
@@ -45,7 +49,7 @@ const SearchResults = () => {
               {/* Rating */}
               <div className="flex items-center justify-center text-yellow-500 mt-2">
                 <FaStar className="mr-1" />
-                <span>{photographer.rating} (24 Reviews)</span>
+                <span>{photographer.rating} ({t("reviews_count", { count: 24 })})</span>
               </div>
 
               {/* Location */}
@@ -57,7 +61,7 @@ const SearchResults = () => {
               {/* Specializations */}
               <div className="mt-4">
                 <p className="text-sm font-medium text-gray-700 flex items-center justify-center">
-                  <FaCamera className="mr-2" /> Specializations:
+                  <FaCamera className="mr-2" /> {t("specializations")}:
                 </p>
                 <motion.div className="flex flex-wrap justify-center gap-2 mt-2">
                   {photographer.specializations?.map((spec, index) => (
@@ -67,7 +71,7 @@ const SearchResults = () => {
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.3 }}
                     >
-                      {spec}
+                      {t(`specialization.${spec}`)}
                     </motion.span>
                   ))}
                 </motion.div>
@@ -76,7 +80,7 @@ const SearchResults = () => {
               {/* Price */}
               <div className="font-bold text-gray-800 mt-4 flex items-center">
                 <FaClock className="mr-2" />
-                <span>₹{photographer.pricePerHour} / Hour</span>
+                <span>{t("pricePerHour", { price: photographer.pricePerHour })}</span>
               </div>
 
               {/* Buttons */}
@@ -85,19 +89,19 @@ const SearchResults = () => {
                   className="bg-yellow-400 text-black px-4 py-2 text-sm font-bold rounded-md hover:bg-yellow-500 transition"
                   whileHover={{ scale: 1.1 }}
                 >
-                  View Profile
+                  {t("viewProfile")}
                 </motion.button>
                 <motion.button
                   className="bg-orange-500 text-white px-4 py-2 text-sm font-bold rounded-md hover:bg-orange-600 transition"
                   whileHover={{ scale: 1.1 }}
                 >
-                  Book Now
+                  {t("bookNow")}
                 </motion.button>
               </div>
             </motion.div>
           ))
         ) : (
-          <p className="text-gray-500">No photographers found</p>
+          <p className="text-gray-500">{t("noPhotographersFound")}</p>
         )}
       </motion.div>
     </div>

@@ -2,17 +2,22 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUserCircle } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "./languageSelector";
 
 const LoggedInNavbar = ({ handleLogout }) => {
+  const { t } = useTranslation(); // Importing translation hook
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const navLinks = [
-    { to: "/search", label: "Home" },
-    { to: "/categories", label: "Top Categories" },
-    { to: "/reviews", label: "Reviews" },
-    { to: "/about", label: "About Us" },
+
+    { to: "/search", label: t("navbar.home") },
+    { to: "/categories", label: t("navbar.categories") },
+    { to: "/reviews", label: t("navbar.reviews") },
+    { to: "/about", label: t("navbar.about") }
     { to: "/contact", label: "Contact Us" }
+
   ];
 
   return (
@@ -32,8 +37,7 @@ const LoggedInNavbar = ({ handleLogout }) => {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `relative px-4 py-2 text-lg font-medium transition-all duration-300 ${
-                isActive ? "text-yellow-500" : "text-white"
+              `relative px-4 py-2 text-lg font-medium transition-all duration-300 ${isActive ? "text-yellow-500" : "text-white"
               }`
             }
           >
@@ -50,8 +54,12 @@ const LoggedInNavbar = ({ handleLogout }) => {
             )}
           </NavLink>
         ))}
+      <div className="z-50">
+      <LanguageSelector />
+      </div>
       </div>
 
+  
       {/* Profile Section */}
       <div className="relative">
         {/* Profile Icon */}
@@ -74,25 +82,26 @@ const LoggedInNavbar = ({ handleLogout }) => {
                 className="block px-4 py-2 hover:bg-gray-600 transition"
                 onClick={() => setDropdownOpen(false)}
               >
-                Profile
+                {t("navbar.profile")}
               </NavLink>
               <NavLink
                 to="/settings"
                 className="block px-4 py-2 hover:bg-gray-600 transition"
                 onClick={() => setDropdownOpen(false)}
               >
-                Settings
+                {t("navbar.settings")}
               </NavLink>
               <button
                 onClick={handleLogout}
                 className="block w-full text-left px-4 py-2 hover:bg-red-500 transition"
               >
-                Logout
+                {t("navbar.logout")}
               </button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
     </nav>
   );
 };
