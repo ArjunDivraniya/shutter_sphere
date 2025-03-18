@@ -18,13 +18,9 @@ import Profile_w from "./Components/profile_w";
 import Profile_s from "./Components/profile_s";
 import Profile_b from "./Components/profile_b";
 import Calendar from "./Components/calendar";
-import Reviews from "./Components/ourreviewpage";
 import ErrorPage from "./Components/404";
 import AboutUs from "./Components/aboutus";
 import ContactUs from "./Components/contactus";
-import Photographerpro from "./Components/photographerpro"
-import PhotographerLanding from "./Components/Photographerlandingpage";
-
 
 function App() {
   useEffect(() => {
@@ -58,7 +54,6 @@ function App() {
                 <Route path="/profile" element={<Profile/>} />
                 <Route path="/about" element={<AboutUs/>} />
                 <Route path="/contact" element={<ContactUs/>} />
-                <Route path="/pp" element={<Photographerpro/>} />
                 <Route path="/reviews" element={<Reviews/>} />
                 <Route path="/editprofile" element={<Editprofile/>}/>
                 <Route path="/profile_profile" element={<><Profile/> <Profile_p/></>}/>

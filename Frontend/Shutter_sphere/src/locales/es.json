@@ -207,12 +207,11 @@
     "book": "Reservar",
     "capture": "Capturar",
     "view_more": "Ver Más",
+    "enterSpecialization": "Ingresa la especialización",
+    "enterLocation": "Ingresa la ubicación",
     "featured_photographers": "Fotógrafos Destacados",
     "photographerNameArjun": "Arjun Divraniya",
     "photographerEmailArjun": "arjundivnainya8@gmail.com",
-    
-        "phoneNumberArjun": "+91 6351565043",
-        "locationCityArjun": "Junagadh"
-      
-      
+    "phoneNumberArjun": "+91 6351565043",
+    "locationCityArjun": "Junagadh"
 }

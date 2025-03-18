@@ -57,7 +57,7 @@ const LoginSignup = () => {
     try {
 
 
-      const endpoint = isLogin ? "http://localhost:5000/api/login" : "http://localhost:5000/api/signup";
+      const endpoint = isLogin ? "http://localhost:8080/api/login" : "http://localhost:8080/api/signup";
       const response = await axios.post(endpoint, formData);
 
 
@@ -112,7 +112,7 @@ const LoginSignup = () => {
                 <option value="photographer">{t("signup.photographer")}</option>
 
               </select>
-            </>
+            </div>
           )}
 
           <div>

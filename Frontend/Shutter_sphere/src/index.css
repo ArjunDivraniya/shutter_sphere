@@ -2,10 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-
-  
   [dir="rtl"] .text {
     text-align: right;
+  }
 
 /* Custom Scrollbar */
 .custom-scrollbar {

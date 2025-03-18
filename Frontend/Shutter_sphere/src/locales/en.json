@@ -212,7 +212,9 @@
     "photographerEmailArjun": "arjundivnainya8@gmail.com",
     "phoneNumberArjun": "+91 6351565043",
     "locationCityArjun": "Junagadh",
-    "reviewDynamic":{
+    "enterSpecialization": "Enter Specialization",
+    "enterLocation": "Enter Location",
+    "reviewDynamic": {
         "text": "{{review}}",
         "name": "{{name}}",
         "role": "{{role}}",
