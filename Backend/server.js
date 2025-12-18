@@ -110,7 +110,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: 'http://localhost:5174',  // Allow only the frontend origin
+  origin: 'http://localhost:5173',  // Allow only the frontend origin
   methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Specify the allowed methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify the allowed headers
 }));

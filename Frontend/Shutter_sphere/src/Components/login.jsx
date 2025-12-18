@@ -7,7 +7,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const LoginSignup = () => {
-  const { t } = useTranslation(); 
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
@@ -55,16 +55,23 @@ const LoginSignup = () => {
     if (!validateForm()) return;
 
     try {
+      const endpoint = isLogin
+        ? "http://localhost:5000/api/login"
+        : "http://localhost:5000/api/signup";
 
-
-      const endpoint = isLogin ? "http://localhost:8080/api/login" : "http://localhost:8080/api/signup";
       const response = await axios.post(endpoint, formData);
 
-
       if (response.status === 200 || response.status === 201) {
+        const { role, token } = response.data;
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", role);
+
         if (isLogin) {
           showToast("Login successful!", "success");
-          navigate("/search");
+
+          if (role === "photographer") navigate("/photographer-dashboard");
+          else if (role === "client") navigate("/client-dashboard");
+          else navigate("/search");
         } else {
           showToast(`Welcome, ${formData.name}!`, "success");
           setIsLogin(true);
@@ -85,7 +92,6 @@ const LoginSignup = () => {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
-
             <div>
               <label className="block text-gray-700 font-medium">{t("signup.name")}</label>
               <input
@@ -93,24 +99,25 @@ const LoginSignup = () => {
                 name="name"
                 placeholder={t("signup.name_placeholder")}
                 value={formData.name}
-                onChange={(e) => setLoginData({ ...loginData, role: e.target.value })}
+                onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
           )}
+
           {!isLogin && (
             <div>
               <label className="block text-gray-700 font-medium">{t("signup.role")}</label>
               <select
                 name="role"
                 value={formData.role}
+                onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 <option value="">{t("signup.role_placeholder")}</option>
                 <option value="client">{t("signup.client")}</option>
                 <option value="photographer">{t("signup.photographer")}</option>
-
               </select>
             </div>
           )}
@@ -121,24 +128,26 @@ const LoginSignup = () => {
               type="email"
               name="email"
               placeholder={t("login.email_placeholder")}
-              value={loginData.email}
-              onChange={loginChange}
+              value={formData.email}
+              onChange={handleChange}
               required
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
+
           <div>
             <label className="block text-gray-700 font-medium">{t("login.password")}</label>
             <input
               type="password"
               name="password"
               placeholder={t("login.password_placeholder")}
-              value={loginData.password}
-              onChange={loginChange}
+              value={formData.password}
+              onChange={handleChange}
               required
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
+
           <button
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition"
@@ -146,8 +155,9 @@ const LoginSignup = () => {
             {isLogin ? t("login.button") : t("signup.button")}
           </button>
         </form>
+
         <p className="text-center text-gray-600 mt-4">
-          {isLogin ? t("signup.prompt") : t("login.prompt")}{" "}
+          {isLogin ? t("signup.prompt") : t("login.prompt")} {" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-blue-500 hover:underline font-medium"

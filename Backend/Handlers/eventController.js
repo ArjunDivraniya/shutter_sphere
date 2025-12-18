@@ -1,7 +1,8 @@
-import Event from "../Models/eventsModel.js";
+const Event = require("../Models/eventsModel");
+
 
 // Create an event
-export const createEvent = async (req, res) => {
+ const createEvent = async (req, res) => {
     try {
         const { signupId, title, date, description, location } = req.body;
 
@@ -31,7 +32,7 @@ export const createEvent = async (req, res) => {
 };
 
 // Get events for a specific photographer
-export const getPhotographerEvents = async (req, res) => {
+ const getPhotographerEvents = async (req, res) => {
     try {
         const { signupId } = req.params;
 
@@ -52,7 +53,7 @@ export const getPhotographerEvents = async (req, res) => {
 };
 
 // Delete an event by ID
-export const deleteEvent = async (req, res) => {
+ const deleteEvent = async (req, res) => {
     try {
         const { eventId } = req.params; // Expecting `_id` from request params
 
@@ -73,3 +74,6 @@ export const deleteEvent = async (req, res) => {
         res.status(500).json({ message: "Error deleting event", error: error.message });
     }
 };
+
+
+module.exports ={deleteEvent,getPhotographerEvents,createEvent}

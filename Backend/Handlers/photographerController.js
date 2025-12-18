@@ -48,10 +48,10 @@ const getPhotographers = async (req, res) => {
 // Update Photographer Profile
 const updatePhotographer = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { signupId } = req.params;
 
         const updatedPhotographer = await Photographer.findByIdAndUpdate(
-            id,
+            signupId,
             { $set: req.body },
             { new: true }
         );
@@ -66,13 +66,14 @@ const updatePhotographer = async (req, res) => {
     }
 };
 
+
 // Search Photographers by Location & Specialization
 const searchPhotographer = async (req, res) => {
     try {
         const { location, specialization } = req.query;
         const query = {};
 
-        if (location) query["address.city"] = { $regex: location, $options: "i" };
+        if (location) query.city = { $regex: location, $options: "i" };
         if (specialization) query.specialization = { $regex: specialization, $options: "i" };
 
         const photographers = await Photographer.find(query);

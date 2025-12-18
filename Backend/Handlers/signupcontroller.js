@@ -1,72 +1,60 @@
-const Signup = require("../Models/signupmodel");
-const User = require("../Models/UserModel");
-const Photographer = require("../Models/photographerModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Client = require("../Models/UserModel");
+const Photographer = require("../Models/photographerModel");
 
-// Register User
-const registerUser = async (req, res) => {
-    try {
-        const { name, email, password, role } = req.body;
+const signup = async (req, res) => {
+  const { name, email, password, role } = req.body;
 
-        // Check if user already exists
-        let existingUser = await Signup.findOne({ email });
-        if (existingUser) return res.status(400).json({ message: "User already exists" });
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create Signup entry
-        const newSignup = new Signup({ name, email, password: hashedPassword, role });
-        await newSignup.save();
-
-        // Store user data in respective collection based on role
-        if (role === "client") {
-            const newUser = new User({
-                signupId: newSignup._id,
-                fullName: name,
-                email
-            });
-            await newUser.save();
-        } else if (role === "photographer") {
-            const newPhotographer = new Photographer({
-                signupId: newSignup._id,
-                fullName: name,
-                email
-            });
-            await newPhotographer.save();
-        }
-
-        res.status(201).json({ message: "User registered successfully" });
-
-    } catch (error) {
-        console.error("Register Error:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+  try {
+    let existingUser;
+    if (role === "client") {
+      existingUser = await Client.findOne({ email });
+    } else {
+      existingUser = await Photographer.findOne({ email });
     }
+
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    let newUser;
+    if (role === "client") {
+      newUser = new Client({ name, email, password: hashedPassword, role });
+    } else {
+      newUser = new Photographer({ name, email, password: hashedPassword, role });
+    }
+
+    await newUser.save();
+    res.status(201).json({ message: "User registered successfully", role });
+  } catch (error) {
+    res.status(500).json({ message: "Error registering user", error });
+  }
 };
 
-// Login User
-const loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+const login = async (req, res) => {
+  const { email, password } = req.body;
 
-        // Check if user exists
-        const user = await Signup.findOne({ email });
-        if (!user) return res.status(400).json({ message: "Invalid credentials" });
+  try {
+    let user = await Client.findOne({ email }) || await Photographer.findOne({ email });
 
-        // Compare password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-
-        // Generate JWT token
-        const token = jwt.sign({ id: user._id, role: user.role }, "your_jwt_secret", { expiresIn: "7d" });
-
-        res.json({ message: "Login successful", token, role: user.role });
-
-    } catch (error) {
-        console.error("Login Error:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ id: user._id, role: user.role }, "secretKey", { expiresIn: "1h" });
+
+    res.status(200).json({ token, role: user.role });
+  } catch (error) {
+    res.status(500).json({ message: "Login failed", error });
+  }
 };
 
-module.exports = { registerUser, loginUser };
+module.exports = { signup, login };
