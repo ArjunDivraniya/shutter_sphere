@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "Frontend/Shutter_sphere/package.json",
+      "use": "@vercel/static-build"
+    }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/assets/(.*)", "dest": "Frontend/Shutter_sphere/dist/assets/$1" },
+    { "src": "/(.*)", "dest": "Frontend/Shutter_sphere/dist/index.html" }
+  ]
+}
