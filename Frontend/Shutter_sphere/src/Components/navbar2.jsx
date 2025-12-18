@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUserCircle } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
-import LanguageSelector from "./languageSelector";
+import LanguageSelector from "./LanguageSelector";
 
 const LoggedInNavbar = ({ handleLogout }) => {
   const { t } = useTranslation(); // Importing translation hook
