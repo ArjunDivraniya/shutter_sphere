@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../utils/apiBase";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ToastContainer, toast } from "react-toastify";
@@ -56,8 +57,8 @@ const LoginSignup = () => {
 
     try {
       const endpoint = isLogin
-        ? "http://localhost:5000/api/login"
-        : "http://localhost:5000/api/signup";
+        ? `${API_BASE_URL}/api/login`
+        : `${API_BASE_URL}/api/signup`;
 
       const response = await axios.post(endpoint, formData);
 

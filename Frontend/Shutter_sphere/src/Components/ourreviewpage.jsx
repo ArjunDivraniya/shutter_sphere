@@ -4,6 +4,7 @@ import { FaUserCircle, FaSpinner, FaStar, FaPaperPlane } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./navbar2";
+import { API_BASE_URL } from "../utils/apiBase";
 import { useTranslation } from "react-i18next";
 
 const Reviews = () => {
@@ -18,7 +19,7 @@ const Reviews = () => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/reviews")
+    fetch(`${API_BASE_URL}/api/reviews`)
       .then((res) => res.json())
       .then((data) => {
         setReviews(data);
@@ -43,7 +44,7 @@ const Reviews = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/reviews", {
+      const response = await fetch(`${API_BASE_URL}/api/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newReview),

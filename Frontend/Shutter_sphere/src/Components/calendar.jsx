@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from "../utils/apiBase";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -36,7 +37,7 @@ const Calendar = ({ signupId = '67d27565fea30f109c22501c', isPhotographer = true
     const fetchEvents = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`http://localhost:8080/calendar/event/${signupId}`);
+            const response = await axios.get(`${API_BASE_URL}/calendar/event/${signupId}`);
             const formattedEvents = Array.isArray(response.data) ? response.data.map(event => ({
                 id: event._id,
                 title: event.title,
@@ -93,7 +94,7 @@ const Calendar = ({ signupId = '67d27565fea30f109c22501c', isPhotographer = true
                 date,
             };
 
-            const response = await axios.post("http://localhost:8080/calendar/event", eventData);
+            const response = await axios.post(`${API_BASE_URL}/calendar/event`, eventData);
 
             const newEvent = {
                 id: response.data._id,
@@ -129,7 +130,7 @@ const Calendar = ({ signupId = '67d27565fea30f109c22501c', isPhotographer = true
         if (!confirm("Are you sure you want to delete this event?")) return;
 
         try {
-            await axios.delete(`http://localhost:8080/calendar/event/${selectedEvent.id}`);
+            await axios.delete(`${API_BASE_URL}/calendar/event/${selectedEvent.id}`);
             setEvents(events.filter(e => e.id !== selectedEvent.id));
 
             const calendarApi = calendarRef.current.getApi();

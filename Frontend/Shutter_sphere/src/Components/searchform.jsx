@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../utils/apiBase";
 import { useNavigate } from "react-router-dom";
 import { usePhotographers } from "./photographercontext";
 import { useTranslation } from "react-i18next";
@@ -63,7 +64,7 @@ const SearchForm = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get(`http://localhost:8080/api/photographers/search`, {
+      const response = await axios.get(`${API_BASE_URL}/api/photographers/search`, {
         params: search,
       });
 
@@ -87,7 +88,7 @@ const SearchForm = () => {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/reviews");
+        const response = await axios.get(`${API_BASE_URL}/api/reviews`);
         setTestimonials(response.data.slice(0, 6)); // Limit to 6 testimonials
       } catch (error) {
         console.error("Error fetching testimonials:", error);
