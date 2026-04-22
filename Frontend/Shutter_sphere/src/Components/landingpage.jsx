@@ -181,7 +181,7 @@ const Homepage1 = () => {
                 <p className="mt-2 text-lg font-semibold text-white">Everything you need to book with confidence.</p>
               </div>
             </motion.div>
-          </div>
+          </Container>
         </section>
 
         <section className="py-20">

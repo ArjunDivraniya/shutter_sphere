@@ -1,5 +1,5 @@
-import React from 'react';
 import { X, Calendar as CalendarIcon, Type, AlignLeft } from 'lucide-react';
+import PropTypes from "prop-types";
 
 export const EventPoPup = ({
   isOpen,
@@ -85,4 +85,16 @@ export const EventPoPup = ({
       </div>
     </div>
   );
+};
+
+EventPoPup.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired,
+  setTitle: PropTypes.func.isRequired,
+  description: PropTypes.string.isRequired,
+  setDescription: PropTypes.func.isRequired,
+  date: PropTypes.string.isRequired,
+  setDate: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
 };

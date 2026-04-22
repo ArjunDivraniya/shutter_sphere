@@ -15,7 +15,7 @@ const initDatabase = async () => {
         id SERIAL PRIMARY KEY,
         name VARCHAR(120) NOT NULL,
         email VARCHAR(190) UNIQUE NOT NULL,
-        password TEXT NOT NULL,
+        password TEXT,
         role VARCHAR(30) NOT NULL CHECK (role IN ('client', 'photographer')),
         profile_photo TEXT DEFAULT '',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

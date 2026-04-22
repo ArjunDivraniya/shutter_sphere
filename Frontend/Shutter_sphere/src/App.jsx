@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import i18n from './i18n';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import PropTypes from "prop-types";
 import { PhotographerProvider } from "./Components/photographercontext";
 
 // Import Components
@@ -10,7 +11,6 @@ import Profile from "./Components/profile";
 import Editprofile from "./Components/photographerprofile";
 import Login from "./Components/login";
 import LandingPage from "./Components/landingpage";
-import Reviews from "./Components/ourreviewpage";
 import Profile_p from "./Components/profile_p";
 import Profile_pay from "./Components/profile_pay";
 import Profile_r from "./Components/profile_r";
@@ -36,6 +36,11 @@ const ProtectedRoute = ({ element, allowedRoles }) => {
     }
 
     return element;
+};
+
+ProtectedRoute.propTypes = {
+  element: PropTypes.element.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string),
 };
 
 function App() {

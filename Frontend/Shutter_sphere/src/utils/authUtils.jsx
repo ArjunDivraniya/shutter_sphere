@@ -13,4 +13,11 @@ export const getUserRole = () => {
   };
   
   export const isAuthenticated = () => !!localStorage.getItem("token");
+
+export const clearAuth = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("email");
+  localStorage.removeItem("userName");
+};
   
