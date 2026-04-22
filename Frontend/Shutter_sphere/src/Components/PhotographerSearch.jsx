@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { FaFilter, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaFilter } from "react-icons/fa";
 import FilterSidebar from "./ui/FilterSidebar";
 import PhotographerCard from "./ui/PhotographerCard";
 import { usePhotographers } from "./photographercontext";
@@ -21,48 +21,42 @@ const PhotographerSearch = () => {
 
   const itemsPerPage = 12;
 
-  // Filter and sort photographers
   const filteredPhotographers = useMemo(() => {
-    let result = photographers || [];
+    let result = [...(photographers || [])];
 
-    // Apply location filter
     if (filters.location) {
       result = result.filter((p) =>
-        p.city?.toLowerCase().includes(filters.location.toLowerCase())
+        (p.city || "").toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
-    // Apply price filter
     result = result.filter((p) => {
-      const price = p.pricePerHour || 50;
+      const price = p.pricePerHour || 0;
       return price >= filters.priceRange[0] && price <= filters.priceRange[1];
     });
 
-    // Apply category filter
     if (filters.category !== "all") {
       result = result.filter((p) =>
-        p.specializations?.some((s) =>
-          s.toLowerCase().includes(filters.category)
+        (p.specializations || [p.specialization || ""]).some((s) =>
+          (s || "").toLowerCase().includes(filters.category)
         )
       );
     }
 
-    // Apply rating filter
     if (filters.minRating > 0) {
-      result = result.filter((p) => (p.rating || 4) >= filters.minRating);
+      result = result.filter((p) => (p.rating || 0) >= filters.minRating);
     }
 
-    // Sort results
     result.sort((a, b) => {
       switch (sortBy) {
         case "price-low":
-          return (a.pricePerHour || 50) - (b.pricePerHour || 50);
+          return (a.pricePerHour || 0) - (b.pricePerHour || 0);
         case "price-high":
-          return (b.pricePerHour || 50) - (a.pricePerHour || 50);
+          return (b.pricePerHour || 0) - (a.pricePerHour || 0);
         case "rating":
-          return (b.rating || 4) - (a.rating || 4);
+          return (b.rating || 0) - (a.rating || 0);
         case "newest":
-          return new Date(b.createdAt) - new Date(a.createdAt);
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         default:
           return 0;
       }
@@ -71,121 +65,100 @@ const PhotographerSearch = () => {
     return result;
   }, [photographers, filters, sortBy]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredPhotographers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedPhotographers = filteredPhotographers.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const paginatedPhotographers = filteredPhotographers.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
-    },
+  const pageStyle = {
+    background:
+      "radial-gradient(circle at 6% 8%, rgba(255,122,69,0.18), transparent 32%), radial-gradient(circle at 95% 12%, rgba(255,184,77,0.16), transparent 28%), linear-gradient(180deg, var(--bg) 0%, var(--bg-elevated) 100%)",
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8f9fb] to-white pt-20 pb-12">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-black bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] bg-clip-text text-transparent">
-              {t("findPhotographer") || "Find Your Photographer"}
-            </h1>
-            <p className="text-gray-600 mt-2">
-              {filteredPhotographers.length}{" "}
-              {t("photographers") || "photographers"} {t("available") || "available"}
-            </p>
+    <div className="min-h-screen pt-20 text-[var(--text)]" style={pageStyle}>
+      <div className="mx-auto max-w-[1400px] px-4 pb-12 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="surface-card mb-6 p-5"
+        >
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h1 className="text-4xl font-black text-[var(--text)]">
+                {t("findPhotographer") || "Find Your Photographer"}
+              </h1>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">
+                {filteredPhotographers.length} {t("photographers") || "photographers"} {t("available") || "available"}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsFilterOpen((prev) => !prev)}
+                className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-semibold text-[var(--text)] lg:hidden"
+              >
+                <FaFilter className="text-[#ff7a45]" /> {t("filters") || "Filters"}
+              </motion.button>
+
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-semibold text-[var(--text)] outline-none focus:border-[#ff7a45]"
+              >
+                <option value="rating">{t("sortByRating") || "Best Rated"}</option>
+                <option value="price-low">{t("sortByPriceLow") || "Price: Low to High"}</option>
+                <option value="price-high">{t("sortByPriceHigh") || "Price: High to Low"}</option>
+                <option value="newest">{t("sortByNewest") || "Newest"}</option>
+              </select>
+            </div>
           </div>
+        </motion.div>
 
-          {/* Mobile Filter Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow"
-          >
-            <FaFilter className="text-[#ff7a45]" />
-            <span className="font-semibold text-gray-700">
-              {t("filters") || "Filters"}
-            </span>
-          </motion.button>
-
-          {/* Sort Dropdown */}
-          <motion.select
-            whileHover={{ scale: 1.02 }}
-            value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value);
+        <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
+          <FilterSidebar
+            onFiltersChange={(next) => {
+              setFilters(next);
               setCurrentPage(1);
             }}
-            className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 focus:border-[#ff7a45] focus:outline-none cursor-pointer hover:border-gray-300 transition"
-          >
-            <option value="rating">{t("sortByRating") || "Best Rated"}</option>
-            <option value="price-low">{t("sortByPriceLow") || "Price: Low to High"}</option>
-            <option value="price-high">{t("sortByPriceHigh") || "Price: High to Low"}</option>
-            <option value="newest">{t("sortByNewest") || "Newest"}</option>
-          </motion.select>
-        </div>
-      </motion.div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex gap-8">
-          {/* Sidebar */}
-          <FilterSidebar
-            onFiltersChange={setFilters}
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
           />
 
-          {/* Main Content */}
-          <motion.div className="flex-1 min-w-0">
-            {/* Results Grid */}
+          <section>
             {filteredPhotographers.length > 0 ? (
               <>
                 <motion.div
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3"
                 >
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="popLayout">
                     {paginatedPhotographers.map((photographer, index) => (
-                      <PhotographerCard
-                        key={photographer.id}
-                        photographer={photographer}
-                        index={index}
-                      />
+                      <PhotographerCard key={photographer.id || index} photographer={photographer} index={index} />
                     ))}
                   </AnimatePresence>
                 </motion.div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-center gap-4 mt-12"
-                  >
+                  <div className="mt-10 flex items-center justify-center gap-3">
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
+                      type="button"
+                      whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="p-3 rounded-full bg-white border-2 border-gray-200 hover:border-[#ff7a45] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] p-3 text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <FaChevronLeft className="text-[#ff7a45]" />
                     </motion.button>
@@ -193,7 +166,6 @@ const PhotographerSearch = () => {
                     <div className="flex items-center gap-2">
                       {[...Array(totalPages)].map((_, i) => {
                         const pageNum = i + 1;
-                        // Show first 3 pages, last page, and current page with neighbors
                         if (
                           pageNum <= 3 ||
                           pageNum === totalPages ||
@@ -202,21 +174,23 @@ const PhotographerSearch = () => {
                           return (
                             <motion.button
                               key={pageNum}
-                              whileHover={{ scale: 1.1 }}
+                              type="button"
+                              whileHover={{ scale: 1.06 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handlePageChange(pageNum)}
-                              className={`w-10 h-10 rounded-full font-semibold transition-all ${
-                                currentPage === pageNum
-                                  ? "bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] text-white shadow-lg"
-                                  : "bg-white border-2 border-gray-200 text-gray-700 hover:border-[#ff7a45]"
+                              className={`h-10 w-10 rounded-full text-sm font-semibold ${
+                                pageNum === currentPage
+                                  ? "bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] text-white"
+                                  : "border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text)]"
                               }`}
                             >
                               {pageNum}
                             </motion.button>
                           );
-                        } else if (pageNum === 4 && currentPage > 5) {
+                        }
+                        if (pageNum === 4 && currentPage > 5) {
                           return (
-                            <span key="ellipsis" className="text-gray-400">
+                            <span key="ellipsis" className="px-1 text-[var(--text-muted)]">
                               ...
                             </span>
                           );
@@ -226,52 +200,48 @@ const PhotographerSearch = () => {
                     </div>
 
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
+                      type="button"
+                      whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className="p-3 rounded-full bg-white border-2 border-gray-200 hover:border-[#ff7a45] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] p-3 text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <FaChevronRight className="text-[#ff7a45]" />
                     </motion.button>
-                  </motion.div>
+                  </div>
                 )}
               </>
             ) : (
-              /* Empty State */
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-20 px-6"
+                className="surface-card flex flex-col items-center px-6 py-14 text-center"
               >
-                <div className="text-6xl mb-4">📸</div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                <div className="mb-3 text-4xl">No Match</div>
+                <h3 className="text-2xl font-bold text-[var(--text)]">
                   {t("noPhotographers") || "No photographers found"}
                 </h3>
-                <p className="text-gray-600 text-center max-w-md">
+                <p className="mt-2 max-w-md text-sm text-[var(--text-muted)]">
                   {t("tryAdjustingFilters") ||
                     "Try adjusting your filters to find the perfect photographer for your needs."}
                 </p>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setFilters({
-                      location: "",
-                      priceRange: [0, 5000],
-                      category: "all",
-                      minRating: 0,
-                    });
+                    setFilters({ location: "", priceRange: [0, 5000], category: "all", minRating: 0 });
                     setSortBy("rating");
                     setCurrentPage(1);
                   }}
-                  className="mt-6 px-6 py-3 bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                  className="mt-5 rounded-xl bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] px-6 py-2.5 text-sm font-semibold text-white"
                 >
                   {t("clearFilters") || "Clear Filters"}
                 </motion.button>
               </motion.div>
             )}
-          </motion.div>
+          </section>
         </div>
       </div>
     </div>

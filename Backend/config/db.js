@@ -45,6 +45,9 @@ const initDatabase = async () => {
       );
     `);
 
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT '';`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS categories TEXT DEFAULT '';`);
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS user_profiles (
         id SERIAL PRIMARY KEY,

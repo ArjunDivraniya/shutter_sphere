@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaChevronDown, FaStar, FaMapMarkerAlt, FaTimes } from "react-icons/fa";
+import { FaChevronDown, FaMapMarkerAlt, FaStar, FaTimes } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
   const { t } = useTranslation();
+
   const [expandedFilters, setExpandedFilters] = useState({
     location: true,
     price: true,
@@ -33,16 +34,13 @@ const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
   ];
 
   const toggleFilter = (filterName) => {
-    setExpandedFilters((prev) => ({
-      ...prev,
-      [filterName]: !prev[filterName],
-    }));
+    setExpandedFilters((prev) => ({ ...prev, [filterName]: !prev[filterName] }));
   };
 
   const handleFilterChange = (filterType, value) => {
-    const newFilters = { ...filters, [filterType]: value };
-    setFilters(newFilters);
-    onFiltersChange(newFilters);
+    const next = { ...filters, [filterType]: value };
+    setFilters(next);
+    onFiltersChange(next);
   };
 
   const resetFilters = () => {
@@ -56,23 +54,13 @@ const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
     onFiltersChange(resetData);
   };
 
-  const filterVariants = {
-    hidden: { opacity: 0, height: 0 },
-    visible: { opacity: 1, height: "auto", transition: { duration: 0.3 } },
-  };
-
-  const sidebarVariants = {
-    hidden: { x: -300, opacity: 0 },
-    visible: { x: 0, opacity: 1, transition: { duration: 0.3 } },
-    exit: { x: -300, opacity: 0, transition: { duration: 0.2 } },
-  };
-
   return (
     <>
-      {/* Mobile overlay */}
       {isOpen && (
-        <motion.div
-          className="fixed inset-0 bg-black/50 lg:hidden"
+        <motion.button
+          type="button"
+          aria-label="Close filters"
+          className="fixed inset-0 z-30 bg-black/60 lg:hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -80,98 +68,71 @@ const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
         />
       )}
 
-      {/* Sidebar */}
-      <motion.aside
-        variants={sidebarVariants}
-        initial="hidden"
-        animate={isOpen ? "visible" : "hidden"}
-        className="fixed left-0 top-0 h-screen w-72 bg-white shadow-xl overflow-y-auto lg:relative lg:h-auto lg:w-64 lg:sticky lg:top-20 lg:shadow-md rounded-r-3xl lg:rounded-3xl"
+      <aside
+        className={`fixed left-0 top-0 z-40 h-screen w-72 overflow-y-auto border-r border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-6 shadow-[0_18px_44px_rgba(0,0,0,0.35)] transition-transform duration-300 lg:sticky lg:top-24 lg:z-0 lg:h-fit lg:rounded-3xl lg:border lg:shadow-none ${
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
       >
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] bg-clip-text text-transparent">
-              {t("filters") || "Filters"}
-            </h2>
-            <button
-              onClick={onClose}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-full"
-            >
-              <FaTimes />
-            </button>
-          </div>
-
-          {/* Reset Button */}
-          <motion.button
-            onClick={resetFilters}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full mb-6 py-2 px-4 bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] text-white font-semibold rounded-xl hover:shadow-lg transition-shadow"
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-2xl font-black text-[var(--text)]">{t("filters") || "Filters"}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--surface-strong)] lg:hidden"
           >
-            {t("resetFilters") || "Reset"}
-          </motion.button>
+            <FaTimes />
+          </button>
+        </div>
 
-          {/* Location Filter */}
-          <div className="mb-6">
-            <motion.button
+        <motion.button
+          type="button"
+          onClick={resetFilters}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+          className="mb-6 w-full rounded-xl bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] py-2.5 text-sm font-semibold text-white"
+        >
+          {t("resetFilters") || "Reset Filters"}
+        </motion.button>
+
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3">
+            <button
+              type="button"
               onClick={() => toggleFilter("location")}
-              className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
+              className="flex w-full items-center justify-between text-left"
             >
-              <div className="flex items-center gap-2 font-semibold text-gray-700">
-                <FaMapMarkerAlt className="text-[#ff7a45]" />
-                {t("location") || "Location"}
-              </div>
-              <motion.div
-                animate={{ rotate: expandedFilters.location ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <FaChevronDown className="text-gray-400" />
-              </motion.div>
-            </motion.button>
-
-            <motion.div
-              variants={filterVariants}
-              initial="hidden"
-              animate={expandedFilters.location ? "visible" : "hidden"}
-              className="overflow-hidden mt-2"
-            >
+              <span className="flex items-center gap-2 font-semibold text-[var(--text)]">
+                <FaMapMarkerAlt className="text-[#ff7a45]" /> {t("location") || "Location"}
+              </span>
+              <FaChevronDown
+                className={`text-[var(--text-muted)] transition-transform ${expandedFilters.location ? "rotate-180" : ""}`}
+              />
+            </button>
+            {expandedFilters.location && (
               <input
                 type="text"
-                placeholder={t("enterCity") || "Enter city"}
                 value={filters.location}
                 onChange={(e) => handleFilterChange("location", e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#ff7a45] focus:outline-none transition"
+                placeholder={t("enterCity") || "Enter city"}
+                className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[#ff7a45]"
               />
-            </motion.div>
+            )}
           </div>
 
-          {/* Price Range Filter */}
-          <div className="mb-6">
-            <motion.button
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3">
+            <button
+              type="button"
               onClick={() => toggleFilter("price")}
-              className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
+              className="flex w-full items-center justify-between text-left"
             >
-              <div className="font-semibold text-gray-700">
-                💰 {t("price") || "Price Range"}
-              </div>
-              <motion.div
-                animate={{ rotate: expandedFilters.price ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <FaChevronDown className="text-gray-400" />
-              </motion.div>
-            </motion.button>
-
-            <motion.div
-              variants={filterVariants}
-              initial="hidden"
-              animate={expandedFilters.price ? "visible" : "hidden"}
-              className="overflow-hidden mt-2 space-y-3"
-            >
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-600">
-                  Max: ${filters.priceRange[1]}
-                </label>
+              <span className="font-semibold text-[var(--text)]">{t("price") || "Price Range"}</span>
+              <FaChevronDown
+                className={`text-[var(--text-muted)] transition-transform ${expandedFilters.price ? "rotate-180" : ""}`}
+              />
+            </button>
+            {expandedFilters.price && (
+              <div className="mt-3 space-y-2">
+                <p className="text-xs text-[var(--text-muted)]">Max: ${filters.priceRange[1]}</p>
                 <input
                   type="range"
                   min="0"
@@ -179,47 +140,33 @@ const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
                   step="100"
                   value={filters.priceRange[1]}
                   onChange={(e) =>
-                    handleFilterChange("priceRange", [
-                      filters.priceRange[0],
-                      parseInt(e.target.value),
-                    ])
+                    handleFilterChange("priceRange", [filters.priceRange[0], Number(e.target.value)])
                   }
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#ff7a45]"
+                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-[var(--surface-strong)] accent-[#ff7a45]"
                 />
+                <p className="text-xs text-[var(--text-muted)]">
+                  ${filters.priceRange[0]} - ${filters.priceRange[1]} / hour
+                </p>
               </div>
-              <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
-                ${filters.priceRange[0]} - ${filters.priceRange[1]} per hour
-              </div>
-            </motion.div>
+            )}
           </div>
 
-          {/* Category Filter */}
-          <div className="mb-6">
-            <motion.button
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3">
+            <button
+              type="button"
               onClick={() => toggleFilter("category")}
-              className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
+              className="flex w-full items-center justify-between text-left"
             >
-              <div className="font-semibold text-gray-700">
-                📸 {t("category") || "Category"}
-              </div>
-              <motion.div
-                animate={{ rotate: expandedFilters.category ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <FaChevronDown className="text-gray-400" />
-              </motion.div>
-            </motion.button>
-
-            <motion.div
-              variants={filterVariants}
-              initial="hidden"
-              animate={expandedFilters.category ? "visible" : "hidden"}
-              className="overflow-hidden mt-2 space-y-2"
-            >
+              <span className="font-semibold text-[var(--text)]">{t("category") || "Category"}</span>
+              <FaChevronDown
+                className={`text-[var(--text-muted)] transition-transform ${expandedFilters.category ? "rotate-180" : ""}`}
+              />
+            </button>
+            {expandedFilters.category && (
               <select
                 value={filters.category}
                 onChange={(e) => handleFilterChange("category", e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#ff7a45] focus:outline-none transition bg-white"
+                className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[#ff7a45]"
               >
                 <option value="all">{t("allCategories") || "All Categories"}</option>
                 {categories.map((cat) => (
@@ -228,64 +175,53 @@ const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
                   </option>
                 ))}
               </select>
-            </motion.div>
+            )}
           </div>
 
-          {/* Rating Filter */}
-          <div className="mb-6">
-            <motion.button
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3">
+            <button
+              type="button"
               onClick={() => toggleFilter("rating")}
-              className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition"
+              className="flex w-full items-center justify-between text-left"
             >
-              <div className="flex items-center gap-2 font-semibold text-gray-700">
-                <FaStar className="text-yellow-400" />
-                {t("rating") || "Rating"}
+              <span className="flex items-center gap-2 font-semibold text-[var(--text)]">
+                <FaStar className="text-amber-400" /> {t("rating") || "Rating"}
+              </span>
+              <FaChevronDown
+                className={`text-[var(--text-muted)] transition-transform ${expandedFilters.rating ? "rotate-180" : ""}`}
+              />
+            </button>
+            {expandedFilters.rating && (
+              <div className="mt-3 space-y-1.5">
+                {[4, 3.5, 3, 2.5, 2].map((rating) => (
+                  <label
+                    key={rating}
+                    className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-[var(--surface-strong)]"
+                  >
+                    <input
+                      type="radio"
+                      name="rating"
+                      value={rating}
+                      checked={filters.minRating === rating}
+                      onChange={() => handleFilterChange("minRating", rating)}
+                      className="h-4 w-4 accent-[#ff7a45]"
+                    />
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <FaStar
+                          key={i}
+                          className={`text-xs ${i < Math.floor(rating) ? "text-amber-400" : "text-slate-500"}`}
+                        />
+                      ))}
+                      <span className="ml-1 text-xs text-[var(--text-muted)]">& up</span>
+                    </div>
+                  </label>
+                ))}
               </div>
-              <motion.div
-                animate={{ rotate: expandedFilters.rating ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <FaChevronDown className="text-gray-400" />
-              </motion.div>
-            </motion.button>
-
-            <motion.div
-              variants={filterVariants}
-              initial="hidden"
-              animate={expandedFilters.rating ? "visible" : "hidden"}
-              className="overflow-hidden mt-2 space-y-2"
-            >
-              {[4, 3.5, 3, 2.5, 2].map((rating) => (
-                <motion.label
-                  key={rating}
-                  whileHover={{ x: 4 }}
-                  className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50"
-                >
-                  <input
-                    type="radio"
-                    name="rating"
-                    value={rating}
-                    checked={filters.minRating === rating}
-                    onChange={(e) => handleFilterChange("minRating", rating)}
-                    className="w-4 h-4 accent-[#ff7a45]"
-                  />
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <FaStar
-                        key={i}
-                        className={`text-sm ${
-                          i < Math.floor(rating) ? "text-yellow-400" : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                    <span className="text-sm text-gray-600 ml-2">& up</span>
-                  </div>
-                </motion.label>
-              ))}
-            </motion.div>
+            )}
           </div>
         </div>
-      </motion.aside>
+      </aside>
     </>
   );
 };
