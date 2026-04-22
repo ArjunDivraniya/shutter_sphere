@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FrameBook — Complete Build Blueprint</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --gold:#D4A853; --gold-bright:#F0C560; --gold-dim:#A07830;
+  --gold-glow:rgba(212,168,83,0.15); --gold-border:rgba(212,168,83,0.22);
+  --gold-soft:rgba(212,168,83,0.07);
+  --bg-void:#080808; --bg-deep:#0E0E0E; --bg-card:#121212;
+  --bg-raised:#191919; --bg-float:#222;
+  --ink-1:#F0EAE0; --ink-2:#B8AFA4; --ink-3:#756C64; --ink-4:#3E3830;
+  --line-1:rgba(255,255,255,0.06); --line-2:rgba(255,255,255,0.10);
+  --green:#52C98A; --amber:#E09B35; --red:#E05555; --blue:#5B9BF0;
+  --f-d:'Cormorant Garamond',serif; --f-u:'Outfit',sans-serif;
+  --r-sm:6px; --r-md:12px; --r-lg:18px; --r-xl:28px; --r-pill:9999px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg-void);color:var(--ink-1);font-family:var(--f-u);font-size:14px;line-height:1.6;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--gold-border);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:100;background:rgba(8,8,8,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--line-1);padding:0 40px;height:58px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:var(--f-d);font-size:20px;font-weight:700;}
+.nav-logo em{font-style:italic;background:linear-gradient(135deg,var(--gold-bright),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-right:7px;vertical-align:middle;animation:pulse 2s infinite;}
+.nav-links{display:flex;gap:6px;flex-wrap:wrap;}
+.nav-pill{font-size:11px;font-weight:500;letter-spacing:0.04em;padding:5px 14px;border-radius:var(--r-pill);cursor:pointer;transition:all 0.2s;color:var(--ink-3);background:none;border:none;}
+.nav-pill:hover,.nav-pill.active{background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold-border);}
+.nav-pill{border:1px solid transparent;}
+
+/* ── HERO ── */
+.hero{padding:80px 40px 60px;max-width:900px;margin:0 auto;text-align:center;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--gold-soft);border:1px solid var(--gold-border);border-radius:var(--r-pill);padding:5px 16px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:28px;}
+.hero-title{font-family:var(--f-d);font-size:clamp(36px,6vw,72px);font-weight:300;line-height:1;letter-spacing:-0.02em;margin-bottom:16px;}
+.hero-title em{font-style:italic;background:linear-gradient(135deg,var(--gold-bright),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:15px;color:var(--ink-2);font-weight:300;line-height:1.8;max-width:580px;margin:0 auto 40px;}
+.hero-toc{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.toc-item{font-size:11px;font-weight:500;letter-spacing:0.06em;padding:6px 14px;border-radius:var(--r-pill);border:1px solid var(--line-2);color:var(--ink-3);cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.toc-item:hover{border-color:var(--gold-border);color:var(--gold);background:var(--gold-soft);}
+.toc-item.pub{border-color:rgba(91,155,240,0.3);color:var(--blue);}
+.toc-item.ph{border-color:rgba(212,168,83,0.3);color:var(--gold);}
+.toc-item.cl{border-color:rgba(82,201,138,0.3);color:var(--green);}
+.toc-item.sh{border-color:var(--line-2);color:var(--ink-3);}
+
+/* ── SECTION WRAPPER ── */
+.section{padding:70px 40px;max-width:1080px;margin:0 auto;}
+.section+.section{border-top:1px solid var(--line-1);}
+.section-alt{background:var(--bg-deep);}
+
+/* ── SECTION HEADER ── */
+.sec-header{margin-bottom:48px;}
+.sec-eyebrow{font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sec-eyebrow::before{content:'';width:28px;height:1px;background:var(--gold);}
+.sec-num{font-family:var(--f-d);font-size:11px;color:var(--ink-4);letter-spacing:0.1em;}
+.sec-title{font-family:var(--f-d);font-size:clamp(28px,4vw,44px);font-weight:600;line-height:1.1;margin-bottom:10px;}
+.sec-sub{font-size:14px;color:var(--ink-2);font-weight:300;line-height:1.8;max-width:600px;}
+
+/* ── PAGE BLOCK ── */
+.page-block{background:var(--bg-card);border:1px solid var(--line-1);border-radius:var(--r-xl);overflow:hidden;margin-bottom:28px;transition:all 0.3s;}
+.page-block:hover{border-color:var(--gold-border);box-shadow:0 8px 48px rgba(0,0,0,0.5),0 0 0 1px var(--gold-border);}
+.pb-header{padding:24px 28px;border-bottom:1px solid var(--line-1);display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.pb-left{flex:1;min-width:200px;}
+.pb-page-num{font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px;}
+.pb-title{font-family:var(--f-d);font-size:22px;font-weight:600;color:var(--ink-1);margin-bottom:4px;}
+.pb-desc{font-size:13px;color:var(--ink-2);line-height:1.7;max-width:480px;}
+.pb-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.meta-tag{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:var(--r-pill);}
+.mt-route{background:rgba(91,155,240,0.08);color:var(--blue);border:1px solid rgba(91,155,240,0.2);}
+.mt-user{background:rgba(212,168,83,0.08);color:var(--gold);border:1px solid var(--gold-border);}
+.mt-client{background:rgba(82,201,138,0.08);color:var(--green);border:1px solid rgba(82,201,138,0.2);}
+.mt-shared{background:rgba(255,255,255,0.04);color:var(--ink-3);border:1px solid var(--line-2);}
+.pb-right{flex-shrink:0;}
+.page-type-badge{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:6px 16px;border-radius:var(--r-pill);}
+.ptb-pub{background:rgba(91,155,240,0.1);color:var(--blue);border:1px solid rgba(91,155,240,0.25);}
+.ptb-ph{background:rgba(212,168,83,0.1);color:var(--gold);border:1px solid var(--gold-border);}
+.ptb-cl{background:rgba(82,201,138,0.1);color:var(--green);border:1px solid rgba(82,201,138,0.25);}
+.ptb-sh{background:rgba(255,255,255,0.04);color:var(--ink-2);border:1px solid var(--line-2);}
+
+.pb-body{padding:24px 28px;}
+
+/* ── SECTION GRID ── */
+.section-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.section-item{background:var(--bg-raised);border:1px solid var(--line-1);border-radius:var(--r-lg);padding:18px 20px;transition:all 0.25s;}
+.section-item:hover{border-color:var(--gold-border);background:var(--bg-float);}
+.si-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.si-icon{font-size:22px;}
+.si-order{font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--ink-4);font-family:monospace;}
+.si-name{font-family:var(--f-d);font-size:16px;font-weight:600;color:var(--ink-1);margin-bottom:4px;}
+.si-desc{font-size:12px;color:var(--ink-2);line-height:1.65;}
+
+/* ── LAYOUT DIAGRAM ── */
+.layout-diagram{background:var(--bg-void);border:1px solid var(--line-1);border-radius:var(--r-lg);padding:24px;margin-top:16px;}
+.ld-label{font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:14px;}
+.ld-grid{display:grid;gap:8px;}
+.ld-row{display:flex;gap:8px;align-items:stretch;}
+.ld-block{border-radius:var(--r-md);padding:10px 14px;font-size:11px;font-weight:500;color:var(--ink-3);display:flex;align-items:center;justify-content:center;text-align:center;min-height:40px;border:1px solid;}
+.ldb-full{flex:1;background:rgba(212,168,83,0.06);border-color:var(--gold-border);color:var(--gold);}
+.ldb-main{flex:3;background:rgba(255,255,255,0.02);border-color:var(--line-2);min-height:80px;}
+.ldb-side{flex:1;background:rgba(91,155,240,0.04);border-color:rgba(91,155,240,0.15);color:var(--blue);}
+.ldb-col{flex:1;background:rgba(255,255,255,0.02);border-color:var(--line-1);min-height:60px;}
+.ldb-wide{flex:2;background:rgba(212,168,83,0.04);border-color:var(--gold-border);}
+.ldb-card{flex:1;background:rgba(255,255,255,0.02);border-color:var(--line-2);}
+
+/* ── COLOR USAGE ── */
+.color-usage{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.cu-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-3);}
+.cu-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* ── COMPONENT LIST ── */
+.comp-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.comp-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-void);border:1px solid var(--line-1);border-radius:var(--r-md);font-size:12px;color:var(--ink-2);}
+.comp-item::before{content:'→';color:var(--gold);font-size:12px;flex-shrink:0;}
+
+/* ── DASHBOARD COMPARISON ── */
+.dash-compare{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-top:16px;}
+.dash-card{border-radius:var(--r-xl);overflow:hidden;border:1px solid;}
+.dc-ph{border-color:var(--gold-border);background:linear-gradient(160deg,#0e0c06 0%,var(--bg-card) 100%);}
+.dc-cl{border-color:rgba(82,201,138,0.25);background:linear-gradient(160deg,#060e09 0%,var(--bg-card) 100%);}
+.dc-head{padding:20px 24px;border-bottom:1px solid;}
+.dc-ph .dc-head{border-color:var(--gold-border);}
+.dc-cl .dc-head{border-color:rgba(82,201,138,0.2);}
+.dc-type{font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:6px;}
+.dc-ph .dc-type{color:var(--gold);}
+.dc-cl .dc-type{color:var(--green);}
+.dc-name{font-family:var(--f-d);font-size:20px;font-weight:600;}
+.dc-body{padding:20px 24px;}
+.dc-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-1);}
+.dc-item:last-child{border-bottom:none;}
+.dc-icon{font-size:16px;flex-shrink:0;margin-top:2px;}
+.dc-info .dc-item-title{font-size:13px;font-weight:500;color:var(--ink-1);margin-bottom:2px;}
+.dc-info .dc-item-sub{font-size:11px;color:var(--ink-3);}
+
+/* ── FLOW DIAGRAM ── */
+.flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-top:16px;}
+.flow-step{background:var(--bg-raised);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:14px 16px;text-align:center;min-width:100px;flex:1;}
+.flow-step:hover{border-color:var(--gold-border);}
+.flow-icon{font-size:22px;margin-bottom:6px;}
+.flow-name{font-size:11px;font-weight:600;color:var(--ink-1);margin-bottom:2px;}
+.flow-sub{font-size:10px;color:var(--ink-4);}
+.flow-arrow{color:var(--gold);font-size:18px;padding:0 4px;flex-shrink:0;}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--line-1);margin:0;}
+.divider-gold{height:1px;background:linear-gradient(90deg,transparent,var(--gold-border),transparent);margin:0;}
+
+/* ── UTIL ── */
+.row{display:flex;gap:16px;flex-wrap:wrap;}
+.col{flex:1;min-width:220px;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:var(--r-pill);}
+.badge-gold{background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold-border);}
+.badge-blue{background:rgba(91,155,240,0.08);color:var(--blue);border:1px solid rgba(91,155,240,0.2);}
+.badge-green{background:rgba(82,201,138,0.08);color:var(--green);border:1px solid rgba(82,201,138,0.2);}
+.badge-red{background:rgba(224,85,85,0.08);color:var(--red);border:1px solid rgba(224,85,85,0.2);}
+.badge-muted{background:rgba(255,255,255,0.03);color:var(--ink-3);border:1px solid var(--line-2);}
+.priority{font-size:10px;font-weight:700;letter-spacing:0.08em;padding:2px 8px;border-radius:var(--r-pill);}
+.p-crit{background:rgba(224,85,85,0.1);color:var(--red);border:1px solid rgba(224,85,85,0.2);}
+.p-high{background:rgba(224,155,53,0.1);color:var(--amber);border:1px solid rgba(224,155,53,0.2);}
+.p-med{background:rgba(82,201,138,0.1);color:var(--green);border:1px solid rgba(82,201,138,0.2);}
+
+/* ── FOOTER ── */
+.footer{border-top:1px solid var(--line-1);padding:40px;text-align:center;background:var(--bg-deep);}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo"><span class="nav-dot"></span>Frame<em>Book</em></div>
+  <div class="nav-links">
+    <span class="nav-pill active">All Pages</span>
+    <span class="nav-pill toc-item pub">Public</span>
+    <span class="nav-pill toc-item ph">Photographer</span>
+    <span class="nav-pill toc-item cl">Client</span>
+    <span class="nav-pill toc-item sh">Shared</span>
+    <span class="nav-pill toc-item">Dashboards</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1.5s infinite;"></span>Build Blueprint · v1.0</div>
+  <h1 class="hero-title">Every page.<br/><em>Every section.</em><br/>Every detail.</h1>
+  <p class="hero-sub">Complete section-by-section breakdown of all pages, layouts, colors, components and both dashboards for FrameBook — the photographer booking platform.</p>
+  <div class="hero-toc">
+    <span class="toc-item sh">📄 Total: 12 Pages</span>
+    <span class="toc-item pub">🌐 4 Public Pages</span>
+    <span class="toc-item ph">📷 4 Photographer Pages</span>
+    <span class="toc-item cl">🎉 4 Client Pages</span>
+  </div>
+</div>
+
+<div class="divider-gold"></div>
+
+<!-- ═══════════════════════════════════════════
+     PART 1 — PUBLIC PAGES (No login required)
+═══════════════════════════════════════════ -->
+<div class="section-alt" style="padding:40px 40px 0;">
+  <div style="max-width:1080px;margin:0 auto;">
+    <div class="sec-eyebrow">Part 01</div>
+    <div class="sec-title" style="margin-bottom:0;">Public Pages <span style="font-size:16px;color:var(--ink-3);font-family:var(--f-u);font-weight:300;"> — No login required</span></div>
+    <p class="sec-sub" style="margin-top:8px;margin-bottom:28px;">These pages are the front door of the platform. Anyone can see them. Goal: convert visitors into registered users.</p>
+  </div>
+</div>
+
+<!-- P1: LANDING PAGE -->
+<div style="background:var(--bg-deep);padding:0 40px 40px;">
+<div style="max-width:1080px;margin:0 auto;">
+
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 01 of 12</div>
+      <div class="pb-title">Landing Page</div>
+      <div class="pb-desc">The homepage. First impression. Must communicate the platform value in under 5 seconds and push users to either search photographers or sign up.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /</span>
+        <span class="meta-tag mt-shared">Auth: None</span>
+        <span class="meta-tag mt-shared">Priority: Critical</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-pub">Public</span>
+  </div>
+  <div class="pb-body">
+    <div class="row">
+      <div class="col">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px;">Sections (top → bottom)</div>
+        <div class="section-grid" style="grid-template-columns:1fr;">
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🧭</span><span class="si-order">S1</span></div>
+            <div class="si-name">Sticky Navbar</div>
+            <div class="si-desc">Logo left · Links center (Discover, How it Works, For Photographers) · Sign In + Get Started buttons right. Frosted glass on scroll. Height 64px.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🎬</span><span class="si-order">S2</span></div>
+            <div class="si-name">Hero Section</div>
+            <div class="si-desc">Full viewport. Giant Cormorant heading. Gold italic accent. Film grain + scanline animation. Big search bar with location + date + category. Two CTAs: "Find Photographer" + "Join as Photographer". Lens circle decoration right side.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">📊</span><span class="si-order">S3</span></div>
+            <div class="si-name">Trust Bar</div>
+            <div class="si-desc">Thin strip: 500+ Photographers · 2,000+ Events · 4.9★ Average · Rajkot & Gujarat. Gold numbers, muted labels. Scrolling marquee on mobile.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🔍</span><span class="si-order">S4</span></div>
+            <div class="si-name">Featured Photographers</div>
+            <div class="si-desc">Horizontal scroll on mobile, 3-col grid on desktop. 6 photographer cards with cover photo, name, city, tags, price, rating. "View All" button.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">⚙️</span><span class="si-order">S5</span></div>
+            <div class="si-name">How It Works</div>
+            <div class="si-desc">Two tabs: "For Clients" and "For Photographers". 4-step flow each with icon, number, title, desc. Alternating layout (icon left/right). Animated connecting line.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🗂️</span><span class="si-order">S6</span></div>
+            <div class="si-name">Category Browser</div>
+            <div class="si-desc">Grid of event categories: Wedding 💍 Festival 🎉 Birthday 🎂 Corporate 💼 Portrait 🤳 Pre-Wedding 🌹. Each with icon, name, count of photographers. Hover gold border glow.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">⭐</span><span class="si-order">S7</span></div>
+            <div class="si-name">Reviews / Testimonials</div>
+            <div class="si-desc">3 client review cards. Avatar, name, event type, star rating, review text, photographer name. Auto-rotating carousel with dot navigation.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">📷</span><span class="si-order">S8</span></div>
+            <div class="si-name">Photographer CTA Banner</div>
+            <div class="si-desc">Dark full-width band. Left: "Are you a photographer?" heading + benefits list. Right: "Create Free Profile" button. Gold diagonal accent line.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🔗</span><span class="si-order">S9</span></div>
+            <div class="si-name">Footer</div>
+            <div class="si-desc">4-col: Logo+tagline · Quick links · For Photographers · Contact. Bottom: copyright + social icons. Background bg-deep, border-top gold gradient.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="max-width:280px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px;">Layout</div>
+        <div class="layout-diagram">
+          <div class="ld-label">Desktop wireframe</div>
+          <div class="ld-grid" style="gap:6px;">
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:36px;">Navbar</div></div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:120px;flex-direction:column;gap:4px;"><span>Hero + Search Bar</span><span style="font-size:10px;color:var(--ink-4);">100vh · Film grain bg</span></div></div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:32px;font-size:10px;">Trust Strip (marquee)</div></div>
+            <div class="ld-row">
+              <div class="ld-block ldb-col" style="min-height:60px;font-size:10px;">Card</div>
+              <div class="ld-block ldb-col" style="min-height:60px;font-size:10px;">Card</div>
+              <div class="ld-block ldb-col" style="min-height:60px;font-size:10px;">Card</div>
+            </div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:60px;">How it Works</div></div>
+            <div class="ld-row">
+              <div class="ld-block ldb-col" style="font-size:10px;">Cat</div>
+              <div class="ld-block ldb-col" style="font-size:10px;">Cat</div>
+              <div class="ld-block ldb-col" style="font-size:10px;">Cat</div>
+            </div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:48px;">Reviews</div></div>
+            <div class="ld-row"><div class="ld-block" style="flex:1;background:var(--gold-soft);border-color:var(--gold-border);min-height:48px;">Photographer CTA</div></div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:48px;">Footer</div></div>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3);margin:16px 0 10px;">Colors Used</div>
+        <div class="color-usage">
+          <div class="cu-item"><div class="cu-dot" style="background:#080808;border:1px solid #333;"></div> bg-void (page)</div>
+          <div class="cu-item"><div class="cu-dot" style="background:var(--gold);"></div> Gold (CTAs)</div>
+          <div class="cu-item"><div class="cu-dot" style="background:var(--ink-1);"></div> Warm White (text)</div>
+          <div class="cu-item"><div class="cu-dot" style="background:#0E0E0E;border:1px solid #333;"></div> bg-deep (sections)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P2: SEARCH & DISCOVERY -->
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 02 of 12</div>
+      <div class="pb-title">Search & Discovery</div>
+      <div class="pb-desc">Where clients find the right photographer. Powerful filtering, map view, real-time availability. Most visited page after landing.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /search</span>
+        <span class="meta-tag mt-client">Auth: Optional</span>
+        <span class="meta-tag mt-shared">Priority: Critical</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-pub">Public</span>
+  </div>
+  <div class="pb-body">
+    <div class="row">
+      <div class="col">
+        <div class="section-grid" style="grid-template-columns:1fr;">
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🔎</span><span class="si-order">S1</span></div>
+            <div class="si-name">Search Header Bar</div>
+            <div class="si-desc">Full-width gold-bordered pill search bar. 3 slots: Location · Date · Category. "Search" gold button. Compact sticky on scroll. Shows result count "34 photographers in Rajkot".</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🧮</span><span class="si-order">S2</span></div>
+            <div class="si-name">Filter Sidebar (Left)</div>
+            <div class="si-desc">240px fixed left panel. Sections: Price Range (slider), Category (checkboxes), Rating (star filter), Availability (date picker), Distance (km slider), Sort by. Each section collapsible. "Apply" gold button.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🗃️</span><span class="si-order">S3</span></div>
+            <div class="si-name">Results Grid (Right)</div>
+            <div class="si-desc">Masonry / 2-col grid of photographer cards. Each shows: cover photo, name, city, specialties (tags), price, rating, availability badge. Toggle between Grid and List view. Infinite scroll / pagination.</div>
+          </div>
+          <div class="section-item">
+            <div class="si-top"><span class="si-icon">🗺️</span><span class="si-order">S4</span></div>
+            <div class="si-name">Map Toggle</div>
+            <div class="si-desc">Top-right toggle: Grid / Map. Map view shows Google Maps with gold pin markers. Clicking pin opens mini profile card. Side-by-side on desktop (50/50 split).</div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="max-width:280px;">
+        <div class="layout-diagram">
+          <div class="ld-label">Desktop layout (sidebar + grid)</div>
+          <div class="ld-grid" style="gap:6px;">
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:36px;font-size:10px;">Search Bar (sticky)</div></div>
+            <div class="ld-row">
+              <div class="ld-block ldb-side" style="min-height:200px;font-size:10px;flex:0 0 80px;">Filter<br/>Sidebar</div>
+              <div class="ld-block ldb-main" style="min-height:200px;flex-direction:column;gap:4px;font-size:10px;">
+                <span>Results Grid</span>
+                <span style="color:var(--ink-4);">Card Card Card</span>
+                <span style="color:var(--ink-4);">Card Card Card</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P3: PHOTOGRAPHER PROFILE (PUBLIC) -->
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 03 of 12</div>
+      <div class="pb-title">Photographer Public Profile</div>
+      <div class="pb-desc">The photographer's storefront. Client lands here from search and decides whether to book. Must build trust fast.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /photographer/:id</span>
+        <span class="meta-tag mt-client">Auth: Login to Book</span>
+        <span class="meta-tag mt-shared">Priority: Critical</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-pub">Public</span>
+  </div>
+  <div class="pb-body">
+    <div class="section-grid">
+      <div class="section-item"><div class="si-top"><span class="si-icon">🎨</span><span class="si-order">S1</span></div><div class="si-name">Cover + Avatar</div><div class="si-desc">Full-width cover image (landscape). Avatar overlapping. Name, city, verified badge. Overall rating + review count. "Book Now" and "Message" CTAs pinned top-right.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📋</span><span class="si-order">S2</span></div><div class="si-name">Sticky Profile Tabs</div><div class="si-desc">Tabs: Portfolio · About · Packages · Reviews · Availability. Sticks below cover on scroll. Active tab underline gold.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">🖼️</span><span class="si-order">S3</span></div><div class="si-name">Portfolio Grid</div><div class="si-desc">Masonry image grid. Filter by category (All / Wedding / Festival / Birthday). Click to open lightbox. Video reel support. "Load More" button.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">ℹ️</span><span class="si-order">S4</span></div><div class="si-name">About Section</div><div class="si-desc">Bio paragraph. Equipment list (cameras, lenses). Specialties badges. Languages spoken. Travel radius map. Years of experience. Events count.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">💰</span><span class="si-order">S5</span></div><div class="si-name">Packages / Pricing</div><div class="si-desc">2–3 pricing cards. Each: package name (Basic / Premium / Elite), duration, deliverables list, price. Most popular badge. "Book This Package" button.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📅</span><span class="si-order">S6</span></div><div class="si-name">Availability Calendar</div><div class="si-desc">Read-only calendar. Booked dates grayed/red. Available dates clickable → triggers booking modal. Tooltip on hover: "Booked · Dec 25".</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">⭐</span><span class="si-order">S7</span></div><div class="si-name">Reviews Section</div><div class="si-desc">Rating breakdown (5★ bar chart). Individual review cards: client avatar, name, event type, date, star rating, review text. Verified booking badge. Photographer reply if any.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- P4: AUTH PAGES -->
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 04 of 12</div>
+      <div class="pb-title">Auth Pages (Login / Register)</div>
+      <div class="pb-desc">Split-screen layout. Left: atmospheric photo. Right: form. Separate registration flows for Client vs Photographer.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Routes: /login · /register · /register/photographer</span>
+        <span class="meta-tag mt-shared">Auth: None</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-pub">Public</span>
+  </div>
+  <div class="pb-body">
+    <div class="row">
+      <div class="col">
+        <div class="section-grid" style="grid-template-columns:1fr;">
+          <div class="section-item"><div class="si-top"><span class="si-icon">🖼️</span><span class="si-order">S1</span></div><div class="si-name">Left Panel (visual)</div><div class="si-desc">50% width. Dark dramatic photo collage. Platform name + tagline overlaid. Gold gradient text. Film grain texture. Hidden on mobile.</div></div>
+          <div class="section-item"><div class="si-top"><span class="si-icon">📝</span><span class="si-order">S2</span></div><div class="si-name">Right Panel (form)</div><div class="si-desc">Login: Email + Password + Remember me + Forgot password. Register: Choose role (Client vs Photographer pill toggle) → different fields. Photographer extras: phone, city, specialties. Google OAuth button.</div></div>
+        </div>
+      </div>
+      <div class="col" style="max-width:280px;">
+        <div class="layout-diagram">
+          <div class="ld-label">Split screen layout</div>
+          <div class="ld-row" style="height:200px;">
+            <div class="ld-block" style="flex:1;background:rgba(212,168,83,0.06);border-color:var(--gold-border);font-size:11px;">Photo Panel<br/>(50%)</div>
+            <div class="ld-block ldb-main" style="flex:1;font-size:11px;">Form<br/>(50%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div></div><!-- end public section -->
+
+<div class="divider-gold"></div>
+
+<!-- ═══════════════════════════════════════════
+     PART 2 — PHOTOGRAPHER PAGES
+═══════════════════════════════════════════ -->
+<div style="padding:40px 40px 0;">
+  <div style="max-width:1080px;margin:0 auto;">
+    <div class="sec-eyebrow">Part 02</div>
+    <div class="sec-title" style="margin-bottom:0;">Photographer Pages <span style="font-size:16px;color:var(--ink-3);font-family:var(--f-u);font-weight:300;"> — Logged in as Photographer</span></div>
+    <p class="sec-sub" style="margin-top:8px;margin-bottom:28px;">Pages only a photographer sees after login. Focus on managing bookings, showcasing work, community.</p>
+  </div>
+</div>
+
+<div style="padding:0 40px 40px;">
+<div style="max-width:1080px;margin:0 auto;">
+
+<!-- PHOTOGRAPHER DASHBOARD -->
+<div class="page-block" style="border-color:var(--gold-border);">
+  <div class="pb-header" style="background:linear-gradient(135deg,rgba(212,168,83,0.05),transparent);">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 05 of 12</div>
+      <div class="pb-title">📷 Photographer Dashboard</div>
+      <div class="pb-desc">The photographer's command center. Everything at a glance — upcoming bookings, earnings, pending requests, calendar. This is where they spend 80% of their time.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /dashboard/photographer</span>
+        <span class="meta-tag mt-user">Auth: Photographer</span>
+        <span class="meta-tag mt-shared">Priority: Critical</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-ph">Photographer</span>
+  </div>
+  <div class="pb-body">
+
+    <!-- Layout -->
+    <div class="row">
+      <div class="col">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Dashboard Layout</div>
+        <div class="layout-diagram" style="background:var(--bg-void);border-color:var(--gold-border);">
+          <div class="ld-label">Photographer dashboard — sidebar layout</div>
+          <div class="ld-row" style="gap:6px;height:280px;">
+            <div class="ld-block ldb-side" style="flex:0 0 60px;min-height:280px;flex-direction:column;gap:6px;font-size:9px;justify-content:flex-start;padding-top:16px;">
+              <span>🏠</span><span>📅</span><span>📋</span><span>👤</span><span>💬</span><span>👥</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div class="ld-block ldb-full" style="min-height:32px;font-size:10px;">Top header: greeting + date + notifications bell</div>
+              <div class="ld-row" style="gap:6px;">
+                <div class="ld-block ldb-col" style="font-size:9px;">📅 Upcoming</div>
+                <div class="ld-block ldb-col" style="font-size:9px;">💰 Earned</div>
+                <div class="ld-block ldb-col" style="font-size:9px;">⭐ Rating</div>
+                <div class="ld-block ldb-col" style="font-size:9px;">🎯 Pending</div>
+              </div>
+              <div class="ld-row" style="gap:6px;flex:1;">
+                <div class="ld-block" style="flex:2;background:rgba(212,168,83,0.04);border-color:var(--gold-border);min-height:80px;font-size:10px;">Upcoming Bookings List</div>
+                <div class="ld-block ldb-side" style="flex:1;min-height:80px;font-size:10px;">Mini Calendar</div>
+              </div>
+              <div class="ld-row" style="gap:6px;">
+                <div class="ld-block ldb-col" style="font-size:9px;min-height:48px;">Pending Requests</div>
+                <div class="ld-block ldb-col" style="font-size:9px;min-height:48px;">Recent Reviews</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">All Dashboard Sections</div>
+        <div class="section-grid" style="grid-template-columns:1fr;">
+          <div class="section-item" style="border-color:var(--gold-border);">
+            <div class="si-top"><span class="si-icon">📐</span><span class="si-order">S1</span></div>
+            <div class="si-name">Left Sidebar Navigation</div>
+            <div class="si-desc">Collapsed (icon-only) by default. Hover/click expands. Items: Home · Calendar · Bookings · My Profile · Messages · Community · Settings. Active item: gold left border. bg-card background. Width 64px collapsed → 220px expanded.</div>
+          </div>
+          <div class="section-item" style="border-color:var(--gold-border);">
+            <div class="si-top"><span class="si-icon">👋</span><span class="si-order">S2</span></div>
+            <div class="si-name">Top Header Bar</div>
+            <div class="si-desc">"Good morning, Rahul 📷" greeting. Today's date. Notifications bell (badge count). Profile avatar top-right with dropdown. Search bar. bg-deep background. Height 60px.</div>
+          </div>
+          <div class="section-item" style="border-color:var(--gold-border);">
+            <div class="si-top"><span class="si-icon">📊</span><span class="si-order">S3</span></div>
+            <div class="si-name">Stats Row (4 cards)</div>
+            <div class="si-desc">
+              Card 1: 📅 Upcoming Bookings (number, "↑ 3 this week")<br/>
+              Card 2: 💰 Monthly Earnings (₹ amount, % change)<br/>
+              Card 3: ⭐ Rating (4.9, review count)<br/>
+              Card 4: 🎯 Pending Requests (number, "Needs response" amber)
+            </div>
+          </div>
+          <div class="section-item" style="border-color:var(--gold-border);">
+            <div class="si-top"><span class="si-icon">📋</span><span class="si-order">S4</span></div>
+            <div class="si-name">Upcoming Bookings List</div>
+            <div class="si-desc">Table rows: date · client name + avatar · event type · location · package · status badge. Status colors: green (confirmed) amber (pending) blue (completed). Click row → full booking detail modal. "View All" link.</div>
+          </div>
+          <div class="section-item" style="border-color:var(--gold-border);">
+            <div class="si-top"><span class="si-icon">📅</span><span class="si-order">S5</span></div>
+            <div class="si-name">Mini Calendar Widget</div>
+            <div class="si-desc">Month view calendar. Color coded dates: gold = selected/today · red = booked · amber = pending · gray = past. Click date → shows booking detail tooltip. "Full Calendar" link.</div>
+          </div>
+          <div class="section-item" style="border-color:var(--gold-border);">
+            <div class="si-top"><span class="si-icon">⏳</span><span class="si-order">S6</span></div>
+            <div class="si-name">Pending Booking Requests</div>
+            <div class="si-desc">Cards with: client name · date · event type · message preview. Two action buttons: ✅ Accept (green) and ✗ Decline (red). Timer showing "Request expires in 24h". Amber badge count in sidebar nav.</div>
+          </div>
+          <div class="section-item" style="border-color:var(--gold-border);">
+            <div class="si-top"><span class="si-icon">💬</span><span class="si-order">S7</span></div>
+            <div class="si-name">Recent Messages</div>
+            <div class="si-desc">Latest 3 chat previews. Avatar · name · last message · time · unread count badge. Click → goes to full Messages page. Blue dot for unread.</div>
+          </div>
+          <div class="section-item" style="border-color:var(--gold-border);">
+            <div class="si-top"><span class="si-icon">⭐</span><span class="si-order">S8</span></div>
+            <div class="si-name">Recent Reviews</div>
+            <div class="si-desc">Last 2 reviews received. Client name · event · star rating · short excerpt. Gold stars. "Reply" button. Link to all reviews.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colors -->
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--line-1);">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Dashboard Color Usage</div>
+      <div class="color-usage">
+        <div class="cu-item"><div class="cu-dot" style="background:#080808;border:1px solid #333;"></div>bg-void (page bg)</div>
+        <div class="cu-item"><div class="cu-dot" style="background:#121212;border:1px solid #222;"></div>bg-card (sidebar)</div>
+        <div class="cu-item"><div class="cu-dot" style="background:#0E0E0E;border:1px solid #222;"></div>bg-deep (main area)</div>
+        <div class="cu-item"><div class="cu-dot" style="background:var(--gold);"></div>Gold (active nav, stats accent)</div>
+        <div class="cu-item"><div class="cu-dot" style="background:var(--green);"></div>Green (confirmed)</div>
+        <div class="cu-item"><div class="cu-dot" style="background:var(--amber);"></div>Amber (pending)</div>
+        <div class="cu-item"><div class="cu-dot" style="background:var(--red);"></div>Red (declined/booked)</div>
+        <div class="cu-item"><div class="cu-dot" style="background:var(--blue);"></div>Blue (messages)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKINGS MANAGEMENT PAGE -->
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 06 of 12</div>
+      <div class="pb-title">Bookings Management</div>
+      <div class="pb-desc">Full list of all bookings — past, present, pending. Photographer can accept/decline, view details, and track status of every event.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /dashboard/photographer/bookings</span>
+        <span class="meta-tag mt-user">Auth: Photographer</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-ph">Photographer</span>
+  </div>
+  <div class="pb-body">
+    <div class="section-grid">
+      <div class="section-item"><div class="si-top"><span class="si-icon">🗂️</span><span class="si-order">S1</span></div><div class="si-name">Filter Tabs</div><div class="si-desc">Tabs: All · Pending · Confirmed · Completed · Cancelled. Each with count badge. Active tab: gold underline + gold text.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📋</span><span class="si-order">S2</span></div><div class="si-name">Booking Table</div><div class="si-desc">Columns: # · Client · Event Type · Date · Location · Package · Amount · Status · Actions. Sortable columns. Status badge colors. Actions: View / Accept / Decline / Message.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📆</span><span class="si-order">S3</span></div><div class="si-name">Calendar View Toggle</div><div class="si-desc">Toggle between Table view and full Calendar view. Calendar shows bookings as events on dates. Click event → booking detail side panel slides in from right.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📄</span><span class="si-order">S4</span></div><div class="si-name">Booking Detail Modal</div><div class="si-desc">Side panel or modal: client info · event details · date/time · location · package · special requests · chat thread · status history timeline. Accept/Decline/Complete buttons.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE EDIT -->
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 07 of 12</div>
+      <div class="pb-title">Profile & Portfolio Editor</div>
+      <div class="pb-desc">Where photographers build and maintain their public profile. Portfolio uploads, pricing packages, bio, availability settings.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /dashboard/photographer/profile</span>
+        <span class="meta-tag mt-user">Auth: Photographer</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-ph">Photographer</span>
+  </div>
+  <div class="pb-body">
+    <div class="section-grid">
+      <div class="section-item"><div class="si-top"><span class="si-icon">🖼️</span><span class="si-order">S1</span></div><div class="si-name">Cover & Avatar Upload</div><div class="si-desc">Drag-drop cover image zone. Avatar circle upload. Live preview on right side. Crop tool. Max file size shown.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">✍️</span><span class="si-order">S2</span></div><div class="si-name">Basic Info Form</div><div class="si-desc">Name · Bio (rich text, 500 chars) · City · Phone · Years of experience · Equipment list (add tags) · Languages · Travel radius (km slider).</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">🗂️</span><span class="si-order">S3</span></div><div class="si-name">Portfolio Upload Grid</div><div class="si-desc">Drag-drop multi-image upload. Each image: add category tag (wedding/festival etc), caption. Reorder by drag. Delete. Max 50 photos. Progress bar on upload.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">💰</span><span class="si-order">S4</span></div><div class="si-name">Pricing Packages</div><div class="si-desc">Add/edit/delete packages. Each: name, price, duration (hours), what's included (checklist), popular toggle. Live preview of how it looks to clients.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📅</span><span class="si-order">S5</span></div><div class="si-name">Availability Manager</div><div class="si-desc">Calendar where photographer manually blocks dates. Toggle date: Available / Blocked. Recurring blocks (every Sunday). Save button with confirmation.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMMUNITY PAGE -->
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 08 of 12</div>
+      <div class="pb-title">Photographer Community</div>
+      <div class="pb-desc">Private forum only for photographers. Share tips, discuss gear, find 2nd shooters, collaborate. Builds platform stickiness.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /community</span>
+        <span class="meta-tag mt-user">Auth: Photographer only</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-ph">Photographer</span>
+  </div>
+  <div class="pb-body">
+    <div class="section-grid">
+      <div class="section-item"><div class="si-top"><span class="si-icon">📂</span><span class="si-order">S1</span></div><div class="si-name">Category Sidebar</div><div class="si-desc">Forum categories: 📷 Gear Talk · 💡 Tips & Techniques · 🤝 Collab Requests · 🛒 Buy/Sell Equipment · 💬 General · 📣 Announcements. Post count per category.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📝</span><span class="si-order">S2</span></div><div class="si-name">Post Feed</div><div class="si-desc">Thread cards: avatar · name · post title · excerpt · tags · like/comment count · time posted. Sort: Latest · Popular · Unanswered. Pinned posts at top (gold border).</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">✏️</span><span class="si-order">S3</span></div><div class="si-name">Create Post</div><div class="si-desc">Floating "New Post" button → modal with: title, category dropdown, rich text editor, image attach, tags. Submit.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">💬</span><span class="si-order">S4</span></div><div class="si-name">Post Detail Page</div><div class="si-desc">Full post content. Comment thread below. Nested replies. Like / bookmark / share. Author profile mini card in sidebar.</div></div>
+    </div>
+  </div>
+</div>
+
+</div></div>
+
+<div class="divider-gold"></div>
+
+<!-- ═══════════════════════════════════════════
+     PART 3 — CLIENT PAGES
+═══════════════════════════════════════════ -->
+<div style="padding:40px 40px 0;background:rgba(82,201,138,0.02);">
+  <div style="max-width:1080px;margin:0 auto;">
+    <div class="sec-eyebrow" style="color:var(--green);">Part 03</div>
+    <div class="sec-title" style="margin-bottom:0;">Client Pages <span style="font-size:16px;color:var(--ink-3);font-family:var(--f-u);font-weight:300;"> — Logged in as Client</span></div>
+    <p class="sec-sub" style="margin-top:8px;margin-bottom:28px;">Pages only a client sees. Focus on booking, tracking, reviewing.</p>
+  </div>
+</div>
+
+<div style="padding:0 40px 40px;background:rgba(82,201,138,0.02);">
+<div style="max-width:1080px;margin:0 auto;">
+
+<!-- CLIENT DASHBOARD -->
+<div class="page-block" style="border-color:rgba(82,201,138,0.3);">
+  <div class="pb-header" style="background:linear-gradient(135deg,rgba(82,201,138,0.04),transparent);">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 09 of 12</div>
+      <div class="pb-title">🎉 Client Dashboard</div>
+      <div class="pb-desc">Client's personal hub. See all their bookings, upcoming events, saved photographers, and past memories. Simpler and warmer than the photographer dashboard.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /dashboard/client</span>
+        <span class="meta-tag mt-client">Auth: Client</span>
+        <span class="meta-tag mt-shared">Priority: High</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-cl">Client</span>
+  </div>
+  <div class="pb-body">
+    <div class="row">
+      <div class="col">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">All Dashboard Sections</div>
+        <div class="section-grid" style="grid-template-columns:1fr;">
+          <div class="section-item" style="border-color:rgba(82,201,138,0.25);">
+            <div class="si-top"><span class="si-icon">👋</span><span class="si-order">S1</span></div>
+            <div class="si-name">Welcome Header</div>
+            <div class="si-desc">"Hello, [Name]! Your next event is in 12 days 🎉". Warm, personal tone. No sidebar — simple top nav instead. Green accent instead of gold for subtle client differentiation.</div>
+          </div>
+          <div class="section-item" style="border-color:rgba(82,201,138,0.25);">
+            <div class="si-top"><span class="si-icon">📊</span><span class="si-order">S2</span></div>
+            <div class="si-name">Quick Stats Row</div>
+            <div class="si-desc">
+              Card 1: 📅 Upcoming Bookings<br/>
+              Card 2: ✅ Past Events (total)<br/>
+              Card 3: ❤️ Saved Photographers<br/>
+              Card 4: ⭐ Reviews Given
+            </div>
+          </div>
+          <div class="section-item" style="border-color:rgba(82,201,138,0.25);">
+            <div class="si-top"><span class="si-icon">🎯</span><span class="si-order">S3</span></div>
+            <div class="si-name">Upcoming Events</div>
+            <div class="si-desc">Card list of confirmed bookings. Each: photographer avatar + name · event type · date (big) · location · status badge. "View Details" and "Message Photographer" buttons. Countdown timer for nearest event.</div>
+          </div>
+          <div class="section-item" style="border-color:rgba(82,201,138,0.25);">
+            <div class="si-top"><span class="si-icon">⏳</span><span class="si-order">S4</span></div>
+            <div class="si-name">Pending Requests</div>
+            <div class="si-desc">Bookings awaiting photographer confirmation. Amber status. "Cancel Request" option. "Follow up" message button. Shows how long ago sent.</div>
+          </div>
+          <div class="section-item" style="border-color:rgba(82,201,138,0.25);">
+            <div class="si-top"><span class="si-icon">❤️</span><span class="si-order">S5</span></div>
+            <div class="si-name">Saved Photographers</div>
+            <div class="si-desc">Horizontal scroll row. Mini photographer cards: avatar, name, city, rating, "Book" button. Heart icon to unsave. "View All Saved" link.</div>
+          </div>
+          <div class="section-item" style="border-color:rgba(82,201,138,0.25);">
+            <div class="si-top"><span class="si-icon">🕐</span><span class="si-order">S6</span></div>
+            <div class="si-name">Past Events + Review Prompts</div>
+            <div class="si-desc">Completed bookings. If no review left yet: yellow "Leave a Review" prompt card. If reviewed: shows star rating given. "Rebook" button for repeat clients.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="max-width:260px;">
+        <div class="layout-diagram" style="border-color:rgba(82,201,138,0.25);">
+          <div class="ld-label">Client dashboard — no sidebar</div>
+          <div class="ld-grid" style="gap:6px;">
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:36px;font-size:10px;border-color:rgba(82,201,138,0.3);color:var(--green);">Top Nav</div></div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:50px;font-size:10px;">Welcome + Countdown</div></div>
+            <div class="ld-row">
+              <div class="ld-block ldb-col" style="font-size:9px;">📅</div>
+              <div class="ld-block ldb-col" style="font-size:9px;">✅</div>
+              <div class="ld-block ldb-col" style="font-size:9px;">❤️</div>
+              <div class="ld-block ldb-col" style="font-size:9px;">⭐</div>
+            </div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:70px;font-size:10px;">Upcoming Events Cards</div></div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:50px;font-size:10px;border-color:rgba(212,168,83,0.3);">Saved Photographers (scroll)</div></div>
+            <div class="ld-row"><div class="ld-block ldb-full" style="min-height:50px;font-size:10px;">Past Events + Review Prompts</div></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:10px;">Client vs Photographer Dashboard</div>
+          <div class="comp-list">
+            <div class="comp-item" style="border-color:rgba(82,201,138,0.2);">No left sidebar — uses top nav</div>
+            <div class="comp-item" style="border-color:rgba(82,201,138,0.2);">Green accents instead of gold</div>
+            <div class="comp-item" style="border-color:rgba(82,201,138,0.2);">No earnings / booking requests</div>
+            <div class="comp-item" style="border-color:rgba(82,201,138,0.2);">Review prompts after events</div>
+            <div class="comp-item" style="border-color:rgba(82,201,138,0.2);">Warmer, friendlier tone</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING FLOW PAGE -->
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 10 of 12</div>
+      <div class="pb-title">Booking Flow (3 Steps)</div>
+      <div class="pb-desc">The most important conversion flow. Client selects date → package → confirms. Must prevent double booking. Clean 3-step wizard.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /book/:photographerId</span>
+        <span class="meta-tag mt-client">Auth: Client required</span>
+        <span class="meta-tag mt-shared">Priority: Critical</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-cl">Client</span>
+  </div>
+  <div class="pb-body">
+    <!-- Booking flow steps -->
+    <div class="flow">
+      <div class="flow-step" style="border-color:var(--gold-border);">
+        <div class="flow-icon">📅</div>
+        <div class="flow-name">Step 1</div>
+        <div class="flow-sub">Pick date from calendar. Unavailable dates blocked in real-time.</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step" style="border-color:var(--gold-border);">
+        <div class="flow-icon">💰</div>
+        <div class="flow-name">Step 2</div>
+        <div class="flow-sub">Choose package. Add event details, location, special requests.</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step" style="border-color:var(--gold-border);">
+        <div class="flow-icon">✅</div>
+        <div class="flow-name">Step 3</div>
+        <div class="flow-sub">Review & confirm. Summary card. Submit booking request.</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step" style="border-color:rgba(82,201,138,0.4);">
+        <div class="flow-icon">🎉</div>
+        <div class="flow-name">Success</div>
+        <div class="flow-sub">Confirmation screen. Notification sent to photographer.</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;" class="comp-list">
+      <div class="comp-item">Step indicator bar at top (1 → 2 → 3) with gold progress fill</div>
+      <div class="comp-item">Photographer mini card always visible on right (sticky)</div>
+      <div class="comp-item">Real-time conflict check: if date booked → red warning + block proceed</div>
+      <div class="comp-item">Back button on each step — no data lost</div>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT BOOKINGS -->
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 11 of 12</div>
+      <div class="pb-title">My Bookings (Client)</div>
+      <div class="pb-desc">Client's full booking history. Track status, view details, cancel, rebook, leave reviews.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /dashboard/client/bookings</span>
+        <span class="meta-tag mt-client">Auth: Client</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-cl">Client</span>
+  </div>
+  <div class="pb-body">
+    <div class="section-grid">
+      <div class="section-item"><div class="si-top"><span class="si-icon">🗂️</span><span class="si-order">S1</span></div><div class="si-name">Status Filter Tabs</div><div class="si-desc">All · Upcoming · Pending · Completed · Cancelled. Count badges.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📋</span><span class="si-order">S2</span></div><div class="si-name">Booking Cards</div><div class="si-desc">Card per booking: photographer photo + name · event type · date · package · amount · status badge. Actions based on status: Message / Cancel / Review / Rebook.</div></div>
+      <div class="section-item"><div class="si-top"><span class="si-icon">📄</span><span class="si-order">S3</span></div><div class="si-name">Booking Detail Modal</div><div class="si-desc">Full event info · photographer contact · package details · payment info · status timeline (Requested → Confirmed → Completed). Chat link.</div></div>
+    </div>
+  </div>
+</div>
+
+</div></div>
+
+<div class="divider-gold"></div>
+
+<!-- ═══════════════════════════════════════════
+     PART 4 — SHARED PAGES
+═══════════════════════════════════════════ -->
+<div style="padding:40px 40px 0;">
+  <div style="max-width:1080px;margin:0 auto;">
+    <div class="sec-eyebrow">Part 04</div>
+    <div class="sec-title" style="margin-bottom:0;">Shared Pages <span style="font-size:16px;color:var(--ink-3);font-family:var(--f-u);font-weight:300;"> — Both user types</span></div>
+    <p class="sec-sub" style="margin-top:8px;margin-bottom:28px;">Pages both photographers and clients use — Chat and Reviews.</p>
+  </div>
+</div>
+<div style="padding:0 40px 40px;">
+<div style="max-width:1080px;margin:0 auto;">
+
+<div class="page-block">
+  <div class="pb-header">
+    <div class="pb-left">
+      <div class="pb-page-num">Page 12 of 12</div>
+      <div class="pb-title">Messages / Chat</div>
+      <div class="pb-desc">Real-time chat between client and photographer. Pre-booking inquiry and post-booking communication. Both users access this.</div>
+      <div class="pb-meta">
+        <span class="meta-tag mt-route">Route: /messages · /messages/:chatId</span>
+        <span class="meta-tag mt-shared">Auth: Any logged-in user</span>
+      </div>
+    </div>
+    <span class="page-type-badge ptb-sh">Shared</span>
+  </div>
+  <div class="pb-body">
+    <div class="row">
+      <div class="col">
+        <div class="section-grid" style="grid-template-columns:1fr;">
+          <div class="section-item"><div class="si-top"><span class="si-icon">📋</span><span class="si-order">S1</span></div><div class="si-name">Conversations List (Left)</div><div class="si-desc">280px panel. Each row: avatar · name · last message preview · time · unread blue dot. Search conversations at top. Sorted by latest activity.</div></div>
+          <div class="section-item"><div class="si-top"><span class="si-icon">💬</span><span class="si-order">S2</span></div><div class="si-name">Chat Window (Right)</div><div class="si-desc">Header: photographer/client name + online status dot + booking context button. Message bubbles: sent (gold-tint right) / received (bg-raised left). Image attachments. Timestamps. Typing indicator.</div></div>
+          <div class="section-item"><div class="si-top"><span class="si-icon">✉️</span><span class="si-order">S3</span></div><div class="si-name">Message Input</div><div class="si-desc">Text input with emoji · attach file · send button (gold). Enter to send. Character limit shown. Auto-resize textarea.</div></div>
+          <div class="section-item"><div class="si-top"><span class="si-icon">📌</span><span class="si-order">S4</span></div><div class="si-name">Booking Context Panel</div><div class="si-desc">Collapsible right panel showing linked booking: date · event type · package · status. "View Full Booking" link. Quick action: "Confirm Booking" button if pending.</div></div>
+        </div>
+      </div>
+      <div class="col" style="max-width:280px;">
+        <div class="layout-diagram">
+          <div class="ld-label">Chat layout (3 column)</div>
+          <div class="ld-row" style="height:240px;gap:6px;">
+            <div class="ld-block ldb-side" style="flex:0 0 70px;min-height:240px;font-size:10px;">Convo<br/>List</div>
+            <div class="ld-block ldb-main" style="min-height:240px;font-size:10px;flex-direction:column;gap:4px;">
+              <span>Chat Window</span>
+              <span style="color:var(--ink-4);">bubbles...</span>
+            </div>
+            <div class="ld-block ldb-side" style="flex:0 0 60px;min-height:240px;font-size:10px;">Booking<br/>Context</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div></div>
+
+<div class="divider-gold"></div>
+
+<!-- DASHBOARD COMPARISON -->
+<div style="padding:60px 40px;">
+<div style="max-width:1080px;margin:0 auto;">
+  <div class="sec-eyebrow">Dashboard Comparison</div>
+  <div class="sec-title">Photographer vs Client Dashboard</div>
+  <p class="sec-sub">Two completely different experiences — same platform, different goals, different layouts, different color accents.</p>
+
+  <div class="dash-compare">
+    <div class="dash-card dc-ph">
+      <div class="dc-head">
+        <div class="dc-type">📷 Photographer Dashboard</div>
+        <div class="dc-name">Command Center</div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Route: /dashboard/photographer</div>
+      </div>
+      <div class="dc-body">
+        <div class="dc-item"><div class="dc-icon">🗂️</div><div class="dc-info"><div class="dc-item-title">Left sidebar navigation</div><div class="dc-item-sub">Icon-only collapse · Gold active state</div></div></div>
+        <div class="dc-item"><div class="dc-icon">📊</div><div class="dc-info"><div class="dc-item-title">4 stat cards</div><div class="dc-item-sub">Bookings · Earnings · Rating · Pending</div></div></div>
+        <div class="dc-item"><div class="dc-icon">📋</div><div class="dc-info"><div class="dc-item-title">Upcoming bookings table</div><div class="dc-item-sub">Client · Date · Event · Status · Actions</div></div></div>
+        <div class="dc-item"><div class="dc-icon">📅</div><div class="dc-info"><div class="dc-item-title">Mini calendar</div><div class="dc-item-sub">Color-coded booking dates</div></div></div>
+        <div class="dc-item"><div class="dc-icon">⏳</div><div class="dc-info"><div class="dc-item-title">Pending requests</div><div class="dc-item-sub">Accept / Decline with 24h timer</div></div></div>
+        <div class="dc-item"><div class="dc-icon">💰</div><div class="dc-info"><div class="dc-item-title">Earnings visible</div><div class="dc-item-sub">Monthly + total earnings</div></div></div>
+        <div class="dc-item"><div class="dc-icon">🎨</div><div class="dc-info"><div class="dc-item-title">Accent color: Gold #D4A853</div><div class="dc-item-sub">Professional, premium feel</div></div></div>
+      </div>
+    </div>
+
+    <div class="dash-card dc-cl">
+      <div class="dc-head">
+        <div class="dc-type">🎉 Client Dashboard</div>
+        <div class="dc-name">My Events Hub</div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Route: /dashboard/client</div>
+      </div>
+      <div class="dc-body">
+        <div class="dc-item"><div class="dc-icon">🧭</div><div class="dc-info"><div class="dc-item-title">Top navigation bar only</div><div class="dc-item-sub">No sidebar — simpler layout</div></div></div>
+        <div class="dc-item"><div class="dc-icon">📊</div><div class="dc-info"><div class="dc-item-title">4 stat cards</div><div class="dc-item-sub">Upcoming · Past · Saved · Reviews given</div></div></div>
+        <div class="dc-item"><div class="dc-icon">🎯</div><div class="dc-info"><div class="dc-item-title">Next event countdown</div><div class="dc-item-sub">"Your event is in 12 days 🎉"</div></div></div>
+        <div class="dc-item"><div class="dc-icon">❤️</div><div class="dc-info"><div class="dc-item-title">Saved photographers strip</div><div class="dc-item-sub">Horizontal scroll, quick rebook</div></div></div>
+        <div class="dc-item"><div class="dc-icon">⭐</div><div class="dc-info"><div class="dc-item-title">Review prompts</div><div class="dc-item-sub">After every completed event</div></div></div>
+        <div class="dc-item"><div class="dc-icon">💰</div><div class="dc-info"><div class="dc-item-title">No earnings section</div><div class="dc-item-sub">Clients don't see payment analytics</div></div></div>
+        <div class="dc-item"><div class="dc-icon">🎨</div><div class="dc-info"><div class="dc-item-title">Accent color: Green #52C98A</div><div class="dc-item-sub">Warm, friendly, accessible feel</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- SUMMARY TABLE -->
+<div style="padding:0 40px 80px;background:var(--bg-deep);">
+<div style="max-width:1080px;margin:0 auto;padding-top:60px;">
+  <div class="sec-eyebrow">Full Summary</div>
+  <div class="sec-title">All 12 Pages at a Glance</div>
+  <div style="background:var(--bg-card);border:1px solid var(--line-1);border-radius:var(--r-xl);overflow:hidden;">
+    <div style="display:grid;grid-template-columns:40px 1fr 120px 100px 80px;padding:12px 20px;border-bottom:1px solid var(--line-2);background:var(--bg-raised);">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-4);">#</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-4);">Page</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-4);">Route</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-4);">User</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-4);">Priority</div>
+    </div>
+    ${[
+      ["01","Landing Page","/","Public","Critical","ptb-pub","p-crit"],
+      ["02","Search & Discovery","/search","Public","Critical","ptb-pub","p-crit"],
+      ["03","Photographer Profile","/photographer/:id","Public","Critical","ptb-pub","p-crit"],
+      ["04","Auth (Login/Register)","/login · /register","Public","High","ptb-pub","p-high"],
+      ["05","Photographer Dashboard","/dashboard/photographer","Photographer","Critical","ptb-ph","p-crit"],
+      ["06","Bookings Management","/dashboard/photographer/bookings","Photographer","Critical","ptb-ph","p-crit"],
+      ["07","Profile & Portfolio Editor","/dashboard/photographer/profile","Photographer","High","ptb-ph","p-high"],
+      ["08","Community","/community","Photographer","Medium","ptb-ph","p-med"],
+      ["09","Client Dashboard","/dashboard/client","Client","High","ptb-cl","p-high"],
+      ["10","Booking Flow","/book/:id","Client","Critical","ptb-cl","p-crit"],
+      ["11","My Bookings (Client)","/dashboard/client/bookings","Client","High","ptb-cl","p-high"],
+      ["12","Messages / Chat","/messages","Both","High","ptb-sh","p-high"],
+    ].map(([num,name,route,user,pri,ub,pb])=>`
+    <div style="display:grid;grid-template-columns:40px 1fr 120px 100px 80px;padding:12px 20px;border-bottom:1px solid var(--line-1);align-items:center;" onmouseover="this.style.background='var(--bg-raised)'" onmouseout="this.style.background='transparent'">
+      <div style="font-family:monospace;font-size:11px;color:var(--ink-4);">${num}</div>
+      <div style="font-size:13px;font-weight:500;color:var(--ink-1);">${name}</div>
+      <div style="font-family:monospace;font-size:10px;color:var(--ink-3);">${route}</div>
+      <div><span class="page-type-badge ${ub}" style="font-size:9px;padding:3px 8px;">${user}</span></div>
+      <div><span class="priority ${pb}">${pri}</span></div>
+    </div>`).join('')}
+  </div>
+</div>
+</div>
+
+<div class="footer">
+  <div style="font-family:var(--f-d);font-size:28px;margin-bottom:8px;">Frame<em style="font-style:italic;color:var(--gold);">Book</em></div>
+  <div style="font-size:12px;color:var(--ink-4);letter-spacing:0.08em;">Build Blueprint v1.0 · 12 Pages · 2 Dashboards · React + Node + PostgreSQL</div>
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:20px;flex-wrap:wrap;">
+    <span class="badge badge-gold">4 Public Pages</span>
+    <span class="badge" style="background:rgba(212,168,83,0.08);color:var(--gold);border:1px solid var(--gold-border);">4 Photographer Pages</span>
+    <span class="badge badge-green">4 Client Pages</span>
+    <span class="badge badge-muted">5 Critical · 5 High · 2 Medium</span>
+  </div>
+</div>
+
+</body>
+</html>

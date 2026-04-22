@@ -8,7 +8,9 @@ import { PhotographerProvider } from "./Components/photographercontext";
 import Searchform from "./Components/searchform";
 import SearchResults from "./Components/searchresult";
 import PhotographerSearch from "./Components/PhotographerSearch";
+import PhotographerPublicProfile from "./Components/photographerpro";
 import Profile from "./Components/profile";
+import GlobalBackButton from "./Components/GlobalBackButton";
 import Editprofile from "./Components/photographerprofile";
 import Login from "./Components/login";
 import ClientDashboard from "./Components/clientdashboard";
@@ -27,18 +29,18 @@ import ContactUs from "./Components/contactus";
 
 // Protected Route Component
 const ProtectedRoute = ({ element, allowedRoles }) => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
-    if (!token) {
-        return <Navigate to="/login" />;
-    }
+  if (!token) {
+    return <Navigate to="/login" />;
+  }
 
-    if (allowedRoles && !allowedRoles.includes(role)) {
-        return <Navigate to="/" />;
-    }
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to="/" />;
+  }
 
-    return element;
+  return element;
 };
 
 ProtectedRoute.propTypes = {
@@ -63,12 +65,14 @@ function App() {
   return (
     <PhotographerProvider>
       <Router>
+        <GlobalBackButton />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
+          <Route path="/photographer/:id" element={<PhotographerPublicProfile />} />
           <Route path="*" element={<ErrorPage />} />
 
           <Route
@@ -77,61 +81,65 @@ function App() {
           />
           <Route
             path="/photographer-dashboard"
+            element={<ProtectedRoute element={<Navigate to="/photographer-dashboard/overview" replace />} allowedRoles={["photographer"]} />}
+          />
+          <Route
+            path="/photographer-dashboard/:section"
             element={<ProtectedRoute element={<PhotographerDashboard />} allowedRoles={["photographer"]} />}
           />
 
           {/* Protected Routes for All Authenticated Users */}
-          <Route 
-            path="/search" 
-            element={<ProtectedRoute element={<PhotographerSearch />} />} 
+          <Route
+            path="/search"
+            element={<ProtectedRoute element={<PhotographerSearch />} />}
           />
-          <Route 
-            path="/search-form" 
-            element={<ProtectedRoute element={<Searchform />} />} 
+          <Route
+            path="/search-form"
+            element={<ProtectedRoute element={<Searchform />} />}
           />
-          <Route 
-            path="/pgresult" 
-            element={<ProtectedRoute element={<SearchResults />} />} 
+          <Route
+            path="/pgresult"
+            element={<ProtectedRoute element={<SearchResults />} />}
           />
 
           {/* Protected Routes for Photographers Only */}
-          <Route 
-            path="/calendar" 
-            element={<ProtectedRoute element={<Calendar />} allowedRoles={['photographer']} />} 
+          <Route
+            path="/calendar"
+            element={<ProtectedRoute element={<Calendar />} allowedRoles={['photographer']} />}
           />
-          <Route 
-            path="/editprofile" 
-            element={<ProtectedRoute element={<Editprofile />} allowedRoles={['photographer']} />} 
+          <Route
+            path="/editprofile"
+            element={<ProtectedRoute element={<Editprofile />} allowedRoles={['photographer']} />}
           />
 
           {/* Profile Sections for Both Roles */}
-          <Route 
-            path="/profile" 
-            element={<ProtectedRoute element={<Profile />} />} 
+          <Route
+            path="/profile"
+            element={<ProtectedRoute element={<Profile />} />}
           />
-          <Route 
-            path="/profile_profile" 
-            element={<ProtectedRoute element={<><Profile /> <Profile_p /></>} />} 
+          <Route
+            path="/profile_profile"
+            element={<ProtectedRoute element={<><Profile /> <Profile_p /></>} />}
           />
-          <Route 
-            path="/profile_booking" 
-            element={<ProtectedRoute element={<><Profile /> <Profile_b /></>} />} 
+          <Route
+            path="/profile_booking"
+            element={<ProtectedRoute element={<><Profile /> <Profile_b /></>} />}
           />
-          <Route 
-            path="/profile_payment" 
-            element={<ProtectedRoute element={<><Profile /> <Profile_pay /></>} />} 
+          <Route
+            path="/profile_payment"
+            element={<ProtectedRoute element={<><Profile /> <Profile_pay /></>} />}
           />
-          <Route 
-            path="/profile_reviews" 
-            element={<ProtectedRoute element={<><Profile /> <Profile_r /></>} />} 
+          <Route
+            path="/profile_reviews"
+            element={<ProtectedRoute element={<><Profile /> <Profile_r /></>} />}
           />
-          <Route 
-            path="/profile_settings" 
-            element={<ProtectedRoute element={<><Profile /> <Profile_s /></>} />} 
+          <Route
+            path="/profile_settings"
+            element={<ProtectedRoute element={<><Profile /> <Profile_s /></>} />}
           />
-          <Route 
-            path="/profile_Whishlist" 
-            element={<ProtectedRoute element={<><Profile /> <Profile_w /></>} />} 
+          <Route
+            path="/profile_Whishlist"
+            element={<ProtectedRoute element={<><Profile /> <Profile_w /></>} />}
           />
         </Routes>
       </Router>

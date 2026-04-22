@@ -98,6 +98,51 @@ const initDatabase = async () => {
     await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS photographer_id INTEGER REFERENCES users(id) ON DELETE SET NULL;`);
     await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS client_name VARCHAR(180);`);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_settings (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+        language VARCHAR(40) DEFAULT 'English',
+        timezone VARCHAR(80) DEFAULT 'Asia/Kolkata',
+        dark_mode BOOLEAN DEFAULT true,
+        two_factor_auth BOOLEAN DEFAULT false,
+        notify_bookings BOOLEAN DEFAULT true,
+        notify_payouts BOOLEAN DEFAULT true,
+        notify_chat BOOLEAN DEFAULT true,
+        auto_reply BOOLEAN DEFAULT false,
+        payout_method VARCHAR(80) DEFAULT 'Bank Transfer',
+        gst_number VARCHAR(40) DEFAULT '',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chat_threads (
+        id SERIAL PRIMARY KEY,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chat_participants (
+        id SERIAL PRIMARY KEY,
+        thread_id INTEGER REFERENCES chat_threads(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        last_read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(thread_id, user_id)
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id SERIAL PRIMARY KEY,
+        thread_id INTEGER REFERENCES chat_threads(id) ON DELETE CASCADE,
+        sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log("PostgreSQL Connected");
   } catch (error) {
     console.error("PostgreSQL Connection Failed", error);
