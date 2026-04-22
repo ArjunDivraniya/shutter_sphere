@@ -8,7 +8,7 @@ import { PhotographerProvider } from "./Components/photographercontext";
 import Searchform from "./Components/searchform";
 import SearchResults from "./Components/searchresult";
 import PhotographerSearch from "./Components/PhotographerSearch";
-import PhotographerPublicProfile from "./Components/photographerpro";
+import PhotographerPublicProfile from "./Components/PhotographerPublicProfile";
 import Profile from "./Components/profile";
 import GlobalBackButton from "./Components/GlobalBackButton";
 import Editprofile from "./Components/photographerprofile";

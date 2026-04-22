@@ -22,6 +22,7 @@ import EarningsSection from "./photographer-dashboard/sections/EarningsSection";
 import CommunitySection from "./photographer-dashboard/sections/CommunitySection";
 import ChatSection from "./photographer-dashboard/sections/ChatSection";
 import SettingsSection from "./photographer-dashboard/sections/SettingsSection";
+import ProfileSection from "./photographer-dashboard/sections/ProfileSection";
 
 const validSections = sidebarItems.map((item) => item.key);
 
@@ -53,14 +54,16 @@ const PhotographerDashboard = () => {
     query: "",
   });
 
-  const [conversations, setConversations] = useState(initialConversations);
+  const [conversations, setConversations] = useState([]);
   const [chatQuery, setChatQuery] = useState("");
-  const [activeConversationId, setActiveConversationId] = useState(initialConversations[0].id);
+  const [activeConversationId, setActiveConversationId] = useState(null);
   const [newMessage, setNewMessage] = useState("");
 
+  const [communityUsersState, setCommunityUsersState] = useState([]);
+
   const [settingsState, setSettingsState] = useState({
-    fullName: "Arjun Divraniya",
-    email: "arjundivraniya8@gmail.com",
+    fullName: "",
+    email: "",
     language: "English",
     timezone: "Asia/Kolkata",
     darkMode: true,
@@ -68,9 +71,9 @@ const PhotographerDashboard = () => {
     notifyBookings: true,
     notifyPayouts: true,
     notifyChat: true,
-    autoReply: true,
+    autoReply: false,
     payoutMethod: "Bank Transfer",
-    gstNumber: "24ABCDE1234F1Z5",
+    gstNumber: "",
   });
 
   const signupId = localStorage.getItem("userId");
@@ -81,22 +84,67 @@ const PhotographerDashboard = () => {
     }
   }, [section, navigate]);
 
+  const loadRealtimeData = async () => {
+    if (!signupId) return;
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/dashboard/photographer/${signupId}/realtime`);
+      const { community, settings, conversations: chatThreads } = response.data || {};
+
+      if (Array.isArray(community)) {
+        setCommunityUsersState(community);
+      }
+      
+      if (settings) {
+        setSettingsState((prev) => ({
+          ...prev,
+          ...settings,
+          fullName: settings.full_name || prev.fullName,
+          darkMode: !!settings.dark_mode,
+          twoFactorAuth: !!settings.two_factor_auth,
+          notifyBookings: !!settings.notify_bookings,
+          notifyPayouts: !!settings.notify_payouts,
+          notifyChat: !!settings.notify_chat,
+          autoReply: !!settings.auto_reply,
+          payoutMethod: settings.payout_method || prev.payoutMethod,
+          gstNumber: settings.gst_number || prev.gstNumber,
+        }));
+      }
+
+      if (Array.isArray(chatThreads)) {
+        const formattedChats = chatThreads.map((thread) => ({
+          id: thread.id,
+          name: thread.partner_name || "Client",
+          unread: Number(thread.unread_count || 0),
+          online: !!thread.partner_online,
+          pinned: false,
+          messages: (thread.messages || []).map((m) => ({
+            fromMe: Number(m.sender_id) === Number(signupId),
+            text: m.content,
+            time: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          })),
+        }));
+        setConversations(formattedChats);
+        if (!activeConversationId && formattedChats.length > 0) {
+          setActiveConversationId(formattedChats[0].id);
+        }
+      }
+    } catch (err) {
+      console.warn("Realtime data fetch failed", err);
+    }
+  };
+
   const loadDashboard = async () => {
     if (!signupId) {
       setLoadingOverview(false);
-      setDashboardData({
-        ...defaultData,
-        bookings: mockBookings,
-      });
       return;
     }
 
     try {
       const response = await axios.get(`${API_BASE_URL}/api/dashboard/photographer/${signupId}`);
       const apiData = response.data || {};
-      const mergedBookings = (apiData.bookings && apiData.bookings.length > 0 ? apiData.bookings : mockBookings).map(
+      const mergedBookings = (apiData.bookings || []).map(
         (booking, index) => ({
-          id: booking.id || `AUTO-${index + 1}`,
+          id: booking.id || `BK-${index + 1}`,
           clientName: booking.clientName || booking.client || "Client",
           eventType: booking.eventType || "Event",
           date: booking.date || new Date().toISOString(),
@@ -126,7 +174,6 @@ const PhotographerDashboard = () => {
       });
     } catch (error) {
       console.error("Failed to load photographer dashboard", error);
-      setDashboardData((prev) => ({ ...prev, bookings: mockBookings }));
     } finally {
       setLoadingOverview(false);
     }
@@ -134,15 +181,19 @@ const PhotographerDashboard = () => {
 
   useEffect(() => {
     loadDashboard();
-  }, []);
+    loadRealtimeData();
+
+    const interval = setInterval(loadRealtimeData, 20000); // Increased interval to 20s for production stability
+    return () => clearInterval(interval);
+  }, [signupId]);
 
   const allBookings = useMemo(() => {
-    const base = dashboardData.bookings && dashboardData.bookings.length > 0 ? dashboardData.bookings : mockBookings;
-    return base.map((booking) => ({
+    return (dashboardData.bookings || []).map((booking) => ({
       ...booking,
       amount: Number(booking.amount || 0),
     }));
   }, [dashboardData.bookings]);
+
 
   const filteredBookings = useMemo(() => {
     let rows = [...allBookings];
@@ -173,7 +224,7 @@ const PhotographerDashboard = () => {
         (booking) =>
           booking.clientName.toLowerCase().includes(q) ||
           booking.location.toLowerCase().includes(q) ||
-          booking.id.toLowerCase().includes(q) ||
+          booking.id.toString().toLowerCase().includes(q) ||
           booking.eventType.toLowerCase().includes(q)
       );
     }
@@ -259,28 +310,30 @@ const PhotographerDashboard = () => {
   }, [allBookings]);
 
   const communityList = useMemo(() => {
-    let rows = [...communityUsers];
+    let rows = [...communityUsersState];
 
     if (communityFilters.scope === "Nearby") {
-      rows = rows.filter((user) => user.distanceKm <= Number(communityFilters.maxDistance));
+      rows = rows.filter((user) => (Number(user.distanceKm) || 0) <= Number(communityFilters.maxDistance));
     }
 
     if (communityFilters.category !== "All") {
-      rows = rows.filter((user) => user.specialty === communityFilters.category);
+      rows = rows.filter((user) => 
+        (user.specialty || "").toLowerCase() === communityFilters.category.toLowerCase()
+      );
     }
 
     if (communityFilters.query.trim()) {
       const q = communityFilters.query.toLowerCase();
       rows = rows.filter(
         (user) =>
-          user.name.toLowerCase().includes(q) ||
-          user.city.toLowerCase().includes(q) ||
-          user.specialty.toLowerCase().includes(q)
+          (user.name || "").toLowerCase().includes(q) ||
+          (user.city || "").toLowerCase().includes(q) ||
+          (user.specialty || "").toLowerCase().includes(q)
       );
     }
 
     return rows;
-  }, [communityFilters]);
+  }, [communityUsersState, communityFilters]);
 
   const visibleConversations = useMemo(() => {
     const rows = conversations.filter((conv) => conv.name.toLowerCase().includes(chatQuery.toLowerCase()));
@@ -300,12 +353,6 @@ const PhotographerDashboard = () => {
       await axios.patch(`${API_BASE_URL}/calendar/event/${bookingId}/status`, { status: nextStatus });
       await loadDashboard();
     } catch (error) {
-      setDashboardData((prev) => ({
-        ...prev,
-        bookings: allBookings.map((booking) =>
-          booking.id === bookingId ? { ...booking, status: nextStatus } : booking
-        ),
-      }));
       console.error("Failed to update booking status", error);
     }
   };
@@ -317,36 +364,34 @@ const PhotographerDashboard = () => {
       onSectionChange("chat");
       return;
     }
-
-    const newConversation = {
-      id: `C-${Date.now()}`,
-      name: personName,
-      unread: 0,
-      online: true,
-      pinned: false,
-      messages: [{ fromMe: false, text: "Hi, glad to connect.", time: "Now" }],
-    };
-
-    setConversations((prev) => [newConversation, ...prev]);
-    setActiveConversationId(newConversation.id);
+    // For now, only switch if exists or handle new thread creation
     onSectionChange("chat");
   };
 
-  const sendMessage = () => {
-    if (!newMessage.trim() || !activeConversation) return;
-    setConversations((prev) =>
-      prev.map((conversation) => {
-        if (conversation.id !== activeConversation.id) return conversation;
-        return {
-          ...conversation,
-          messages: [
-            ...conversation.messages,
-            { fromMe: true, text: newMessage.trim(), time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
-          ],
-        };
-      })
-    );
-    setNewMessage("");
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !activeConversation || !signupId) return;
+    try {
+      await axios.post(`${API_BASE_URL}/api/dashboard/photographer/${signupId}/chat`, {
+        threadId: activeConversation.id,
+        content: newMessage.trim(),
+      });
+      setNewMessage("");
+      await loadRealtimeData();
+    } catch (err) {
+      console.error("Message send failed", err);
+    }
+  };
+
+  const onSaveSettings = async () => {
+    if (!signupId) return;
+    try {
+      await axios.post(`${API_BASE_URL}/api/dashboard/photographer/${signupId}/settings`, settingsState);
+      alert("Settings saved successfully!");
+      await loadRealtimeData();
+    } catch (err) {
+      console.error("Failed to save settings", err);
+      alert("Error saving settings.");
+    }
   };
 
   const onLogout = () => {
@@ -419,7 +464,17 @@ const PhotographerDashboard = () => {
     }
 
     if (activeMenu === "settings") {
-      return <SettingsSection settingsState={settingsState} setSettingsState={setSettingsState} />;
+      return (
+        <SettingsSection
+          settingsState={settingsState}
+          setSettingsState={setSettingsState}
+          onSave={onSaveSettings}
+        />
+      );
+    }
+
+    if (activeMenu === "profile") {
+      return <ProfileSection signupId={signupId} />;
     }
 
     return (

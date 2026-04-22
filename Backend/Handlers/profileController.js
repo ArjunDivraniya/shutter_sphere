@@ -1,4 +1,5 @@
 const { pool } = require("../config/db");
+const cloudinary = require("../utils/cloudinary");
 
 const splitCsv = (value) =>
   (value || "")
@@ -267,4 +268,87 @@ const upsertRoleProfile = async (req, res) => {
 module.exports = {
   getRoleProfile,
   upsertRoleProfile,
+  updatePortfolio,
+  getPhotographerPortfolio,
 };
+
+async function updatePortfolio(req, res) {
+  try {
+    const signupId = Number(req.params.signupId);
+    if (!signupId) {
+      return res.status(400).json({ message: "Valid signupId is required" });
+    }
+
+    const portfolioUrls = req.body.portfolioUrls || [];
+    
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map((file) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "shutter_sphere/portfolio" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            }
+          );
+          stream.end(file.buffer);
+        });
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      portfolioUrls.push(...uploadedUrls);
+    }
+
+    const portfolioCsv = portfolioUrls.join(",");
+
+    await pool.query(
+      `UPDATE photographers
+       SET portfolio_links = COALESCE($1, portfolio_links)
+       WHERE signup_id = $2`,
+      [portfolioCsv || null, signupId]
+    );
+
+    return res.status(200).json({
+      message: "Portfolio updated successfully",
+      portfolio: portfolioUrls,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to update portfolio", error: error.message });
+  }
+}
+
+async function getPhotographerPortfolio(req, res) {
+  try {
+    const signupId = Number(req.params.signupId);
+    if (!signupId) {
+      return res.status(400).json({ message: "Valid signupId is required" });
+    }
+
+    const result = await pool.query(
+      `SELECT portfolio_links, specialization
+       FROM photographers
+       WHERE signup_id = $1
+       ORDER BY id DESC
+       LIMIT 1`,
+      [signupId]
+    );
+
+    const photographer = result.rows[0];
+    if (!photographer) {
+      return res.status(404).json({ message: "Photographer not found" });
+    }
+
+    const portfolio = (photographer.portfolio_links || "")
+      .split(",")
+      .map((url) => url.trim())
+      .filter(Boolean);
+
+    return res.status(200).json({
+      portfolio,
+      specialization: photographer.specialization || "",
+      totalImages: portfolio.length,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to fetch portfolio", error: error.message });
+  }
+}
