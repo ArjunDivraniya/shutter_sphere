@@ -1,4 +1,4 @@
-const Event = require("../Models/eventsModel");
+const { pool } = require("../config/db");
 
 
 // Create an event
@@ -11,20 +11,26 @@ const Event = require("../Models/eventsModel");
             return res.status(400).json({ message: "title, and date are required." });
         }
 
-        // Create a new event
-        const newEvent = new Event({
-            signupId,
-            title,
-            date,
-            description,
-            location
+        const inserted = await pool.query(
+            `INSERT INTO events (signup_id, title, date, description, location)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, signup_id, title, date, description, location, created_at`,
+            [signupId, title, date, description || null, location || null]
+        );
+
+        const newEvent = inserted.rows[0];
+
+        // Return the created event in frontend-compatible shape
+        res.status(201).json({
+            _id: String(newEvent.id),
+            id: newEvent.id,
+            signupId: newEvent.signup_id,
+            title: newEvent.title,
+            date: newEvent.date,
+            description: newEvent.description,
+            location: newEvent.location,
+            createdAt: newEvent.created_at,
         });
-
-        // Save the event to the database
-        await newEvent.save();
-
-        // Return the created event
-        res.status(201).json({ message: "Event created successfully", event: newEvent });
     } catch (error) {
         console.error("Error creating event:", error);
         res.status(500).json({ message: "Error creating event", error: error.message });
@@ -37,7 +43,24 @@ const Event = require("../Models/eventsModel");
         const { signupId } = req.params;
 
         // Fetch events for the photographer
-        const events = await Event.find({ signupId });
+        const result = await pool.query(
+            `SELECT id, signup_id, title, date, description, location, created_at
+             FROM events
+             WHERE signup_id = $1
+             ORDER BY date ASC`,
+            [signupId]
+        );
+
+        const events = result.rows.map((event) => ({
+            _id: String(event.id),
+            id: event.id,
+            signupId: event.signup_id,
+            title: event.title,
+            date: event.date,
+            description: event.description,
+            location: event.location,
+            createdAt: event.created_at,
+        }));
 
         // If no events are found, return a message
         if (events.length === 0) {
@@ -61,14 +84,29 @@ const Event = require("../Models/eventsModel");
             return res.status(400).json({ message: "Event ID is required." });
         }
 
-        // Delete event by `_id`
-        const deletedEvent = await Event.findByIdAndDelete(eventId);
+        const deletedEvent = await pool.query(
+            `DELETE FROM events WHERE id = $1 RETURNING id, signup_id, title, date, description, location, created_at`,
+            [eventId]
+        );
 
-        if (!deletedEvent) {
+        if (deletedEvent.rows.length === 0) {
             return res.status(404).json({ message: "Event not found." });
         }
 
-        res.status(200).json({ message: "Event deleted successfully", event: deletedEvent });
+        const event = deletedEvent.rows[0];
+        res.status(200).json({
+            message: "Event deleted successfully",
+            event: {
+                _id: String(event.id),
+                id: event.id,
+                signupId: event.signup_id,
+                title: event.title,
+                date: event.date,
+                description: event.description,
+                location: event.location,
+                createdAt: event.created_at,
+            },
+        });
     } catch (error) {
         console.error("Error deleting event:", error);
         res.status(500).json({ message: "Error deleting event", error: error.message });
