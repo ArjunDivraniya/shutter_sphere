@@ -220,4 +220,22 @@
         "role": "{{role}}",
         "loading": "Loading testimonials..."
     }
+        ,
+        "filters": "Filters",
+        "resetFilters": "Reset Filters",
+        "location": "Location",
+        "enterCity": "Enter city",
+        "price": "Price Range",
+        "category": "Category",
+        "allCategories": "All Categories",
+        "rating": "Rating",
+        "photographers": "photographers",
+        "findPhotographer": "Find Your Photographer",
+        "sortByRating": "Best Rated",
+        "sortByPriceLow": "Price: Low to High",
+        "sortByPriceHigh": "Price: High to Low",
+        "sortByNewest": "Newest",
+        "noPhotographers": "No photographers found",
+        "tryAdjustingFilters": "Try adjusting your filters to find the perfect photographer for your needs.",
+        "clearFilters": "Clear Filters"
 }

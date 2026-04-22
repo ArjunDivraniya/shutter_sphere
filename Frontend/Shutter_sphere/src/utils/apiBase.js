@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Deployed and local backend URLs
 const DEPLOYED_BASE = "https://shutter-sphere.onrender.com";
-const LOCAL_BASE = "http://localhost:8080";
+const LOCAL_BASE = "http://localhost:5000";
 
 // Determine API base URL: env var → localhost detection → deployed
 const ENV_BASE = import.meta?.env?.VITE_API_BASE_URL;

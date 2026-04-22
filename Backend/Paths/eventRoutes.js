@@ -1,5 +1,5 @@
 const express = require("express");
-const { createEvent, getPhotographerEvents, deleteEvent } = require("../Handlers/eventController.js");;
+const { createEvent, getPhotographerEvents, deleteEvent, updateEventStatus } = require("../Handlers/eventController.js");;
 
 const router = express.Router();
 
@@ -11,5 +11,8 @@ router.get("/event/:signupId", getPhotographerEvents); // Get events
 
 // Route to delete an event by eventId
 router.delete("/event/:eventId", deleteEvent); // Delete event
+
+// Route to update booking status
+router.patch("/event/:eventId/status", updateEventStatus);
 
 module.exports = router;

@@ -7,9 +7,12 @@ import { PhotographerProvider } from "./Components/photographercontext";
 // Import Components
 import Searchform from "./Components/searchform";
 import SearchResults from "./Components/searchresult";
+import PhotographerSearch from "./Components/PhotographerSearch";
 import Profile from "./Components/profile";
 import Editprofile from "./Components/photographerprofile";
 import Login from "./Components/login";
+import ClientDashboard from "./Components/clientdashboard";
+import PhotographerDashboard from "./Components/photographerdashboard";
 import LandingPage from "./Components/landingpage";
 import Profile_p from "./Components/profile_p";
 import Profile_pay from "./Components/profile_pay";
@@ -68,9 +71,22 @@ function App() {
           <Route path="/contact" element={<ContactUs />} />
           <Route path="*" element={<ErrorPage />} />
 
+          <Route
+            path="/client-dashboard"
+            element={<ProtectedRoute element={<ClientDashboard />} allowedRoles={["client"]} />}
+          />
+          <Route
+            path="/photographer-dashboard"
+            element={<ProtectedRoute element={<PhotographerDashboard />} allowedRoles={["photographer"]} />}
+          />
+
           {/* Protected Routes for All Authenticated Users */}
           <Route 
             path="/search" 
+            element={<ProtectedRoute element={<PhotographerSearch />} />} 
+          />
+          <Route 
+            path="/search-form" 
             element={<ProtectedRoute element={<Searchform />} />} 
           />
           <Route 

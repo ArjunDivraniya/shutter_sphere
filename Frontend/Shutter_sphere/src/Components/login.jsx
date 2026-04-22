@@ -63,9 +63,12 @@ const LoginSignup = () => {
       const response = await axios.post(endpoint, formData);
 
       if (response.status === 200 || response.status === 201) {
-        const { role, token } = response.data;
+        const { role, token, userId } = response.data;
         localStorage.setItem("token", token);
         localStorage.setItem("role", role);
+        if (userId) {
+          localStorage.setItem("userId", String(userId));
+        }
         localStorage.setItem("email", response.data.email || formData.email);
         localStorage.setItem("userName", response.data.name || formData.name || "");
 
@@ -76,8 +79,9 @@ const LoginSignup = () => {
           else navigate("/search");
         } else {
           showToast(`Welcome, ${formData.name}!`, "success");
-          setIsLogin(true);
-          setFormData({ name: "", email: "", password: "", role: "" });
+          if (role === "photographer") navigate("/photographer-dashboard");
+          else if (role === "client") navigate("/client-dashboard");
+          else navigate("/search");
         }
       }
     } catch (error) {

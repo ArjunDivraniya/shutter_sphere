@@ -89,6 +89,12 @@ const initDatabase = async () => {
       );
     `);
 
+    // Keep schema backward-compatible for existing databases.
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending';`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES users(id) ON DELETE SET NULL;`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS photographer_id INTEGER REFERENCES users(id) ON DELETE SET NULL;`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS client_name VARCHAR(180);`);
+
     console.log("PostgreSQL Connected");
   } catch (error) {
     console.error("PostgreSQL Connection Failed", error);
