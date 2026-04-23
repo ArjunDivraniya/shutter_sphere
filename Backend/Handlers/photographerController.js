@@ -599,7 +599,7 @@ const getPackages = async (req, res) => {
     try {
         const userId = req.params.userId || req.user.id;
         const result = await pool.query(
-            "SELECT * FROM photographer_packages WHERE photographer_id = $1 ORDER BY price ASC",
+            "SELECT * FROM photographer_packages WHERE photographer_id = $1 ORDER BY sort_order ASC, price ASC",
             [userId]
         );
         res.json(result.rows);
@@ -611,23 +611,45 @@ const getPackages = async (req, res) => {
 const upsertPackage = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { id, name, price, duration, description } = req.body;
+        const { 
+            id, name, price, duration, duration_hrs, 
+            description, edited_photos, raw_files, 
+            max_revisions, travel_included, add_ons, is_active 
+        } = req.body;
 
         let result;
         if (id) {
             result = await pool.query(
                 `UPDATE photographer_packages 
-                 SET name = $1, price = $2, duration = $3, description = $4
-                 WHERE id = $5 AND photographer_id = $6
+                 SET name = $1, price = $2, duration = $3, duration_hrs = $4,
+                     description = $5, edited_photos = $6, raw_files = $7,
+                     max_revisions = $8, travel_included = $9, add_ons = $10,
+                     is_active = $11
+                 WHERE id = $12 AND photographer_id = $13
                  RETURNING *`,
-                [name, price, duration, description, id, userId]
+                [
+                    name, price, duration, duration_hrs, 
+                    description, edited_photos, raw_files, 
+                    max_revisions, travel_included, JSON.stringify(add_ons || []),
+                    is_active !== undefined ? is_active : true,
+                    id, userId
+                ]
             );
         } else {
             result = await pool.query(
-                `INSERT INTO photographer_packages (photographer_id, name, price, duration, description)
-                 VALUES ($1, $2, $3, $4, $5)
-                 RETURNING *`,
-                [userId, name, price, duration, description]
+                `INSERT INTO photographer_packages (
+                    photographer_id, name, price, duration, duration_hrs,
+                    description, edited_photos, raw_files, max_revisions,
+                    travel_included, add_ons, is_active
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                RETURNING *`,
+                [
+                    userId, name, price, duration, duration_hrs,
+                    description, edited_photos, raw_files, max_revisions,
+                    travel_included, JSON.stringify(add_ons || []),
+                    is_active !== undefined ? is_active : true
+                ]
             );
         }
 
@@ -639,6 +661,25 @@ const upsertPackage = async (req, res) => {
         res.json(result.rows[0]);
     } catch (error) {
         res.status(500).json({ message: "Error saving package", error: error.message });
+    }
+};
+
+const reorderPackages = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { orders } = req.body; // Array of { id, sort_order }
+
+        const queries = orders.map(item => 
+            pool.query(
+                "UPDATE photographer_packages SET sort_order = $1 WHERE id = $2 AND photographer_id = $3",
+                [item.sort_order, item.id, userId]
+            )
+        );
+        
+        await Promise.all(queries);
+        res.json({ message: "Packages reordered successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error reordering packages", error: error.message });
     }
 };
 
@@ -1020,6 +1061,7 @@ module.exports = {
     getPackages,
     upsertPackage,
     deletePackage,
+    reorderPackages,
     upsertAchievement,
     deleteAchievement,
     advancedSearch,

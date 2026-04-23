@@ -53,6 +53,17 @@ const BookingFlow = () => {
     
     // Form State
     const [selectedDate, setSelectedDate] = useState(location.state?.selectedDate || '');
+    
+    useEffect(() => {
+        if (selectedDate) {
+            const date = new Date(selectedDate + 'T00:00:00');
+            const today = new Date().setHours(0, 0, 0, 0);
+            if (date < today) {
+                setSelectedDate('');
+            }
+        }
+    }, []);
+
     const [selectedPackage, setSelectedPackage] = useState(location.state?.package || null);
     const [eventDetails, setEventDetails] = useState({
         eventName: '',
@@ -154,13 +165,16 @@ const BookingFlow = () => {
                                 ))}
                                 {calendarDays.map((calendarDay) => {
                                     const isBlocked = blockedDates.has(calendarDay.value);
+                                    const isPast = new Date(calendarDay.value + 'T00:00:00') < new Date().setHours(0, 0, 0, 0);
+                                    const isDisabled = isBlocked || isPast;
+
                                     return (
                                     <div 
                                         key={calendarDay.value}
-                                        onClick={() => !isBlocked && setSelectedDate(calendarDay.value)}
+                                        onClick={() => !isDisabled && setSelectedDate(calendarDay.value)}
                                         className={`h-14 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
-                                            isBlocked
-                                            ? 'bg-[#191919] text-[#756C64] cursor-not-allowed opacity-50'
+                                            isDisabled
+                                            ? 'bg-[#191919] text-[#756C64] cursor-not-allowed opacity-30'
                                             : selectedDate === calendarDay.value
                                                 ? 'bg-[var(--gold)] text-black font-bold ring-4 ring-[var(--gold)]/20'
                                                 : 'bg-[#191919] text-white hover:bg-white/5'

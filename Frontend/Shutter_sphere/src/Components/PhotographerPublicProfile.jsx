@@ -882,6 +882,7 @@ const PhotographerPublicProfile = () => {
 
                     const isBooked = slot.status === "booked";
                     const isPending = slot.status === "pending";
+                    const isPast = slot.date < new Date().setHours(0, 0, 0, 0);
                     const isSelected = selectedDate === slot.key;
                     const baseClass = "flex h-16 flex-col justify-between rounded-xl border p-2 text-left transition duration-200";
 
@@ -889,13 +890,13 @@ const PhotographerPublicProfile = () => {
                       <button
                         key={slot.key}
                         type="button"
-                        disabled={isBooked}
+                        disabled={isBooked || isPast}
                         onClick={() => setSelectedDate(slot.key)}
                         className={`${baseClass} ${
                           isSelected
                             ? "border-[var(--gold)] bg-[var(--gold)] text-black"
-                            : isBooked
-                              ? "cursor-not-allowed border-rose-500/30 bg-rose-500/10 text-rose-300"
+                            : isBooked || isPast
+                              ? "cursor-not-allowed opacity-40 border-white/5 bg-transparent"
                               : isPending
                                 ? "border-amber-500/30 bg-amber-500/10 text-amber-200 hover:border-amber-400/40"
                                 : "border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-1)] hover:border-[var(--gold-border)] hover:bg-[var(--gold-soft)]"
@@ -903,7 +904,7 @@ const PhotographerPublicProfile = () => {
                       >
                         <span className="text-xs text-inherit">{slot.day}</span>
                         <span className="text-[10px] uppercase tracking-wide opacity-80">
-                          {isBooked ? "Booked" : isPending ? "Pending" : "Available"}
+                          {isPast ? "Past" : isBooked ? "Booked" : isPending ? "Pending" : "Available"}
                         </span>
                       </button>
                     );

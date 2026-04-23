@@ -7,12 +7,14 @@ import {
   FaUsers,
   FaWallet,
   FaUser,
+  FaBoxOpen,
 } from "react-icons/fa";
 
 export const sidebarItems = [
   { key: "overview", label: "Dashboard", icon: FaHome },
   { key: "profile", label: "My Profile", icon: FaUser },
   { key: "bookings", label: "My Bookings", icon: FaCalendarCheck },
+  { key: "packages", label: "Packages", icon: FaBoxOpen },
   { key: "calendar", label: "Calendar", icon: FaCalendarAlt },
   { key: "earnings", label: "Earnings", icon: FaWallet },
   { key: "community", label: "Community", icon: FaUsers },

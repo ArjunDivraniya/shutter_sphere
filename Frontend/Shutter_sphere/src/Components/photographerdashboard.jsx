@@ -23,6 +23,7 @@ import CommunitySection from "./photographer-dashboard/sections/CommunitySection
 import ChatSection from "./photographer-dashboard/sections/ChatSection";
 import SettingsSection from "./photographer-dashboard/sections/SettingsSection";
 import ProfileSection from "./photographer-dashboard/sections/ProfileSection";
+import PackagesSection from "./photographer-dashboard/sections/PackagesSection";
 
 const validSections = sidebarItems.map((item) => item.key);
 
@@ -433,6 +434,10 @@ const PhotographerDashboard = () => {
 
     if (activeMenu === "earnings") {
       return <EarningsSection earningsMetrics={earningsMetrics} />;
+    }
+
+    if (activeMenu === "packages") {
+      return <PackagesSection signupId={signupId} />;
     }
 
     if (activeMenu === "community") {

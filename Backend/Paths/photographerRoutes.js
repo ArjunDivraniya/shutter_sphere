@@ -32,6 +32,8 @@ router.delete("/portfolio/:photoId", authMiddleware(["photographer"]), control.d
 // Package management
 router.get("/packages/:userId?", authMiddleware(["photographer"]), control.getPackages);
 router.post("/packages", authMiddleware(["photographer"]), control.upsertPackage);
+router.put("/packages/reorder", authMiddleware(["photographer"]), control.reorderPackages);
+router.put("/packages/:id", authMiddleware(["photographer"]), control.upsertPackage);
 router.delete("/packages/:packageId", authMiddleware(["photographer"]), control.deletePackage);
 
 // Achievement management
