@@ -6,20 +6,19 @@ const monthKey = (dateValue) => {
 };
 
 const getClientDashboard = async (req, res) => {
+  // Keeping original for backward compatibility if needed, but getClientRealtimeData should be used for the new modular dashboard
   try {
     const signupId = Number(req.params.signupId);
-    if (!signupId) {
-      return res.status(400).json({ message: "Valid signupId is required" });
-    }
+    if (!signupId) return res.status(400).json({ message: "Valid signupId is required" });
 
     const bookingsResult = await pool.query(
       `SELECT e.id, e.title, e.date, e.location, COALESCE(e.status, 'Pending') AS status,
               COALESCE(e.client_name, u_client.name, 'Client Booking') AS client_name,
-              COALESCE(p.full_name, u_photo.name, 'Photographer') AS photographer_name,
-              e.created_at
+              COALESCE(p.full_name, u.name, 'Photographer') AS photographer_name,
+              e.created_at, e.photographer_id
        FROM events e
        LEFT JOIN users u_client ON u_client.id = e.client_id
-       LEFT JOIN users u_photo ON u_photo.id = e.photographer_id
+       LEFT JOIN users u ON u.id = e.photographer_id
        LEFT JOIN photographers p ON p.signup_id = e.photographer_id
        WHERE e.client_id = $1 OR e.signup_id = $1
        ORDER BY e.date ASC`,
@@ -27,14 +26,14 @@ const getClientDashboard = async (req, res) => {
     );
 
     const recommendedResult = await pool.query(
-      `SELECT id, signup_id, full_name, city, specialization, rating, price_per_hour
-       FROM photographers
-       ORDER BY rating DESC, id DESC
+      `SELECT p.id, p.signup_id, p.full_name, p.city, p.specialization, p.rating, p.price_per_hour
+       FROM photographers p
+       ORDER BY p.rating DESC, p.id DESC
        LIMIT 6`
     );
 
-    const reviewCountResult = await pool.query(
-      `SELECT COUNT(*)::int AS total FROM reviews WHERE client_id = $1`,
+    const faveCountResult = await pool.query(
+      `SELECT COUNT(*)::int AS total FROM favorite_photographers WHERE client_id = $1`,
       [signupId]
     );
 
@@ -46,6 +45,7 @@ const getClientDashboard = async (req, res) => {
       status: row.status,
       clientName: row.client_name,
       photographerName: row.photographer_name,
+      photographerId: row.photographer_id,
       createdAt: row.created_at,
     }));
 
@@ -54,36 +54,204 @@ const getClientDashboard = async (req, res) => {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5)
       .map((b) => ({
-        id: `booking-${b.id}`,
-        title: "Booking updated",
-        detail: `${b.photographerName} • ${b.status}`,
-        time: new Date(b.createdAt).toISOString(),
+        id: `activity-${b.id}`,
+        title: "Booking Update",
+        detail: `Session with ${b.photographerName} is ${b.status}`,
+        time: b.createdAt,
       }));
-
-    const upcomingBookings = bookings.filter((b) => new Date(b.date) >= new Date() && b.status !== "Cancelled");
-
-    const recommendedPhotographers = recommendedResult.rows.map((row) => ({
-      id: row.id,
-      signupId: row.signup_id,
-      name: row.full_name || "Photographer",
-      city: row.city || "",
-      specialization: row.specialization || "",
-      rating: Number(row.rating) || 5,
-      pricePerHour: Number(row.price_per_hour) || 0,
-    }));
 
     return res.status(200).json({
       stats: {
-        upcomingBookings: upcomingBookings.length,
+        upcomingBookings: bookings.filter(b => b.status === 'Confirmed' || b.status === "Pending").length,
         totalBookings: bookings.length,
-        favoritePhotographers: reviewCountResult.rows[0]?.total || 0,
+        favoritePhotographers: faveCountResult.rows[0]?.total || 0,
       },
       upcomingBookings: bookings.slice(0, 10),
-      recommendedPhotographers,
+      recommendedPhotographers: recommendedResult.rows.map(r => ({
+        id: r.id,
+        signupId: r.signup_id,
+        name: r.full_name,
+        city: r.city,
+        specialization: r.specialization,
+        rating: Number(r.rating) || 5,
+        pricePerHour: Number(r.price_per_hour) || 0
+      })),
       recentActivity,
     });
   } catch (error) {
     return res.status(500).json({ message: "Failed to load client dashboard", error: error.message });
+  }
+};
+
+const getClientRealtimeData = async (req, res) => {
+  try {
+    const signupId = Number(req.params.signupId);
+    if (!signupId) return res.status(400).json({ message: "Valid signupId is required" });
+
+    // 1. Stats and Bookings
+    const bookingsResult = await pool.query(
+      `SELECT e.id, e.title, e.date, e.location, COALESCE(e.status, 'Pending') AS status,
+              COALESCE(p.full_name, u.name, 'Photographer') AS photographer_name,
+              e.photographer_id, e.created_at
+       FROM events e
+       LEFT JOIN users u ON u.id = e.photographer_id
+       LEFT JOIN photographers p ON p.signup_id = e.photographer_id
+       WHERE e.client_id = $1
+       ORDER BY e.date ASC`,
+      [signupId]
+    );
+
+    // 2. Favorites
+    const favoritesResult = await pool.query(
+      `SELECT p.signup_id, p.full_name, p.city, p.specialization, p.rating, p.price_per_hour
+       FROM favorite_photographers f
+       JOIN photographers p ON p.signup_id = f.photographer_id
+       WHERE f.client_id = $1`,
+      [signupId]
+    );
+
+    // 3. Recommended / Community (Nearby)
+    const communityResult = await pool.query(
+      `SELECT u.id AS signup_id,
+              COALESCE(p.full_name, u.name, 'Photographer') AS name,
+              COALESCE(p.city, 'Main City') AS city,
+              COALESCE(p.specialization, 'General') AS specialty,
+              COALESCE(p.rating, 4.8) AS rating,
+              COALESCE(p.availability, true) AS online,
+              p.latitude, p.longitude
+       FROM users u
+       LEFT JOIN photographers p ON p.signup_id = u.id
+       WHERE LOWER(TRIM(u.role)) = 'photographer'
+       LIMIT 100`,
+      []
+    );
+
+    // 4. Conversations (Reusing the logic from photographer dashboard)
+    const threadResult = await pool.query(
+      `SELECT t.id AS thread_id,
+              u.id AS other_user_id,
+              COALESCE(p.full_name, u.name, 'User') AS other_name,
+              COALESCE(
+                 (SELECT COUNT(*)::int FROM chat_messages m WHERE m.thread_id = t.id AND m.sender_id <> $1 AND m.created_at > COALESCE(cp.last_read_at, 'epoch'::timestamp)),
+                 0
+              ) AS unread_count
+       FROM chat_threads t
+       JOIN chat_participants cp ON cp.thread_id = t.id AND cp.user_id = $1
+       JOIN chat_participants cp_other ON cp_other.thread_id = t.id AND cp_other.user_id <> $1
+       JOIN users u ON u.id = cp_other.user_id
+       LEFT JOIN photographers p ON p.signup_id = u.id
+       ORDER BY t.created_at DESC`,
+      [signupId]
+    );
+
+    const conversations = [];
+    for (const thread of threadResult.rows) {
+      const msgResult = await pool.query(
+        `SELECT sender_id, content, created_at FROM chat_messages WHERE thread_id = $1 ORDER BY created_at ASC LIMIT 100`,
+        [thread.thread_id]
+      );
+      conversations.push({
+        id: `C-${thread.thread_id}`,
+        threadId: thread.thread_id,
+        name: thread.other_name,
+        userId: thread.other_user_id,
+        unread: thread.unread_count,
+        messages: msgResult.rows.map(m => ({ fromMe: Number(m.sender_id) === signupId, text: m.content, time: toMessageTime(m.created_at) }))
+      });
+    }
+
+    // 5. Reviews Given
+    const reviewsResult = await pool.query(
+      `SELECT r.id, r.review, r.rating, r.created_at, p.full_name AS photographer_name
+       FROM reviews r
+       JOIN photographers p ON p.signup_id = r.photographer_id
+       WHERE r.client_id = $1
+       ORDER BY r.created_at DESC`,
+      [signupId]
+    );
+
+    // 6. Settings
+    const settingsResult = await pool.query(`SELECT * FROM user_settings WHERE user_id = $1`, [signupId]);
+    const userResult = await pool.query(`SELECT name, email FROM users WHERE id = $1`, [signupId]);
+
+    return res.status(200).json({
+      stats: {
+        upcomingBookings: bookingsResult.rows.filter(b => b.status !== 'Cancelled').length,
+        totalBookings: bookingsResult.rows.length,
+        favoritePhotographers: favoritesResult.rows.length,
+      },
+      bookings: bookingsResult.rows.map(b => ({
+        id: b.id,
+        photographerName: b.photographer_name,
+        date: b.date,
+        location: b.location,
+        status: b.status,
+      })),
+      favorites: favoritesResult.rows.map(f => ({
+        signupId: f.signup_id,
+        name: f.full_name,
+        city: f.city,
+        specialty: f.specialization,
+        rating: Number(f.rating) || 5,
+        pricePerHour: Number(f.price_per_hour) || 0
+      })),
+      community: communityResult.rows.map(row => ({
+        id: `P-${row.signup_id}`,
+        userId: row.signup_id,
+        name: row.name,
+        city: row.city,
+        specialty: row.specialty,
+        rating: Number(row.rating) || 4.5,
+        online: Boolean(row.online),
+        lat: row.latitude,
+        lng: row.longitude
+      })),
+      conversations,
+      reviews: reviewsResult.rows.map(r => ({
+        id: r.id,
+        comment: r.review,
+        rating: r.rating,
+        date: r.created_at,
+        photographerName: r.photographer_name,
+      })),
+      settings: {
+        fullName: userResult.rows[0]?.name || "",
+        email: userResult.rows[0]?.email || "",
+        ... (settingsResult.rows[0] || {})
+      }
+    });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to load realtime client data", error: error.message });
+  }
+};
+
+const toggleFavoritePhotographer = async (req, res) => {
+  try {
+    const signupId = Number(req.params.signupId);
+    const { photographerId } = req.body;
+    if (!signupId || !photographerId) return res.status(400).json({ message: "Ids are required" });
+
+    const check = await pool.query(
+      `SELECT 1 FROM favorite_photographers WHERE client_id = $1 AND photographer_id = $2`,
+      [signupId, photographerId]
+    );
+
+    if (check.rows.length > 0) {
+      await pool.query(
+        `DELETE FROM favorite_photographers WHERE client_id = $1 AND photographer_id = $2`,
+        [signupId, photographerId]
+      );
+      return res.status(200).json({ message: "Removed from favorites", favorited: false });
+    } else {
+      await pool.query(
+        `INSERT INTO favorite_photographers (client_id, photographer_id) VALUES ($1, $2)`,
+        [signupId, photographerId]
+      );
+      return res.status(200).json({ message: "Added to favorites", favorited: true });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Operation failed", error: error.message });
   }
 };
 
@@ -515,9 +683,11 @@ const markConversationRead = async (req, res) => {
 
 module.exports = {
   getClientDashboard,
+  getClientRealtimeData,
   getPhotographerDashboard,
   getPhotographerRealtimeData,
   upsertPhotographerSettings,
   sendConversationMessage,
   markConversationRead,
+  toggleFavoritePhotographer,
 };

@@ -1,20 +1,15 @@
 const express = require("express");
-const { 
-  getClientDashboard, 
-  getPhotographerDashboard,
-  getPhotographerRealtimeData,
-  upsertPhotographerSettings,
-  sendConversationMessage,
-  markConversationRead
-} = require("../Handlers/dashboardController");
+const dashboardController = require("../Handlers/dashboardController");
 
 const router = express.Router();
 
-router.get("/client/:signupId", getClientDashboard);
-router.get("/photographer/:signupId", getPhotographerDashboard);
-router.get("/photographer/:signupId/realtime", getPhotographerRealtimeData);
-router.post("/photographer/:signupId/settings", upsertPhotographerSettings);
-router.post("/photographer/:signupId/chat", sendConversationMessage);
-router.patch("/photographer/:signupId/chat/:threadId/read", markConversationRead);
+router.get("/client/:signupId", dashboardController.getClientDashboard);
+router.get("/client/:signupId/realtime", dashboardController.getClientRealtimeData);
+router.post("/client/:signupId/favorite", dashboardController.toggleFavoritePhotographer);
+router.get("/photographer/:signupId", dashboardController.getPhotographerDashboard);
+router.get("/photographer/:signupId/realtime", dashboardController.getPhotographerRealtimeData);
+router.post("/photographer/:signupId/settings", dashboardController.upsertPhotographerSettings);
+router.post("/photographer/:signupId/chat/send", dashboardController.sendConversationMessage);
+router.post("/photographer/:signupId/chat/:threadId/read", dashboardController.markConversationRead);
 
 module.exports = router;

@@ -1,17 +1,23 @@
 import { motion } from "framer-motion";
 import { sidebarItems } from "./constants";
 
-const Sidebar = ({ activeMenu, onSectionChange }) => {
+const Sidebar = ({
+  activeMenu,
+  onSectionChange,
+  items = sidebarItems,
+  spaceLabel = "Photographer Space",
+  brandLabel = "Shutter Sphere",
+}) => {
   return (
     <aside className="surface-card hidden w-72 shrink-0 self-start p-5 lg:sticky lg:top-6 lg:block">
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Photographer Space</p>
-        <h1 className="mt-2 text-2xl font-black text-[var(--text)]">Shutter Sphere</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">{spaceLabel}</p>
+        <h1 className="mt-2 text-2xl font-black text-[var(--text)]">{brandLabel}</h1>
         <div className="mt-4 h-1.5 w-24 rounded-full bg-gradient-to-r from-[#ff7a45] to-[#ffb84d]" />
       </div>
 
       <nav className="space-y-2">
-        {sidebarItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const active = activeMenu === item.key;
           return (
