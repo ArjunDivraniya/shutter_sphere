@@ -217,11 +217,57 @@ const updatePhotographer = async (req, res) => {
     }
 };
 
+const getPhotographerById = async (req, res) => {
+    try {
+        const photographerId = req.params.id;
+
+        const result = await pool.query(
+            `SELECT id, signup_id, full_name, email, phone_number, address, city, specialization,
+                    experience, portfolio_links, budget_range, availability, languages_spoken,
+                    equipment_used, reviews, rating, price_per_hour
+             FROM photographers
+             WHERE CAST(id AS TEXT) = $1 OR CAST(signup_id AS TEXT) = $1
+             LIMIT 1`,
+            [photographerId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Photographer not found" });
+        }
+
+        const row = result.rows[0];
+        return res.json({
+            _id: String(row.id),
+            id: row.id,
+            signupId: row.signup_id,
+            name: row.full_name,
+            fullName: row.full_name,
+            email: row.email,
+            phoneNumber: row.phone_number,
+            address: row.address,
+            city: row.city,
+            specialization: row.specialization,
+            specializations: row.specialization ? [row.specialization] : [],
+            experience: row.experience,
+            portfolioLinks: row.portfolio_links,
+            budgetRange: row.budget_range,
+            availability: row.availability,
+            languagesSpoken: row.languages_spoken,
+            equipmentUsed: row.equipment_used,
+            reviews: row.reviews,
+            rating: Number(row.rating) || 5,
+            pricePerHour: Number(row.price_per_hour) || 0,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Failed to load photographer", error: error.message });
+    }
+};
+
 
 // Search Photographers by Location & Specialization
 const searchPhotographer = async (req, res) => {
     try {
-        const { location, specialization } = req.query;
+        const { location, specialization, query } = req.query;
         const values = [];
         const conditions = [];
 
@@ -234,6 +280,21 @@ const searchPhotographer = async (req, res) => {
             conditions.push(`specialization ILIKE $${values.length}`);
         }
 
+        if (query) {
+            values.push(`%${query}%`);
+            const qIndex = values.length;
+            conditions.push(`(
+                full_name ILIKE $${qIndex}
+                OR city ILIKE $${qIndex}
+                OR address ILIKE $${qIndex}
+                OR specialization ILIKE $${qIndex}
+                OR COALESCE(experience::text, '') ILIKE $${qIndex}
+                OR COALESCE(languages_spoken, '') ILIKE $${qIndex}
+                OR COALESCE(equipment_used, '') ILIKE $${qIndex}
+                OR COALESCE(reviews, '') ILIKE $${qIndex}
+            )`);
+        }
+
         const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
         const result = await pool.query(
             `SELECT id, signup_id, full_name, email, phone_number, address, city, specialization,
@@ -241,7 +302,7 @@ const searchPhotographer = async (req, res) => {
                     equipment_used, reviews, rating, price_per_hour
              FROM photographers
              ${whereClause}
-             ORDER BY id DESC`,
+             ORDER BY rating DESC, id DESC`,
             values
         );
 
@@ -274,4 +335,4 @@ const searchPhotographer = async (req, res) => {
     }
 };
 
-module.exports = { createPhotographer, getPhotographers, updatePhotographer, searchPhotographer };
+module.exports = { createPhotographer, getPhotographers, updatePhotographer, searchPhotographer, getPhotographerById };

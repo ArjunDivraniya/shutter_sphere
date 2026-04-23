@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaMapMarkerAlt, FaStar, FaFilter, FaRedo, FaMap, FaList } from "react-icons/fa";
+import { FaMapMarkerAlt, FaStar, FaFilter, FaRedo, FaMap, FaList, FaComments } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";

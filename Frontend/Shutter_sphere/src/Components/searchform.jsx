@@ -73,7 +73,7 @@ const SearchForm = () => {
       if (response.status === 200 || response.status === 201) {
         setPhotographers(response.data);
         console.log(response.data)
-        navigate("/pgresult");
+        navigate("/search");
       }
 
     } catch (error) {

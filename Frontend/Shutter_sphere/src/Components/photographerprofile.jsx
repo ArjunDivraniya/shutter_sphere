@@ -1,4 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import axios from "axios";
+import { API_BASE_URL } from "../utils/apiBase";
 import {
   FiAward,
   FiBookOpen,
@@ -81,6 +84,56 @@ const initialData = {
   ],
 };
 
+const decodeJwtPayload = (token) => {
+  try {
+    const payload = token?.split(".")?.[1];
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = decodeURIComponent(
+      atob(normalized)
+        .split("")
+        .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+        .join("")
+    );
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+};
+
+const resolveSignupId = () => {
+  const localId = localStorage.getItem("userId");
+  if (localId) return String(localId);
+
+  const token = localStorage.getItem("token");
+  const payload = decodeJwtPayload(token);
+  const inferredId = payload?.userId || payload?.id || payload?.sub;
+  return inferredId ? String(inferredId) : "";
+};
+
+const mapProfileApiToState = (apiProfile = {}) => {
+  const next = JSON.parse(JSON.stringify(initialData));
+  next.personal.fullName = apiProfile.name || next.personal.fullName;
+  next.personal.email = apiProfile.email || next.personal.email;
+  next.personal.phone = apiProfile.phoneNumber || next.personal.phone;
+  next.personal.photographerType = apiProfile.specialization || next.personal.photographerType;
+  next.personal.city = apiProfile.location || next.personal.city;
+  next.personal.state = "";
+  next.personal.country = "";
+  next.personal.experience = apiProfile.experience || next.personal.experience;
+
+  const portfolio = Array.isArray(apiProfile.portfolio) ? apiProfile.portfolio : [];
+  next.portfolio.totalImages = String(portfolio.length);
+  next.review.rating = String(apiProfile.rating || next.review.rating);
+  next.review.totalReviews = String(apiProfile.totalReviews || next.review.totalReviews);
+  if (Array.isArray(apiProfile.reviews) && apiProfile.reviews.length > 0) {
+    next.review.featuredReview = apiProfile.reviews[0].review || next.review.featuredReview;
+    next.review.featuredClient = apiProfile.reviews[0].name || next.review.featuredClient;
+  }
+
+  return next;
+};
+
 const cardStyle =
   "rounded-2xl border border-[var(--line-2)] bg-[var(--bg-card)] p-4 shadow-[0_8px_20px_rgba(0,0,0,0.2)]";
 const inputStyle =
@@ -98,9 +151,21 @@ const PhotographerProfile = () => {
   const [profileData, setProfileData] = useState(initialData);
   const [draftData, setDraftData] = useState(initialData);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
+
+  const signupId = useMemo(() => resolveSignupId(), []);
 
   const activeLabel =
     sectionConfig.find((section) => section.key === activeSection)?.label || "Section";
+
+  const profileHighlights = [
+    { label: "Portfolio", value: profileData.portfolio.totalImages },
+    { label: "Bookings", value: profileData.bookings.completed },
+    { label: "Rating", value: profileData.review.rating },
+    { label: "Packages", value: String(profileData.packages.length) },
+  ];
 
   const userHeader = useMemo(() => {
     const personal = profileData.personal;
@@ -110,6 +175,54 @@ const PhotographerProfile = () => {
       cityState: `${personal.city}, ${personal.state}`,
     };
   }, [profileData]);
+
+  const loadProfile = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!signupId) {
+        if (!silent) setLoading(false);
+        return;
+      }
+
+      try {
+        if (!silent) setLoading(true);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${API_BASE_URL}/api/profile/${signupId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        const liveState = mapProfileApiToState(response.data?.profile || {});
+        setProfileData(liveState);
+        if (!isEditing) {
+          setDraftData(liveState);
+        }
+        setLastSyncedAt(new Date());
+      } catch (error) {
+        console.error("Failed to sync photographer profile:", error);
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [signupId, isEditing]
+  );
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    if (!signupId || isEditing) return undefined;
+
+    const intervalId = setInterval(() => {
+      loadProfile({ silent: true });
+    }, 15000);
+
+    const handleFocus = () => loadProfile({ silent: true });
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [signupId, isEditing, loadProfile]);
 
   const openEditMode = () => {
     setDraftData(profileData);
@@ -121,9 +234,42 @@ const PhotographerProfile = () => {
     setIsEditing(false);
   };
 
-  const saveSection = () => {
-    setProfileData(draftData);
-    setIsEditing(false);
+  const saveSection = async () => {
+    if (!signupId) {
+      setProfileData(draftData);
+      setIsEditing(false);
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${API_BASE_URL}/api/profile/${signupId}`,
+        {
+          name: draftData.personal.fullName,
+          phoneNumber: draftData.personal.phone,
+          location: draftData.personal.city,
+          specialization: draftData.personal.photographerType,
+          experience: draftData.personal.experience,
+          description: draftData.review.featuredReview,
+          pricePerHour: Number(String(draftData.packages?.[0]?.price || "").replace(/[^0-9]/g, "")) || 0,
+        },
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
+      );
+
+      setProfileData(draftData);
+      setIsEditing(false);
+      setLastSyncedAt(new Date());
+      await loadProfile({ silent: true });
+    } catch (error) {
+      console.error("Failed to save photographer profile:", error);
+      alert("Failed to save profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSectionChange = (nextSection) => {
@@ -441,6 +587,16 @@ const PhotographerProfile = () => {
     return renderSimpleArraySection("achievements", "New Achievement");
   };
 
+  if (loading) {
+    return (
+      <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-8" style={{ background: "#080808", color: "#F0EAE0" }}>
+        <div className="mx-auto max-w-7xl rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#121212] p-6 text-sm text-[#B8AFA4]">
+          Loading your profile...
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main
       className="min-h-screen px-4 py-6 sm:px-6 lg:px-8"
@@ -461,78 +617,109 @@ const PhotographerProfile = () => {
         "--line-2": "rgba(255,255,255,0.1)",
       }}
     >
-      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[320px,1fr]">
-        <aside className="rounded-2xl border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_16px_30px_rgba(0,0,0,0.28)]">
-          <div className="mb-6 rounded-2xl border border-[var(--line-2)] bg-[var(--bg-raised)] p-4">
-            <div className="mb-3 h-16 w-16 rounded-full border-2 border-[var(--gold)] bg-[linear-gradient(145deg,#333,#1b1b1b)]" />
-            <p className="text-lg font-semibold text-[var(--ink-1)]" style={{ fontFamily: "Cormorant Garamond, serif" }}>
-              {userHeader.fullName}
-            </p>
-            <p className="mt-1 text-xs text-[var(--ink-2)]">{userHeader.email}</p>
-            <p className="mt-2 inline-flex items-center gap-1 text-xs text-[var(--ink-2)]">
-              <FiMapPin className="text-[var(--gold)]" /> {userHeader.cityState}
-            </p>
-          </div>
+      <div className="mx-auto max-w-7xl space-y-6">
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="overflow-hidden rounded-2xl border border-[var(--line-1)] bg-[var(--bg-card)] shadow-[0_16px_30px_rgba(0,0,0,0.28)]"
+        >
+          <div className="h-[180px] bg-[linear-gradient(135deg,#1a1208_0%,#0c0e14_52%,#140a0a_100%)]" />
+          <div className="relative px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
+            <div className="-mt-14 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="relative h-24 w-24 rounded-full border-[3px] border-[var(--gold)] bg-[#191919] p-1 shadow-[0_0_0_8px_rgba(14,14,14,0.95)]">
+                  <div className="h-full w-full rounded-full bg-[linear-gradient(145deg,#333,#1b1b1b)]" />
+                  <span className="absolute bottom-0 right-0 flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-[#121212] bg-[var(--gold)] text-[10px] font-bold text-white">
+                    ✓
+                  </span>
+                </div>
 
-          <div className="space-y-2">
-            {sectionConfig.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => handleSectionChange(key)}
-                className={`flex w-full items-center justify-between rounded-xl border px-3 py-3 text-sm font-semibold transition-all duration-200 ${
-                  activeSection === key
-                    ? "border-[var(--gold-border)] bg-[var(--gold-soft)] text-[var(--gold)] shadow-[0_0_0_1px_var(--gold-border)]"
-                    : "border-[var(--line-2)] bg-[var(--bg-card)] text-[var(--ink-2)] hover:border-[var(--gold-border)] hover:text-[var(--ink-1)]"
-                }`}
-              >
-                <span className="inline-flex items-center gap-2">
+                <div className="pt-4">
+                  <h1 className="font-display text-[36px] font-semibold leading-none text-[var(--ink-1)]" style={{ fontFamily: "Cormorant Garamond, serif" }}>
+                    {userHeader.fullName}
+                  </h1>
+                  <p className="mt-2 inline-flex items-center gap-2 text-[13px] text-[var(--ink-2)]">
+                    <FiMapPin className="text-[var(--gold)]" /> {userHeader.cityState}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {profileHighlights.map((item) => (
+                      <span key={item.label} className="rounded-full border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-1 text-[12px] text-[var(--ink-2)]">
+                        {item.label}: <span className="text-[var(--gold)]">{item.value}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-xs text-[var(--ink-2)]">
+                  <FiClock />
+                  {lastSyncedAt
+                    ? `Synced ${lastSyncedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                    : "Live sync waiting..."}
+                </span>
+                {!isEditing ? (
+                  <button
+                    onClick={openEditMode}
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--gold-border)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)] transition hover:bg-[var(--gold)] hover:text-black"
+                  >
+                    <FiEdit2 /> Edit Profile
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={saveSection}
+                      disabled={saving}
+                      className="inline-flex items-center gap-2 rounded-full border border-[var(--gold-border)] bg-[var(--gold)] px-4 py-3 text-sm font-semibold text-black"
+                    >
+                      <FiSave /> {saving ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      onClick={cancelEditMode}
+                      className="inline-flex items-center gap-2 rounded-full border border-[var(--line-2)] bg-[var(--bg-raised)] px-4 py-3 text-sm font-semibold text-[var(--ink-2)]"
+                    >
+                      <FiX /> Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-2 overflow-x-auto border-b border-[var(--line-2)] pb-3">
+              {sectionConfig.map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  onClick={() => handleSectionChange(key)}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                    activeSection === key
+                      ? "border border-[var(--gold-border)] bg-[var(--gold-soft)] text-[var(--gold)]"
+                      : "text-[var(--ink-2)] hover:bg-[var(--bg-raised)] hover:text-[var(--ink-1)]"
+                  }`}
+                >
                   <Icon className="text-base" />
                   {label}
-                </span>
-                {activeSection === key ? <FiCheckCircle className="text-[var(--gold)]" /> : null}
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        <section className="rounded-2xl border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_16px_30px_rgba(0,0,0,0.28)] sm:p-6">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--line-2)] bg-[var(--bg-raised)] px-4 py-3.5">
-            <h1 className="text-3xl font-semibold text-[var(--ink-1)]" style={{ fontFamily: "Cormorant Garamond, serif" }}>
-              {activeLabel}
-            </h1>
-
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-xs text-[var(--ink-2)]">
-                <FiClock /> Updated 2 hours ago
-              </span>
-              {!isEditing ? (
-                <button
-                  onClick={openEditMode}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--gold-border)] bg-[var(--gold-soft)] px-3 py-2 text-xs font-semibold text-[var(--gold)]"
-                >
-                  <FiEdit2 /> Edit Section
+                  {activeSection === key ? <FiCheckCircle className="text-[var(--gold)]" /> : null}
                 </button>
-              ) : (
-                <>
-                  <button
-                    onClick={saveSection}
-                    className="inline-flex items-center gap-2 rounded-xl border border-[var(--gold-border)] bg-[var(--gold)] px-3 py-2 text-xs font-semibold text-black"
-                  >
-                    <FiSave /> Save
-                  </button>
-                  <button
-                    onClick={cancelEditMode}
-                    className="inline-flex items-center gap-2 rounded-xl border border-[var(--line-2)] bg-[var(--bg-card)] px-3 py-2 text-xs font-semibold text-[var(--ink-2)]"
-                  >
-                    <FiX /> Cancel
-                  </button>
-                </>
-              )}
+              ))}
             </div>
+          </div>
+        </motion.section>
+
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.03 }}
+          className="rounded-2xl border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_16px_30px_rgba(0,0,0,0.28)] sm:p-6"
+        >
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--line-2)] bg-[var(--bg-raised)] px-4 py-3.5">
+            <h2 className="text-3xl font-semibold text-[var(--ink-1)]" style={{ fontFamily: "Cormorant Garamond, serif" }}>
+              {activeLabel}
+            </h2>
           </div>
 
           {renderSectionContent()}
-        </section>
+        </motion.section>
       </div>
     </main>
   );

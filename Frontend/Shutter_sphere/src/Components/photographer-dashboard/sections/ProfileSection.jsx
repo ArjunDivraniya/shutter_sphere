@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { API_BASE_URL } from "../../../utils/apiBase";
@@ -39,72 +39,136 @@ const Field = ({ label, children }) => (
   </label>
 );
 
+const createDefaultProfileState = () => ({
+  personal: {
+    fullName: "Rahul Sharma",
+    email: "rahul@example.com",
+    phone: "",
+    location: "",
+    specialization: "",
+    experience: "",
+    bio: "",
+    equipment: "",
+    languages: "",
+    pricePerHour: 0,
+  },
+  portfolio: {
+    images: [],
+    totalImages: 0,
+  },
+  packages: [
+    { name: "Basic", price: "$299", duration: "4 Hours", deliverables: "100+ Edited Photos" },
+    { name: "Premium", price: "$649", duration: "8 Hours", deliverables: "250+ Edited Photos, 1 Reel" },
+    { name: "Elite", price: "$1099", duration: "12 Hours", deliverables: "500+ Edited Photos, 2 Reels, Album" },
+  ],
+  reviews: [],
+  rating: 0,
+  totalReviews: 0,
+  achievements: [
+    "Top 10 Wedding Photographer - 2025",
+    "Best Candid Storytelling Award",
+    "Featured Artist in Gujarat Wedding Expo",
+  ],
+});
+
 const ProfileSection = ({ signupId }) => {
   const [activeTab, setActiveTab] = useState("personal");
-  const [profileData, setProfileData] = useState(null);
-  const [draftData, setDraftData] = useState(null);
+  const [profileData, setProfileData] = useState(() => createDefaultProfileState());
+  const [draftData, setDraftData] = useState(() => createDefaultProfileState());
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
 
   const activeLabel =
     tabConfig.find((tab) => tab.key === activeTab)?.label || "Section";
 
-  useEffect(() => {
-    loadProfile();
-  }, [signupId]);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async ({ silent = false } = {}) => {
     if (!signupId) {
-      setLoading(false);
+      const fallbackState = createDefaultProfileState();
+      setProfileData(fallbackState);
+      setDraftData(fallbackState);
+      if (!silent) setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/api/profile/${signupId}`);
       const data = response.data.profile || {};
       
+      const fallbackState = createDefaultProfileState();
       const profileState = {
+        ...fallbackState,
         personal: {
-          fullName: data.name || "",
-          email: data.email || "",
-          phone: data.phoneNumber || "",
-          location: data.location || "",
-          specialization: data.specialization || "",
-          experience: data.experience || "",
-          bio: data.description || "",
-          equipment: data.equipmentUsed || "",
-          languages: data.languagesSpoken || "",
-          pricePerHour: data.pricePerHour || 0,
+          ...fallbackState.personal,
+          fullName: data.name || fallbackState.personal.fullName,
+          email: data.email || fallbackState.personal.email,
+          phone: data.phoneNumber || fallbackState.personal.phone,
+          location: data.location || fallbackState.personal.location,
+          specialization: data.specialization || fallbackState.personal.specialization,
+          experience: data.experience || fallbackState.personal.experience,
+          bio: data.description || fallbackState.personal.bio,
+          equipment: data.equipmentUsed || fallbackState.personal.equipment,
+          languages: data.languagesSpoken || fallbackState.personal.languages,
+          pricePerHour: data.pricePerHour || fallbackState.personal.pricePerHour,
         },
         portfolio: {
-          images: data.portfolio || [],
-          totalImages: data.portfolio?.length || 0,
+          images: data.portfolio || fallbackState.portfolio.images,
+          totalImages: data.portfolio?.length || fallbackState.portfolio.totalImages,
         },
-        packages: [
-          { name: "Basic", price: "$299", duration: "4 Hours", deliverables: "100+ Edited Photos" },
-          { name: "Premium", price: "$649", duration: "8 Hours", deliverables: "250+ Edited Photos, 1 Reel" },
-          { name: "Elite", price: "$1099", duration: "12 Hours", deliverables: "500+ Edited Photos, 2 Reels, Album" },
-        ],
-        reviews: data.reviews || [],
-        rating: data.rating || 0,
-        totalReviews: data.totalReviews || 0,
-        achievements: [
-          "Top 10 Wedding Photographer - 2025",
-          "Best Candid Storytelling Award",
-          "Featured Artist in Gujarat Wedding Expo",
-        ],
+        reviews: data.reviews || fallbackState.reviews,
+        rating: data.rating || fallbackState.rating,
+        totalReviews: data.totalReviews || fallbackState.totalReviews,
       };
 
       setProfileData(profileState);
-      setDraftData(profileState);
+      if (!isEditing) {
+        setDraftData(profileState);
+      }
+      setLastSyncedAt(new Date());
     } catch (error) {
       console.error("Failed to load profile:", error);
+      if (!silent) {
+        const fallbackState = createDefaultProfileState();
+        setProfileData(fallbackState);
+        setDraftData(fallbackState);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  };
+  }, [signupId, isEditing]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    if (!signupId || isEditing) return undefined;
+
+    const intervalId = setInterval(() => {
+      loadProfile({ silent: true });
+    }, 15000);
+
+    const handleFocus = () => {
+      loadProfile({ silent: true });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadProfile({ silent: true });
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [signupId, isEditing, loadProfile]);
 
   const openEditMode = () => {
     setDraftData(JSON.parse(JSON.stringify(profileData)));
@@ -482,6 +546,11 @@ const ProfileSection = ({ signupId }) => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <span className="hidden text-[11px] text-[var(--ink-3)] md:inline">
+              {lastSyncedAt
+                ? `Live sync: ${lastSyncedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                : "Live sync: waiting..."}
+            </span>
             {!isEditing ? (
               <button
                 onClick={openEditMode}

@@ -6,7 +6,6 @@ import { PhotographerProvider } from "./Components/photographercontext";
 
 // Import Components
 import Searchform from "./Components/searchform";
-import SearchResults from "./Components/searchresult";
 import PhotographerSearch from "./Components/PhotographerSearch";
 import PhotographerPublicProfile from "./Components/PhotographerPublicProfile";
 import Profile from "./Components/profile";
@@ -26,6 +25,8 @@ import Calendar from "./Components/calendar";
 import ErrorPage from "./Components/404";
 import AboutUs from "./Components/aboutus";
 import ContactUs from "./Components/contactus";
+import PhotographerCommandCenter from "./Components/photographer-dashboard-v2/PhotographerCommandCenter";
+import PhotographerBookingsManagement from "./Components/photographer-dashboard-v2/PhotographerBookingsManagement";
 
 // Protected Route Component
 const ProtectedRoute = ({ element, allowedRoles }) => {
@@ -88,6 +89,19 @@ function App() {
             element={<ProtectedRoute element={<PhotographerDashboard />} allowedRoles={["photographer"]} />}
           />
 
+          <Route
+            path="/dashboard/photographer"
+            element={<ProtectedRoute element={<PhotographerCommandCenter />} allowedRoles={["photographer"]} />}
+          />
+          <Route
+            path="/dashboard/photographer/bookings"
+            element={<ProtectedRoute element={<PhotographerBookingsManagement />} allowedRoles={["photographer"]} />}
+          />
+          <Route
+            path="/dashboard/photographer/profile"
+            element={<ProtectedRoute element={<Editprofile />} allowedRoles={["photographer"]} />}
+          />
+
           {/* Protected Routes for All Authenticated Users */}
           <Route
             path="/search"
@@ -99,7 +113,7 @@ function App() {
           />
           <Route
             path="/pgresult"
-            element={<ProtectedRoute element={<SearchResults />} />}
+            element={<ProtectedRoute element={<PhotographerSearch />} />}
           />
 
           {/* Protected Routes for Photographers Only */}

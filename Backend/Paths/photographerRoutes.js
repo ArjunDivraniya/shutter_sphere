@@ -5,6 +5,7 @@ const router = express.Router();
 router.post("/add", control.createPhotographer);  // User submits profile data
 router.get("/find",control.getPhotographers); // get photographer data
 router.get("/photographers", control.getPhotographers);
+router.get("/photographer/:id", control.getPhotographerById);
 router.patch("/photographer/:id",control.updatePhotographer);
 
 // Search photographers by location and specialization

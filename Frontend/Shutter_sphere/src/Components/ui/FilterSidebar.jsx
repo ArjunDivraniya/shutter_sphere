@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaChevronDown, FaMapMarkerAlt, FaStar, FaTimes } from "react-icons/fa";
+import { FaChevronDown, FaMapMarkerAlt, FaStar, FaTimes, FaSearch } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
 const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
   const { t } = useTranslation();
 
   const [expandedFilters, setExpandedFilters] = useState({
+    query: true,
     location: true,
     price: true,
     category: true,
@@ -14,6 +15,7 @@ const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
   });
 
   const [filters, setFilters] = useState({
+    query: "",
     location: "",
     priceRange: [0, 5000],
     category: "all",
@@ -45,6 +47,7 @@ const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
 
   const resetFilters = () => {
     const resetData = {
+      query: "",
       location: "",
       priceRange: [0, 5000],
       category: "all",
@@ -95,6 +98,30 @@ const FilterSidebar = ({ onFiltersChange, isOpen, onClose }) => {
         </motion.button>
 
         <div className="space-y-5">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3">
+            <button
+              type="button"
+              onClick={() => toggleFilter("query")}
+              className="flex w-full items-center justify-between text-left"
+            >
+              <span className="flex items-center gap-2 font-semibold text-[var(--text)]">
+                <FaSearch className="text-[#ff7a45]" /> Search
+              </span>
+              <FaChevronDown
+                className={`text-[var(--text-muted)] transition-transform ${expandedFilters.query ? "rotate-180" : ""}`}
+              />
+            </button>
+            {expandedFilters.query && (
+              <input
+                type="text"
+                value={filters.query}
+                onChange={(e) => handleFilterChange("query", e.target.value)}
+                placeholder="Name, city, category, events..."
+                className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[#ff7a45]"
+              />
+            )}
+          </div>
+
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3">
             <button
               type="button"

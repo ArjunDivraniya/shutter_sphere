@@ -1,398 +1,773 @@
-import React, { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiAward,
-  FiCalendar,
-  FiCheckCircle,
-  FiClock,
-  FiColumns,
-  FiGlobe,
-  FiGrid,
-  FiImage,
-  FiMapPin,
-  FiMessageCircle,
-  FiPlayCircle,
-  FiStar,
-  FiTag,
-  FiUser,
-  FiVideo,
-} from "react-icons/fi";
+  FaArrowLeft,
+  FaCalendarAlt,
+  FaChevronLeft,
+  FaChevronRight,
+  FaCheck,
+  FaCheckCircle,
+  FaClock,
+  FaComments,
+  FaImage,
+  FaMapMarkerAlt,
+  FaPaperPlane,
+  FaPlay,
+  FaStar,
+  FaVideo,
+} from "react-icons/fa";
+import { API_BASE_URL } from "../utils/apiBase";
 
-const tabs = ["Portfolio", "About", "Packages", "Reviews", "Availability"];
-const categoryFilters = ["All", "Wedding", "Festival", "Birthday"];
+const tabItems = ["Portfolio", "About", "Packages", "Reviews", "Availability"];
+const portfolioCategories = ["All", "Wedding", "Festival", "Birthday", "Portrait"];
 
-const portfolioItems = [
-  { id: 1, h: "h-28", tag: "Wedding" },
-  { id: 2, h: "h-40", tag: "Festival" },
-  { id: 3, h: "h-32", tag: "Birthday" },
-  { id: 4, h: "h-48", tag: "Wedding" },
-  { id: 5, h: "h-36", tag: "Festival" },
-  { id: 6, h: "h-44", tag: "Birthday" },
-];
+const fallbackPhotographer = {
+  id: 1,
+  name: "Rahul Sharma",
+  fullName: "Rahul Sharma",
+  city: "Rajkot",
+  state: "Gujarat",
+  specialization: "Wedding & Festival Photographer",
+  specializations: ["Wedding", "Festival", "Portrait"],
+  experience: 6,
+  equipment: ["Canon EOS R5", "Canon 24-70mm f/2.8", "Canon 85mm f/1.4", "DJI Mavic Air 2 (drone)"],
+  languages: ["Hindi", "Gujarati", "English"],
+  rating: 4.9,
+  reviewCount: 84,
+  basePrice: 8000,
+  priceLabel: "\u20b98,000/event",
+  verified: true,
+  travelRadiusKm: 200,
+  avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop",
+  coverGradient: "linear-gradient(135deg, #1a1208 0%, #0c0e14 52%, #140a0a 100%)",
+  watermark: "\ud83d\udcf8",
+  locationLabel: "Rajkot, Gujarat",
+  bio:
+    "Rahul Sharma creates warm, cinematic wedding and festival stories with a calm on-ground presence and a fast delivery workflow. His focus is clean composition, authentic emotion, and premium color grading for family, culture, and celebration-driven events.",
+  categories: ["Wedding", "Festival", "Birthday", "Portrait"],
+  portfolio: [
+    { id: 1, category: "Wedding", style: "h-56", gradient: "bg-[linear-gradient(160deg,#24201b,#121212)]", icon: "\ud83d\udc8d" },
+    { id: 2, category: "Festival", style: "h-40", gradient: "bg-[linear-gradient(160deg,#20161a,#0f1118)]", icon: "\ud83c\udf89" },
+    { id: 3, category: "Portrait", style: "h-72", gradient: "bg-[linear-gradient(160deg,#171313,#0f0f0f)]", icon: "\ud83d\udcf7" },
+    { id: 4, category: "Wedding", style: "h-44", gradient: "bg-[linear-gradient(160deg,#15171e,#101010)]", icon: "\ud83d\udc6b" },
+    { id: 5, category: "Festival", style: "h-52", gradient: "bg-[linear-gradient(160deg,#231d13,#111111)]", icon: "\ud83c\udf86" },
+    { id: 6, category: "Birthday", style: "h-36", gradient: "bg-[linear-gradient(160deg,#1a1411,#101010)]", icon: "\ud83c\udf82" },
+    { id: 7, category: "Portrait", style: "h-48", gradient: "bg-[linear-gradient(160deg,#10151b,#121212)]", icon: "\ud83e\udd33" },
+    { id: 8, category: "Wedding", style: "h-60", gradient: "bg-[linear-gradient(160deg,#17110f,#131313)]", icon: "\ud83d\udc95" },
+    { id: 9, category: "Festival", style: "h-44", gradient: "bg-[linear-gradient(160deg,#21180f,#111111)]", icon: "\ud83c\udfa5" },
+  ],
+  packages: [
+    {
+      name: "Basic",
+      price: 8000,
+      duration: "4 hours coverage",
+      deliverables: ["200 edited photos", "1 photographer", "Online delivery in 7 days"],
+      popular: false,
+      cta: "Book Basic",
+    },
+    {
+      name: "Premium",
+      price: 15000,
+      duration: "8 hours coverage",
+      deliverables: ["500 edited photos + reels", "2 photographers", "Delivery in 5 days", "Album included"],
+      popular: true,
+      cta: "Book Premium",
+    },
+    {
+      name: "Elite",
+      price: 25000,
+      duration: "Full day + next-day",
+      deliverables: ["1000 photos + cinematic video", "3 photographers", "3-day delivery", "Album + frame"],
+      popular: false,
+      cta: "Book Elite",
+    },
+  ],
+  reviews: [
+    {
+      id: 1,
+      name: "Riya Shah",
+      event: "Wedding",
+      date: "Nov 14, 2025",
+      rating: 5,
+      text: "Rahul handled our baraat and indoor rituals beautifully. His timing and direction were excellent, and the photos felt warm and elegant.",
+      reply: "Thank you, Riya. Your family energy made the shoot effortless.",
+      verified: true,
+    },
+    {
+      id: 2,
+      name: "Aarav Patel",
+      event: "Festival",
+      date: "Jan 08, 2026",
+      rating: 5,
+      text: "Very calm, professional, and fast. We received previews quickly and the festival colors looked rich without over-editing.",
+      reply: "Glad you liked the color treatment. Happy to cover the next celebration too.",
+      verified: true,
+    },
+    {
+      id: 3,
+      name: "Nisha Mehta",
+      event: "Birthday",
+      date: "Feb 21, 2026",
+      rating: 4,
+      text: "Great candid shots, especially with kids and family moments. Easy communication and on-time delivery.",
+      reply: null,
+      verified: true,
+    },
+  ],
+  availability: [
+    { date: "2026-04-04", status: "available" },
+    { date: "2026-04-08", status: "pending" },
+    { date: "2026-04-12", status: "booked" },
+    { date: "2026-04-18", status: "available" },
+    { date: "2026-04-22", status: "available" },
+    { date: "2026-04-25", status: "pending" },
+    { date: "2026-04-28", status: "booked" },
+    { date: "2026-05-03", status: "available" },
+    { date: "2026-05-08", status: "available" },
+    { date: "2026-05-12", status: "pending" },
+    { date: "2026-05-17", status: "booked" },
+    { date: "2026-05-21", status: "available" },
+  ],
+};
 
-const packages = [
-  {
-    name: "Basic",
-    duration: "4 Hours",
-    price: "$299",
-    popular: false,
-    deliverables: ["120 Edited Photos", "Online Gallery", "72h Preview"],
-  },
-  {
-    name: "Premium",
-    duration: "8 Hours",
-    price: "$649",
-    popular: true,
-    deliverables: ["320 Edited Photos", "Highlight Reel", "Priority Delivery"],
-  },
-  {
-    name: "Elite",
-    duration: "12 Hours",
-    price: "$1,099",
-    popular: false,
-    deliverables: ["520 Edited Photos", "Film + Drone", "Luxury Album"],
-  },
-];
+const createDayStatusMap = (days) => {
+  const map = new Map();
+  days.forEach((item) => map.set(item.date, item.status));
+  return map;
+};
 
-const reviews = [
-  {
-    id: 1,
-    name: "Riya Shah",
-    event: "Wedding",
-    date: "Nov 14, 2025",
-    stars: 5,
-    text: "Excellent direction and timing. Every candid looked cinematic.",
-    reply: "Thank you, Riya. Your ceremony light was perfect to shoot.",
-  },
-  {
-    id: 2,
-    name: "Aarav Patel",
-    event: "Birthday",
-    date: "Jan 08, 2026",
-    stars: 4,
-    text: "Fast delivery and good color grading. Team was very polite.",
-    reply: "Glad you liked it. We will push an extra reel this weekend.",
-  },
-];
+const monthName = (date) =>
+  date.toLocaleString("en-US", { month: "long", year: "numeric" });
 
-const cardBase =
-  "rounded-2xl border border-[#2a2a2a] bg-[linear-gradient(160deg,#181818,#121212)] p-6 shadow-[0_12px_30px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-1 hover:border-[#aa8a3b] hover:shadow-[0_0_26px_rgba(201,166,79,0.18)]";
+const formatDay = (date) => date.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
 
-const HeaderBadge = ({ children }) => (
-  <span className="rounded-full border border-[#443a1f] bg-[#211b0d] px-3 py-1.5 text-[11px] font-semibold tracking-wide text-[#e7c56b]">
-    {children}
-  </span>
-);
+const buildMonthGrid = (cursorDate, availabilityMap) => {
+  const year = cursorDate.getFullYear();
+  const month = cursorDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startPadding = firstDay.getDay();
+  const grid = [];
 
-const SectionHead = ({ icon: Icon, id, title }) => (
-  <div className="mb-4 flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#3a3a3a] bg-[#0f0f0f] text-[#ddb85a]">
-        <Icon />
-      </span>
-      <h2 className="text-xl font-semibold text-white">{title}</h2>
-    </div>
-    <span className="rounded-full border border-[#3f361a] bg-[#1c170d] px-2.5 py-1 text-xs font-semibold text-[#e7c56b]">
-      {id}
-    </span>
-  </div>
-);
+  for (let i = 0; i < startPadding; i += 1) grid.push(null);
+  for (let day = 1; day <= lastDay.getDate(); day += 1) {
+    const current = new Date(year, month, day);
+    const key = current.toISOString().slice(0, 10);
+    grid.push({
+      date: current,
+      key,
+      day,
+      isToday: key === new Date().toISOString().slice(0, 10),
+      status: availabilityMap.get(key) || (day % 7 === 0 ? "booked" : day % 5 === 0 ? "pending" : "available"),
+    });
+  }
+
+  while (grid.length % 7 !== 0) grid.push(null);
+  return grid;
+};
+
+const normalizePhotographer = (raw) => {
+  if (!raw) return fallbackPhotographer;
+  return {
+    ...fallbackPhotographer,
+    id: raw.id || raw._id || fallbackPhotographer.id,
+    name: raw.fullName || raw.name || fallbackPhotographer.name,
+    fullName: raw.fullName || raw.name || fallbackPhotographer.fullName,
+    city: raw.city || fallbackPhotographer.city,
+    specialization: raw.specialization || fallbackPhotographer.specialization,
+    specializations: raw.specializations?.length ? raw.specializations : fallbackPhotographer.specializations,
+    experience: Number(raw.experience || fallbackPhotographer.experience),
+    equipment: raw.equipmentUsed ? String(raw.equipmentUsed).split(",").map((item) => item.trim()) : fallbackPhotographer.equipment,
+    languages: raw.languagesSpoken ? String(raw.languagesSpoken).split(",").map((item) => item.trim()) : fallbackPhotographer.languages,
+    rating: Number(raw.rating || fallbackPhotographer.rating),
+    reviewCount: Number(raw.reviewCount || fallbackPhotographer.reviewCount),
+    basePrice: Number(raw.pricePerHour || fallbackPhotographer.basePrice),
+    priceLabel: `\u20b9${Number(raw.pricePerHour || fallbackPhotographer.basePrice).toLocaleString("en-IN")}/event`,
+    verified: true,
+  };
+};
 
 const PhotographerPublicProfile = () => {
-  const [activeTab, setActiveTab] = useState("Portfolio");
-  const [activeFilter, setActiveFilter] = useState("All");
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const visiblePortfolio = useMemo(() => {
-    if (activeFilter === "All") {
-      return portfolioItems;
-    }
-    return portfolioItems.filter((item) => item.tag === activeFilter);
-  }, [activeFilter]);
+  const [activeTab, setActiveTab] = useState("Portfolio");
+  const [portfolioFilter, setPortfolioFilter] = useState("All");
+  const [activePackage, setActivePackage] = useState("Premium");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedReviewCount, setSelectedReviewCount] = useState(3);
+  const [profile, setProfile] = useState(fallbackPhotographer);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_BASE_URL}/api/photographer/${id}`);
+        setProfile(normalizePhotographer(response.data));
+      } catch (error) {
+        setProfile(fallbackPhotographer);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [id]);
+
+  const availabilityMap = useMemo(() => createDayStatusMap(profile.availability || fallbackPhotographer.availability), [profile]);
+  const monthGrid = useMemo(() => buildMonthGrid(selectedMonth, availabilityMap), [selectedMonth, availabilityMap]);
+
+  const portfolioRows = useMemo(() => {
+    const rows = profile.portfolio || fallbackPhotographer.portfolio;
+    if (portfolioFilter === "All") return rows;
+    return rows.filter((item) => item.category === portfolioFilter);
+  }, [portfolioFilter, profile]);
+
+  const reviewsVisible = useMemo(() => {
+    return (profile.reviews || fallbackPhotographer.reviews).slice(0, selectedReviewCount);
+  }, [profile, selectedReviewCount]);
+
+  const ratingBars = useMemo(() => {
+    const rating = profile.rating || 4.9;
+    const total = profile.reviewCount || 84;
+    const weights = [52, 24, 12, 8, 4];
+    return [5, 4, 3, 2, 1].map((stars, index) => ({
+      stars,
+      percent: Math.max(4, Math.round((weights[index] / 100) * 100)),
+      count: Math.round((weights[index] / 100) * total),
+    }));
+  }, [profile]);
+
+  const setPrevMonth = () => {
+    setSelectedMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1));
+  };
+
+  const setNextMonth = () => {
+    setSelectedMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1));
+  };
+
+  const handleBookSelectedDate = () => {
+    if (!selectedDate) return;
+    navigate("/login", { state: { selectedDate, photographerId: id } });
+  };
+
+  const heroAccent = profile.coverGradient || fallbackPhotographer.coverGradient;
+  const portfolioCountText = `${portfolioRows.length} photos`;
+
+  const activePackageData = (profile.packages || fallbackPhotographer.packages).find((pkg) => pkg.name === activePackage) || fallbackPhotographer.packages[1];
+  const displayedName = profile.fullName || profile.name;
+  const displayedLocation = profile.locationLabel || `${profile.city}, ${profile.state || "Gujarat"}`;
+  const displayedRole = profile.specialization || fallbackPhotographer.specialization;
+
+  if (loading) {
+    return (
+      <main
+        className="min-h-screen px-4 py-8 text-[#F0EAE0]"
+        style={{ background: "#080808", fontFamily: "Outfit, ui-sans-serif, system-ui, sans-serif", color: "var(--ink-1)" }}
+      >
+        <div className="mx-auto max-w-7xl rounded-2xl border border-[var(--line-1)] bg-[var(--bg-card)] p-8 text-center text-sm text-[var(--ink-3)]">
+          Loading photographer profile...
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main
-      className="min-h-screen bg-[radial-gradient(circle_at_15%_0%,#1d1a13_0%,#0b0b0b_32%,#050505_100%)] px-4 py-8 text-white sm:px-6 lg:px-12"
-      style={{ fontFamily: "Sora, Manrope, ui-sans-serif, system-ui" }}
+      className="min-h-screen text-[#F0EAE0]"
+      style={{
+        background: "radial-gradient(circle at 10% 0%, #17130d 0%, #090909 40%, #070707 100%)",
+        fontFamily: "Outfit, ui-sans-serif, system-ui, sans-serif",
+        color: "var(--ink-1)",
+      }}
     >
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-2xl border border-[#2a2a2a] bg-[#101010]/90 p-6 shadow-[0_14px_30px_rgba(0,0,0,0.25)] sm:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-4">
-              <p className="text-xs font-bold tracking-[0.22em] text-[#8a8a8a]">PAGE 03 OF 12</p>
-              <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Photographer Public Profile</h1>
-              <p className="max-w-3xl text-sm leading-relaxed text-[#bcbcbc] sm:text-base">
-                The photographer&apos;s storefront. Client lands here from search and decides whether to book. Must build
-                trust fast.
-              </p>
-              <div className="flex flex-wrap gap-2.5">
-                <HeaderBadge>ROUTE: /PHOTOGRAPHER/:ID</HeaderBadge>
-                <HeaderBadge>AUTH: LOGIN TO BOOK</HeaderBadge>
-                <HeaderBadge>PRIORITY: CRITICAL</HeaderBadge>
-              </div>
-            </div>
+      <style>{`
+        .framebook-no-scrollbar::-webkit-scrollbar { display: none; }
+        .framebook-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
 
-            <span className="inline-flex h-fit rounded-full border border-[#3c6cb3] bg-[#112648] px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-[#68a9ff]">
-              PUBLIC
-            </span>
+      <section className="relative overflow-hidden rounded-2xl border border-[var(--line-1)] bg-[var(--bg-card)] shadow-[0_16px_30px_rgba(0,0,0,0.28)]">
+        <div className="relative h-[320px] w-full" style={{ background: heroAccent }}>
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.46))]" />
+          <div className="absolute inset-0 opacity-[0.05]">
+            <div className="flex h-full items-center justify-center text-[220px] text-white">📸</div>
           </div>
-        </header>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_30%,rgba(212,168,83,0.14),transparent_24%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.05),transparent_22%),linear-gradient(135deg,rgba(0,0,0,0.02),rgba(0,0,0,0.18))]" />
+        </div>
 
-        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
-          <article className={cardBase}>
-            <SectionHead icon={FiImage} id="S1" title="Cover + Avatar" />
-            <div className="relative overflow-hidden rounded-2xl border border-[#363636]">
-              <div className="h-36 bg-[linear-gradient(125deg,#262626,#3a2e16)]" />
-              <div className="absolute right-3 top-3 flex gap-2">
-                <button className="rounded-lg bg-[#d2aa4a] px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-[#e6c063]">
-                  Book Now
-                </button>
-                <button className="rounded-lg border border-[#4e4e4e] bg-[#151515] px-3 py-1.5 text-xs font-semibold text-white transition hover:border-[#d2aa4a]">
-                  Message
-                </button>
-              </div>
-              <div className="absolute -bottom-8 left-4 h-16 w-16 rounded-2xl border-4 border-[#111] bg-[linear-gradient(160deg,#b08a3f,#624b20)]" />
-            </div>
-            <div className="mt-10 space-y-2 text-sm">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base font-semibold text-white">Aarav Mehta</p>
-                <span className="inline-flex items-center gap-1 rounded-full border border-[#2e5235] bg-[#0d2012] px-2 py-0.5 text-[11px] text-[#78d58f]">
-                  <FiCheckCircle className="text-xs" /> Verified
-                </span>
-              </div>
-              <p className="flex items-center gap-1.5 text-[#b3b3b3]"><FiMapPin className="text-[#ddb85a]" />Rajkot, India</p>
-              <p className="flex items-center gap-1.5 text-[#b3b3b3]"><FiStar className="text-[#ddb85a]" />4.9 (287 reviews)</p>
-            </div>
-          </article>
+        <div className="relative bg-[#0E0E0E] px-4 pb-8 pt-[60px] sm:px-10 sm:pb-10">
+          <div className="mx-auto max-w-7xl">
+            <div className="relative rounded-2xl border border-[var(--line-1)] bg-[#0E0E0E] px-0 shadow-[0_16px_30px_rgba(0,0,0,0.28)]">
+              <div className="relative px-10 pb-8 pt-[60px]">
+                <div className="absolute -top-10 left-10 h-20 w-20 rounded-full border-[3px] border-[var(--gold)] bg-[#191919] p-1 shadow-[0_0_0_8px_rgba(14,14,14,0.95)]">
+                  <img src={profile.avatar || fallbackPhotographer.avatar} alt={profile.name} className="h-full w-full rounded-full object-cover" />
+                  <span className="absolute bottom-0 right-0 flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-[#121212] bg-[var(--gold)] text-[10px] font-bold text-white">
+                    ✓
+                  </span>
+                </div>
 
-          <article className={cardBase}>
-            <SectionHead icon={FiColumns} id="S2" title="Sticky Profile Tabs" />
-            <div className="sticky top-3 rounded-xl border border-[#333] bg-[#121212] p-2">
-              <div className="flex flex-wrap gap-2">
-                {tabs.map((tab) => (
+                <div className="ml-[96px] flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="max-w-4xl pt-4 sm:pt-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h1 className="font-display text-[36px] font-semibold leading-none text-[var(--ink-1)]">{displayedName}</h1>
+                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
+                        Verified Photographer
+                      </span>
+                    </div>
+
+                    <p className="mt-2 text-[13px] text-[var(--ink-3)]">
+                      📍 {displayedLocation} · {profile.experience} Years Experience
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {(profile.specializations || fallbackPhotographer.specializations).map((tag) => (
+                        <span key={tag} className="rounded-full border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-1 text-[12px] text-[var(--ink-2)]">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-2 text-[var(--gold)]">
+                      <FaStar />
+                      <span className="text-[13px] font-medium text-[var(--gold)]">
+                        {profile.rating.toFixed(1)} ({profile.reviewCount} reviews)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-start gap-3 lg:items-end">
+                    <div className="flex flex-wrap items-center gap-3 pt-2 lg:pt-4">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--line-2)] bg-[var(--bg-raised)] px-4 py-3 text-sm text-[var(--ink-1)] backdrop-blur-md transition hover:border-[var(--gold-border)]"
+                      >
+                        <FaComments /> Message
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#F0C560] to-[#D4A853] px-5 py-3 text-sm font-semibold text-[#000] shadow-[0_0_30px_rgba(212,168,83,0.18)]"
+                      >
+                        📅 Book Now
+                      </button>
+                    </div>
+
+                    <span className="inline-flex rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-[12px] font-medium text-emerald-300">
+                      ✓ Verified Photographer
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="sticky top-16 z-40 border-b border-[var(--line-1)] bg-[rgba(14,14,14,0.95)] backdrop-blur-[24px]">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 sm:px-10 framebook-no-scrollbar">
+          {tabItems.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`relative h-[52px] shrink-0 px-3 text-[13px] font-medium transition ${
+                activeTab === tab ? "text-[var(--gold)]" : "text-[var(--ink-3)] hover:text-[var(--ink-1)]"
+              }`}
+            >
+              {tab}
+              <span
+                className={`absolute bottom-0 left-0 h-[2px] w-full transition ${
+                  activeTab === tab ? "bg-[var(--gold)]" : "bg-transparent"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-10">
+        <AnimatePresence mode="wait">
+          {activeTab === "Portfolio" && (
+            <motion.section
+              key="portfolio"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="mb-5 flex flex-wrap gap-2">
+                {portfolioCategories.map((category) => (
                   <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`rounded-md px-3 py-2 text-xs font-semibold transition ${
-                      activeTab === tab ? "bg-[#1f1b10] text-[#e9c56c]" : "text-[#a9a9a9] hover:text-white"
+                    key={category}
+                    type="button"
+                    onClick={() => setPortfolioFilter(category)}
+                    className={`rounded-full border px-4 py-2 text-sm transition ${
+                      portfolioFilter === category
+                        ? "border-[var(--gold-border)] bg-[var(--gold-soft)] text-[var(--gold)]"
+                        : "border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-3)] hover:text-[var(--ink-1)]"
                     }`}
                   >
-                    {tab}
-                    <span
-                      className={`mt-1 block h-[2px] rounded transition ${
-                        activeTab === tab ? "bg-[#ddb85a]" : "bg-transparent"
-                      }`}
-                    />
+                    {category}
                   </button>
                 ))}
               </div>
-            </div>
-            <p className="mt-4 text-sm leading-relaxed text-[#b8b8b8]">
-              Tabs remain anchored below the cover while scrolling. Active state uses a gold underline and warm tint for
-              instant orientation.
-            </p>
-          </article>
 
-          <article className={cardBase}>
-            <SectionHead icon={FiGrid} id="S3" title="Portfolio Grid" />
-            <div className="mb-3 flex flex-wrap gap-2">
-              {categoryFilters.map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                    activeFilter === filter
-                      ? "border-[#7e6528] bg-[#211b0d] text-[#e4c26c]"
-                      : "border-[#323232] bg-[#121212] text-[#b8b8b8] hover:text-white"
-                  }`}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {visiblePortfolio.map((item) => (
-                <div
-                  key={item.id}
-                  className={`${item.h} group relative overflow-hidden rounded-xl border border-[#333] bg-[linear-gradient(150deg,#242424,#151515)]`}
-                >
-                  <button className="absolute inset-0 text-left">
-                    <span className="absolute bottom-2 left-2 rounded bg-black/55 px-2 py-0.5 text-[10px] text-[#d8d8d8]">
-                      {item.tag}
-                    </span>
-                    <span className="absolute right-2 top-2 rounded-full bg-black/55 p-1 text-[#e7c56b] opacity-0 transition group-hover:opacity-100">
-                      <FiImage className="text-xs" />
-                    </span>
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 flex items-center justify-between">
-              <button className="inline-flex items-center gap-1 rounded-lg border border-[#343434] bg-[#121212] px-3 py-1.5 text-xs font-semibold text-[#d4d4d4] hover:border-[#ddb85a] hover:text-[#f1d07c]">
-                <FiVideo /> Video Reel
-              </button>
-              <button className="rounded-lg bg-[#d2aa4a] px-3 py-1.5 text-xs font-semibold text-black hover:bg-[#e7c56b]">
-                Load More
-              </button>
-            </div>
-          </article>
-
-          <article className={cardBase}>
-            <SectionHead icon={FiUser} id="S4" title="About Section" />
-            <p className="text-sm leading-relaxed text-[#b7b7b7]">
-              Documentary-style photographer focused on emotion-first compositions with natural light and clean skin-tone
-              grading.
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-[#d5d5d5]">
-              <div className="rounded-lg border border-[#333] bg-[#121212] p-2">Cameras: R6 Mark II, A7IV</div>
-              <div className="rounded-lg border border-[#333] bg-[#121212] p-2">Lenses: 35mm, 85mm, 70-200</div>
-              <div className="rounded-lg border border-[#333] bg-[#121212] p-2">Languages: English, Hindi, Gujarati</div>
-              <div className="rounded-lg border border-[#333] bg-[#121212] p-2">Travel Radius: 200 km</div>
-              <div className="rounded-lg border border-[#333] bg-[#121212] p-2">Experience: 9 Years</div>
-              <div className="rounded-lg border border-[#333] bg-[#121212] p-2">Events Shot: 640+</div>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {[
-                "Weddings",
-                "Destination",
-                "Cultural Festivals",
-                "Family Portraits",
-              ].map((specialty) => (
-                <span key={specialty} className="rounded-full border border-[#3d3d3d] bg-[#121212] px-2.5 py-1 text-[11px] text-[#e2e2e2]">
-                  {specialty}
-                </span>
-              ))}
-            </div>
-            <div className="mt-3 rounded-xl border border-[#333] bg-[#121212] p-3 text-xs text-[#bcbcbc]">
-              <p className="mb-2 flex items-center gap-1.5 text-[#e2e2e2]"><FiGlobe className="text-[#ddb85a]" /> Travel Radius Map</p>
-              <div className="h-16 rounded-lg bg-[linear-gradient(160deg,#1f1f1f,#141414)]" />
-            </div>
-          </article>
-
-          <article className={cardBase}>
-            <SectionHead icon={FiTag} id="S5" title="Packages / Pricing" />
-            <div className="grid gap-3">
-              {packages.map((pkg) => (
-                <div
-                  key={pkg.name}
-                  className={`rounded-xl border p-3 ${
-                    pkg.popular
-                      ? "border-[#7a6228] bg-[linear-gradient(150deg,#251f10,#17130b)]"
-                      : "border-[#343434] bg-[#121212]"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="font-semibold text-white">{pkg.name}</p>
-                    {pkg.popular ? (
-                      <span className="rounded-full bg-[#d2aa4a] px-2 py-0.5 text-[10px] font-bold text-black">Most Popular</span>
-                    ) : null}
-                  </div>
-                  <p className="text-xs text-[#bbbbbb]">{pkg.duration}</p>
-                  <p className="my-1 text-xl font-bold text-[#e7c56b]">{pkg.price}</p>
-                  <ul className="mb-3 space-y-1 text-xs text-[#cfcfcf]">
-                    {pkg.deliverables.map((item) => (
-                      <li key={item} className="flex items-center gap-1.5"><FiCheckCircle className="text-[#ddb85a]" />{item}</li>
-                    ))}
-                  </ul>
-                  <button className="w-full rounded-lg bg-[#d2aa4a] px-3 py-2 text-xs font-semibold text-black hover:bg-[#e6c063]">
-                    Book This Package
-                  </button>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className={cardBase}>
-            <SectionHead icon={FiCalendar} id="S6" title="Availability Calendar" />
-            <div className="rounded-xl border border-[#343434] bg-[#121212] p-3">
-              <div className="mb-2 flex items-center justify-between text-xs text-[#b4b4b4]">
-                <p>December 2026</p>
-                <p className="flex items-center gap-1"><FiClock /> Read-only</p>
+              <div className="columns-1 gap-5 md:columns-2 xl:columns-3">
+                {portfolioRows.map((shot) => (
+                  <article key={shot.id} className={`group mb-5 break-inside-avoid overflow-hidden rounded-[12px] border border-[var(--line-2)] bg-[var(--bg-raised)] ${shot.style}`}>
+                    <div className={`relative h-full min-h-[220px] overflow-hidden ${shot.gradient}`}>
+                      <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-70">{shot.icon}</div>
+                      <div className="absolute inset-0 bg-[rgba(0,0,0,0.0)] transition duration-300 group-hover:bg-[rgba(0,0,0,0.6)]" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover:opacity-100">
+                        <span className="rounded-full border border-[var(--line-2)] bg-black/50 px-4 py-2 text-sm text-[var(--ink-1)] backdrop-blur-md">
+                          🔍 View
+                        </span>
+                      </div>
+                      <span className="absolute left-3 top-3 rounded-full border border-[var(--line-2)] bg-black/40 px-2.5 py-1 text-[11px] text-[var(--ink-1)]">
+                        {shot.category}
+                      </span>
+                    </div>
+                  </article>
+                ))}
               </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px]">
-                {Array.from({ length: 14 }).map((_, i) => {
-                  const day = i + 18;
-                  const booked = [20, 25, 28].includes(day);
+
+              <div className="mt-10 flex justify-center">
+                <button
+                  type="button"
+                  className="rounded-full border border-[var(--line-2)] px-6 py-3 text-sm text-[var(--ink-1)] transition hover:border-[var(--gold-border)] hover:text-[var(--gold)]"
+                >
+                  Load More Photos
+                </button>
+              </div>
+            </motion.section>
+          )}
+
+          {activeTab === "About" && (
+            <motion.section
+              key="about"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="grid gap-8 lg:grid-cols-2">
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="font-display text-[22px] text-[var(--ink-1)]">About {profile.fullName || profile.name}</h2>
+                    <p className="mt-4 text-[15px] leading-8 text-[var(--ink-2)]">
+                      {profile.bio}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-display text-[18px] text-[var(--ink-1)]">Equipment</h3>
+                    <div className="mt-4 space-y-2">
+                      {(profile.equipment || fallbackPhotographer.equipment).map((item) => (
+                        <div key={item} className="flex items-start gap-2 text-[13px] text-[var(--ink-2)]">
+                          <span className="mt-0.5 text-[var(--gold)]">📷</span>
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-display text-[18px] text-[var(--ink-1)]">Languages</h3>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {(profile.languages || fallbackPhotographer.languages).map((lang) => (
+                        <span key={lang} className="rounded-full border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-1 text-[13px] text-[var(--ink-1)]">
+                          {lang}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {[
+                      { label: "Events Covered", value: "200+" },
+                      { label: "Years Experience", value: String(profile.experience) },
+                      { label: "Cities Covered", value: "8" },
+                      { label: "Response Rate", value: "98%" },
+                    ].map((stat) => (
+                      <article key={stat.label} className="rounded-[12px] border border-[var(--line-1)] bg-[var(--bg-card)] p-5">
+                        <p className="font-display text-[32px] leading-none text-[var(--gold)]">{stat.value}</p>
+                        <p className="mt-2 text-[12px] text-[var(--ink-3)]">{stat.label}</p>
+                      </article>
+                    ))}
+                  </div>
+
+                  <article className="rounded-[12px] border border-[var(--line-1)] bg-[var(--bg-card)] p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 text-[var(--gold)]">
+                        <FaMapMarkerAlt />
+                      </span>
+                      <p className="text-[14px] text-[var(--ink-2)]">
+                        Travels up to {profile.travelRadiusKm || fallbackPhotographer.travelRadiusKm}km from {profile.city}
+                      </p>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </motion.section>
+          )}
+
+          {activeTab === "Packages" && (
+            <motion.section
+              key="packages"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="grid gap-5 lg:grid-cols-3">
+                {(profile.packages || fallbackPhotographer.packages).map((pkg) => {
+                  const isPopular = pkg.popular;
                   return (
-                    <button
-                      key={day}
-                      title={booked ? `Booked - Dec ${day}` : `Available - Dec ${day}`}
-                      className={`rounded-md px-1 py-2 transition ${
-                        booked
-                          ? "cursor-not-allowed bg-[#3a1a1a] text-[#f09a9a]"
-                          : "bg-[#1c1c1c] text-[#d9d9d9] hover:border hover:border-[#d2aa4a] hover:text-[#f0d083]"
+                    <article
+                      key={pkg.name}
+                      className={`relative rounded-[18px] border p-7 ${
+                        isPopular
+                          ? "border-[var(--gold)] bg-[var(--bg-card)] shadow-[0_0_40px_rgba(212,168,83,0.12)]"
+                          : "border-[var(--line-1)] bg-[var(--bg-card)]"
                       }`}
                     >
-                      {day}
-                    </button>
+                      {isPopular ? (
+                        <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[var(--gold-border)] bg-[var(--gold-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--gold)]">
+                          ⭐ Most Popular
+                        </span>
+                      ) : null}
+
+                      <h3 className="font-display text-3xl font-semibold text-[var(--ink-1)]">{pkg.name}</h3>
+                      <p className="mt-2 text-[12px] uppercase tracking-[0.2em] text-[var(--ink-3)]">/ event</p>
+                      <p className="mt-5 font-display text-[36px] font-semibold text-[var(--gold)]">{formatPrice(pkg.price)}</p>
+
+                      <div className="mt-5 space-y-3">
+                        <div className="flex items-center gap-2 text-[13px] text-[var(--ink-2)]">
+                          <FaCheck className="text-[#52C98A]" /> {pkg.duration}
+                        </div>
+                        {pkg.deliverables.map((item) => (
+                          <div key={item} className="flex items-center gap-2 text-[13px] text-[var(--ink-2)]">
+                            <FaCheck className="text-[#52C98A]" /> {item}
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setActivePackage(pkg.name)}
+                        className={`mt-7 w-full rounded-full px-5 py-3 text-sm font-semibold transition ${
+                          activePackage === pkg.name
+                            ? "bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black"
+                            : "border border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-1)] hover:border-[var(--gold-border)]"
+                        }`}
+                      >
+                        {pkg.cta}
+                      </button>
+                    </article>
                   );
                 })}
               </div>
-            </div>
-            <div className="mt-3 flex items-center gap-4 text-xs text-[#bcbcbc]">
-              <p className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-[#f09a9a]" />Booked</p>
-              <p className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-[#d2aa4a]" />Available</p>
-            </div>
-            <p className="mt-2 text-xs text-[#8f8f8f]">
-              Available dates are clickable and should open a booking modal in production flow.
-            </p>
-          </article>
-        </section>
+            </motion.section>
+          )}
 
-        <section className={cardBase}>
-          <SectionHead icon={FiMessageCircle} id="S7" title="Reviews Section" />
-          <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-xl border border-[#343434] bg-[#121212] p-4">
-              <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
-                <FiStar className="text-[#ddb85a]" /> Rating Breakdown
-              </p>
-              {[5, 4, 3, 2, 1].map((stars, index) => (
-                <div key={stars} className="mb-2 flex items-center gap-2 text-xs">
-                  <span className="w-10 text-[#c8c8c8]">{stars} star</span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#242424]">
-                    <div
-                      className="h-full rounded-full bg-[linear-gradient(90deg,#b28b3f,#e7c56b)]"
-                      style={{ width: `${100 - index * 18}%` }}
-                    />
-                  </div>
+          {activeTab === "Availability" && (
+            <motion.section
+              key="availability"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-5"
+            >
+              <div>
+                <h2 className="font-display text-[22px] text-[var(--ink-1)]">Check Availability</h2>
+                <p className="mt-2 text-[14px] text-[var(--ink-2)]">Select a date to book {profile.fullName || profile.name} for your event</p>
+              </div>
+
+              <article className="rounded-[18px] border border-[var(--line-1)] bg-[var(--bg-card)] p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={setPrevMonth}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-raised)] text-[var(--ink-1)] transition hover:bg-[var(--gold)] hover:text-black"
+                  >
+                    <FaChevronLeft />
+                  </button>
+                  <h3 className="font-display text-[22px] text-[var(--ink-1)]">{monthName(selectedMonth)}</h3>
+                  <button
+                    type="button"
+                    onClick={setNextMonth}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-raised)] text-[var(--ink-1)] transition hover:bg-[var(--gold)] hover:text-black"
+                  >
+                    <FaChevronRight />
+                  </button>
                 </div>
-              ))}
-            </div>
 
-            <div className="space-y-3">
-              {reviews.map((review) => (
-                <article key={review.id} className="rounded-xl border border-[#343434] bg-[#121212] p-4">
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="h-9 w-9 rounded-full bg-[linear-gradient(150deg,#3f3f3f,#232323)]" />
-                      <div>
-                        <p className="text-sm font-semibold text-white">{review.name}</p>
-                        <p className="text-xs text-[#aaaaaa]">{review.event} • {review.date}</p>
+                <div className="grid grid-cols-7 gap-2 text-center text-[11px] uppercase tracking-[0.12em] text-[#3E3830]">
+                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+                    <div key={day} className="py-2">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-3 grid grid-cols-7 gap-2">
+                  {monthGrid.map((slot, index) => {
+                    if (!slot) {
+                      return <div key={`empty-${index}`} className="h-16 rounded-xl" />;
+                    }
+
+                    const isBooked = slot.status === "booked";
+                    const isPending = slot.status === "pending";
+                    const isSelected = selectedDate === slot.key;
+                    const baseClass = "flex h-16 flex-col justify-between rounded-xl border p-2 text-left transition";
+
+                    return (
+                      <button
+                        key={slot.key}
+                        type="button"
+                        disabled={isBooked}
+                        onClick={() => setSelectedDate(slot.key)}
+                        className={`${baseClass} ${
+                          isSelected
+                            ? "border-[var(--gold)] bg-[var(--gold)] text-black"
+                            : isBooked
+                              ? "cursor-not-allowed border-[#e05555]/20 bg-[rgba(224,85,85,0.1)] text-[#E05555]"
+                              : isPending
+                                ? "border-[#e09b35]/20 bg-[rgba(224,155,53,0.1)] text-[#E09B35] hover:bg-[rgba(212,168,83,0.1)]"
+                                : "border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-1)] hover:bg-[rgba(212,168,83,0.1)]"
+                        } ${slot.isToday ? "ring-1 ring-[var(--gold)]" : ""}`}
+                      >
+                        <span className="text-xs text-inherit">{slot.day}</span>
+                        <span className="text-[10px] uppercase tracking-wide opacity-80">
+                          {isBooked ? "Booked" : isPending ? "Pending" : "Available"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-center gap-4 text-[12px] text-[var(--ink-2)]">
+                  <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Available</span>
+                  <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#E05555]" /> Booked</span>
+                  <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#E09B35]" /> Pending</span>
+                </div>
+
+                <AnimatePresence>
+                  {selectedDate ? (
+                    <motion.button
+                      key="book-proceed"
+                      type="button"
+                      onClick={handleBookSelectedDate}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      className="mt-6 inline-flex rounded-full bg-gradient-to-r from-[#F0C560] to-[#D4A853] px-6 py-3 text-sm font-semibold text-black"
+                    >
+                      Proceed to Book →
+                    </motion.button>
+                  ) : null}
+                </AnimatePresence>
+              </article>
+            </motion.section>
+          )}
+
+          {activeTab === "Reviews" && (
+            <motion.section
+              key="reviews"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <div className="grid gap-6 lg:grid-cols-[0.55fr_1.45fr]">
+                <article className="rounded-[18px] border border-[var(--line-1)] bg-[var(--bg-card)] p-6">
+                  <p className="font-display text-[64px] leading-none text-[var(--gold)]">{profile.rating.toFixed(1)}</p>
+                  <p className="mt-2 text-sm text-[var(--ink-3)]">Average rating from {profile.reviewCount} reviews</p>
+                </article>
+
+                <article className="rounded-[18px] border border-[var(--line-1)] bg-[var(--bg-card)] p-6">
+                  <div className="space-y-3">
+                    {ratingBars.map((row) => (
+                      <div key={row.stars} className="grid grid-cols-[70px_1fr_50px] items-center gap-3">
+                        <span className="text-[12px] text-[var(--ink-2)]">{row.stars}★</span>
+                        <div className="h-[6px] rounded-full bg-[var(--bg-raised)]">
+                          <div
+                            className="h-full rounded-full bg-[linear-gradient(90deg,#F0C560,#D4A853)]"
+                            style={{ width: `${row.percent}%` }}
+                          />
+                        </div>
+                        <span className="text-[12px] text-[var(--ink-3)]">{row.percent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              </div>
+
+              <div className="space-y-4">
+                {reviewsVisible.map((review) => (
+                  <article key={review.id} className="rounded-[14px] border border-[var(--line-1)] bg-[var(--bg-card)] p-6">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-11 w-11 rounded-full bg-[linear-gradient(160deg,#343434,#1b1b1b)]" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[13px] font-semibold text-[var(--ink-1)]">{review.name}</p>
+                            <span className="rounded-full border border-[var(--line-2)] bg-[var(--bg-raised)] px-2 py-0.5 text-[11px] text-[var(--ink-2)]">
+                              {review.event}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[12px] text-[var(--ink-3)]">{review.date}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex text-[var(--gold)]">
+                          {Array.from({ length: 5 }).map((_, index) => (
+                            <FaStar key={index} className={index < review.rating ? "text-[var(--gold)]" : "text-[#3E3830]"} />
+                          ))}
+                        </div>
+                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300">
+                          ✓ Verified Booking
+                        </span>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[#2f5536] bg-[#102315] px-2 py-0.5 text-[10px] text-[#88dd9c]">
-                      <FiAward /> Verified Booking
-                    </span>
-                  </div>
-                  <p className="mb-2 flex text-[#ddb85a]">
-                    {Array.from({ length: review.stars }).map((_, idx) => (
-                      <FiStar key={idx} className="fill-current" />
-                    ))}
-                  </p>
-                  <p className="text-sm leading-relaxed text-[#c8c8c8]">{review.text}</p>
-                  {review.reply ? (
-                    <div className="mt-3 rounded-lg border border-[#3a3a3a] bg-[#171717] p-3 text-xs text-[#bcbcbc]">
-                      <p className="mb-1 font-semibold text-[#e4e4e4]">Photographer Reply</p>
-                      <p>{review.reply}</p>
-                    </div>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
 
+                    <p className="mt-4 text-[14px] leading-8 italic text-[var(--ink-2)]">{review.text}</p>
+
+                    {review.reply ? (
+                      <div className="mt-4 rounded-[10px] bg-[var(--bg-raised)] p-4">
+                        <p className="text-[12px] font-semibold text-[var(--gold)]">Rahul replied:</p>
+                        <p className="mt-2 text-[13px] leading-7 text-[var(--ink-2)]">{review.reply}</p>
+                      </div>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setSelectedReviewCount((count) => Math.min(count + 2, (profile.reviews || fallbackPhotographer.reviews).length))}
+                  className="rounded-full border border-[var(--line-2)] px-6 py-3 text-sm text-[var(--ink-1)] transition hover:border-[var(--gold-border)] hover:text-[var(--gold)]"
+                >
+                  Load More Reviews
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
       </div>
     </main>
   );
 };
+
+const formatPrice = (price) => `\u20b9${Number(price || 0).toLocaleString("en-IN")}`;
 
 export default PhotographerPublicProfile;
