@@ -207,7 +207,16 @@ const SearchSection = ({ community, startChatFromCommunity, navigate }) => {
                   </div>
 
                   <div className="mt-6 flex gap-3">
-                    <button className="flex-1 rounded-xl bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] py-2.5 text-xs font-bold text-white hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    <button 
+                        onClick={() => window.location.href=`/photographer/${p.id}`}
+                        className="px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs font-bold hover:text-white transition-all"
+                    >
+                        Profile
+                    </button>
+                    <button 
+                        onClick={() => window.location.href=`/book/${p.id}`}
+                        className="flex-1 rounded-xl bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] py-2.5 text-xs font-bold text-white hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    >
                       Book Now
                     </button>
                     <button onClick={() => startChatFromCommunity(p.name)} className="px-4 rounded-xl bg-[var(--surface-strong)] text-[var(--text-muted)] hover:text-white transition-all flex items-center justify-center">
@@ -237,7 +246,12 @@ const SearchSection = ({ community, startChatFromCommunity, navigate }) => {
                         <h5 className="font-bold text-slate-800">{p.name}</h5>
                         <p className="text-xs text-slate-600">{p.specialty}</p>
                         <p className="text-xs font-bold text-[#ff7a45] mt-1">${p.pricePerHour}/hr</p>
-                        <button className="mt-2 w-full bg-[#ff7a45] text-white text-[10px] py-1 rounded font-bold">Details</button>
+                        <button 
+                            onClick={() => window.location.href=`/photographer/${p.id}`}
+                            className="mt-2 w-full bg-[#ff7a45] text-white text-[10px] py-1.5 rounded font-bold"
+                        >
+                            View Profile
+                        </button>
                       </div>
                     </Popup>
                   </Marker>

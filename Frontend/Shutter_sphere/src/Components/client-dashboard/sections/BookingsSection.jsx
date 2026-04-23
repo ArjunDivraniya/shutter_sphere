@@ -13,10 +13,13 @@ const BookingsSection = ({ bookings, navigate }) => {
     <div className="space-y-6">
       <div className="surface-card p-6 border border-[var(--border)] flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-black text-white italic">My Bookings</h2>
+          <h2 className="text-2xl font-black text-white italic">Recent Bookings</h2>
           <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-widest mt-1">Manage your photography sessions</p>
         </div>
-        <button onClick={() => navigate("search")} className="rounded-xl bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] px-5 py-2.5 text-xs font-bold text-white shadow-lg">New Booking</button>
+        <div className="flex gap-3">
+            <button onClick={() => window.location.href='/dashboard/client/bookings'} className="rounded-xl border border-white/10 px-5 py-2.5 text-xs font-bold text-white hover:bg-white/5 transition-all">View All</button>
+            <button onClick={() => navigate("search")} className="rounded-xl bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] px-5 py-2.5 text-xs font-bold text-white shadow-lg">New Booking</button>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -63,6 +66,12 @@ const BookingsSection = ({ bookings, navigate }) => {
               </div>
 
               <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => onViewDetails(booking)}
+                    className="rounded-xl px-4 py-2.5 bg-white/5 border border-white/5 text-xs font-bold text-white hover:bg-white/10 transition-all"
+                  >
+                    Details
+                  </button>
                  <button onClick={() => navigate("chat")} className="p-3 rounded-xl bg-[var(--surface-strong)] text-[var(--text-muted)] hover:text-[#ffb84d] transition-all">
                     <FaComments />
                  </button>

@@ -27,6 +27,8 @@ import AboutUs from "./Components/aboutus";
 import ContactUs from "./Components/contactus";
 import PhotographerCommandCenter from "./Components/photographer-dashboard-v2/PhotographerCommandCenter";
 import PhotographerBookingsManagement from "./Components/photographer-dashboard-v2/PhotographerBookingsManagement";
+import BookingFlow from "./Components/BookingFlow";
+import ClientBookingsPage from "./Components/ClientBookingsPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ element, allowedRoles }) => {
@@ -154,6 +156,16 @@ function App() {
           <Route
             path="/profile_Whishlist"
             element={<ProtectedRoute element={<><Profile /> <Profile_w /></>} />}
+          />
+
+          {/* FrameBook Premium Routes */}
+          <Route
+            path="/book/:id"
+            element={<ProtectedRoute element={<BookingFlow />} allowedRoles={["client"]} />}
+          />
+          <Route
+            path="/dashboard/client/bookings"
+            element={<ProtectedRoute element={<ClientBookingsPage />} allowedRoles={["client"]} />}
           />
         </Routes>
       </Router>

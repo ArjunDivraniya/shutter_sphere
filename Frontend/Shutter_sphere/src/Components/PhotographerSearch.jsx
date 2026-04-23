@@ -805,20 +805,36 @@ const PhotographerSearch = () => {
                           {badge.label}
                         </span>
                       </div>
-                      <div className="p-5">
-                        <p className="text-[11px] uppercase tracking-[0.2em] text-[#D4A853]">{photographer.specialization}</p>
-                        <h3 className="mt-1 font-display text-2xl text-[#F0EAE0]">{photographer.name}</h3>
-                        <div className="mt-2 flex items-center gap-2 text-sm">
-                          <FaStar className="text-[#D4A853]" />
-                          <span className="font-semibold">{photographer.rating.toFixed(1)}</span>
-                          <span className="text-[#756C64]">({photographer.reviewCount} reviews)</span>
+                        <div className="p-5">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-[#D4A853]">{photographer.specialization}</p>
+                          <h3 className="mt-1 font-display text-2xl text-[#F0EAE0]">{photographer.name}</h3>
+                          <div className="mt-2 flex items-center gap-2 text-sm">
+                            <FaStar className="text-[#D4A853]" />
+                            <span className="font-semibold">{photographer.rating.toFixed(1)}</span>
+                            <span className="text-[#756C64]">({photographer.reviewCount} reviews)</span>
+                          </div>
+                          <p className="mt-2 text-sm text-[#B8AFA4]">{photographer.city}</p>
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="inline-flex rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-[#F0EAE0]">
+                              {formatCurrency(photographer.pricePerHour)}/hr
+                            </div>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => window.location.href=`/photographer/${photographer.id}`}
+                                    className="h-9 px-4 rounded-lg bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-all"
+                                >
+                                    Profile
+                                </button>
+                                <button 
+                                    onClick={() => window.location.href=`/book/${photographer.id}`}
+                                    className="h-9 px-4 rounded-lg bg-[var(--gold)] text-black text-[11px] font-bold shadow-lg"
+                                >
+                                    Book
+                                </button>
+                            </div>
+                          </div>
                         </div>
-                        <p className="mt-2 text-sm text-[#B8AFA4]">{photographer.city}</p>
-                        <div className="mt-4 inline-flex rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-[#F0EAE0]">
-                          Price: {formatCurrency(photographer.pricePerHour)}/hr
-                        </div>
-                      </div>
-                    </motion.article>
+                      </motion.article>
                   );
                 })}
               </section>
@@ -852,8 +868,24 @@ const PhotographerSearch = () => {
                       </div>
                       <p className="mt-2 text-sm text-[#B8AFA4]">{photographer.city}</p>
 
-                      <div className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-[#F0EAE0]">
-                        Price: {formatCurrency(photographer.pricePerHour)}/hr
+                      <div className="mt-6 flex items-center justify-between">
+                        <div className="inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-[#F0EAE0]">
+                          {formatCurrency(photographer.pricePerHour)}/hr
+                        </div>
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => window.location.href=`/photographer/${photographer.id}`}
+                                className="h-10 px-5 rounded-xl border border-white/10 bg-transparent text-xs font-bold text-white hover:bg-white/5 transition-all"
+                            >
+                                View Profile
+                            </button>
+                            <button 
+                                onClick={() => window.location.href=`/book/${photographer.id}`}
+                                className="h-10 px-6 rounded-xl bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black text-xs font-bold shadow-lg"
+                            >
+                                Book Now
+                            </button>
+                        </div>
                       </div>
                     </div>
                   </motion.article>

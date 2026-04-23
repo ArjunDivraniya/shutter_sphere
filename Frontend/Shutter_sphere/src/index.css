@@ -7,15 +7,26 @@
 :root {
   --bg: #08111f;
   --bg-elevated: #0d1728;
+  --bg-deep: #0E0E0E;
+  --bg-surface: #121212;
+  --bg-input: #191919;
   --surface: rgba(255, 255, 255, 0.05);
   --surface-strong: rgba(255, 255, 255, 0.08);
   --border: rgba(255, 255, 255, 0.1);
+  --border-muted: rgba(255, 255, 255, 0.06);
   --text: #f8fafc;
-  --text-muted: #cbd5e1;
+  --text-muted: #756C64;
+  --text-accent: #B8AFA4;
   --accent: #ffb84d;
+  --gold: #D4A853;
+  --gold-bright: #F0C560;
   --accent-strong: #ff7a45;
+  --client-accent: #52C98A;
   --shadow-soft: 0 20px 60px rgba(0, 0, 0, 0.22);
 }
+
+.font-cormorant { font-family: 'Cormorant Garamond', serif; }
+.font-outfit { font-family: 'Outfit', sans-serif; }
 
 html {
   scroll-behavior: smooth;

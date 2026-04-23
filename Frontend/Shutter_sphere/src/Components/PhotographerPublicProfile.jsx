@@ -252,7 +252,11 @@ const PhotographerPublicProfile = () => {
 
   const handleBookSelectedDate = () => {
     if (!selectedDate) return;
-    navigate("/login", { state: { selectedDate, photographerId: id } });
+    navigate(`/book/${id}`, { state: { selectedDate, package: activePackage } });
+  };
+
+  const handleBookNow = () => {
+    navigate(`/book/${id}`, { state: { package: activePackage } });
   };
 
   const heroAccent = profile.coverGradient || fallbackPhotographer.coverGradient;
@@ -349,6 +353,7 @@ const PhotographerPublicProfile = () => {
                       </button>
                       <button
                         type="button"
+                        onClick={handleBookNow}
                         className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#F0C560] to-[#D4A853] px-5 py-3 text-sm font-semibold text-[#000] shadow-[0_0_30px_rgba(212,168,83,0.18)]"
                       >
                         📅 Book Now
@@ -559,7 +564,10 @@ const PhotographerPublicProfile = () => {
 
                       <button
                         type="button"
-                        onClick={() => setActivePackage(pkg.name)}
+                        onClick={() => {
+                          setActivePackage(pkg.name);
+                          navigate(`/book/${id}`, { state: { package: pkg.name } });
+                        }}
                         className={`mt-7 w-full rounded-full px-5 py-3 text-sm font-semibold transition ${
                           activePackage === pkg.name
                             ? "bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black"
