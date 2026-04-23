@@ -23,13 +23,13 @@ const checkCompletion = async (userId) => {
     );
     const packageCount = parseInt(packageRes.rows[0].count);
 
-    // Required: full_name, bio (>=100 chars), lat+lng, at least 1 category, at least 3 photos, at least 1 package
+    // Required: full_name, bio, lat+lng, at least 1 photo, at least 1 package
     const isComplete = (
         p.full_name && 
-        p.bio && p.bio.length >= 100 &&
+        p.bio && p.bio.length >= 10 &&
         p.lat && p.lng &&
         p.categories && p.categories.length > 0 &&
-        photoCount >= 3 &&
+        photoCount >= 1 &&
         packageCount >= 1
     );
 
@@ -259,11 +259,10 @@ const getPhotographerById = async (req, res) => {
         const photographerId = req.params.id;
 
         const result = await pool.query(
-            `SELECT id, signup_id, full_name, email, phone_number, address, city, specialization,
-                    experience, portfolio_links, budget_range, availability, languages_spoken,
-                    equipment_used, reviews, rating, price_per_hour
-             FROM photographers
-             WHERE CAST(id AS TEXT) = $1 OR CAST(signup_id AS TEXT) = $1
+            `SELECT p.*, u.profile_photo
+             FROM photographers p
+             LEFT JOIN users u ON p.signup_id = u.id
+             WHERE CAST(p.id AS TEXT) = $1 OR CAST(p.signup_id AS TEXT) = $1
              LIMIT 1`,
             [photographerId]
         );
@@ -707,6 +706,176 @@ const deleteAchievement = async (req, res) => {
     }
 };
 
+const advancedSearch = async (req, res) => {
+    try {
+        const {
+            lat,
+            lng,
+            radius_km = 25,
+            category, // array or string
+            max_price,
+            min_rating,
+            date,
+            sort_by = 'recommended',
+            page = 1,
+            limit = 12
+        } = req.query;
+
+        const offset = (Number(page) - 1) * Number(limit);
+        const values = [];
+        const conditions = [];
+
+        // Base query
+        let query = `
+            SELECT p.*, 
+                   u.profile_photo,
+                   COALESCE(p.rating_avg, p.rating, 5.0) as final_rating,
+                   (6371 * acos(cos(radians($1)) * cos(radians(p.lat)) * cos(radians(p.lng) - radians($2)) + sin(radians($1)) * sin(radians(p.lat)))) AS distance_km
+            FROM photographers p
+            LEFT JOIN users u ON p.signup_id = u.id
+        `;
+        
+        values.push(lat || 0, lng || 0);
+
+        // Filters
+        conditions.push("p.profile_complete = true");
+        conditions.push("COALESCE(p.is_active, true) = true");
+
+        if (lat && lng && radius_km) {
+            // Radius filter logic is handled in the WHERE distance_km clause below using a subquery for performance
+        }
+
+        if (category) {
+            const catArr = Array.isArray(category) ? category.filter(Boolean) : category.split(',').map(c => c.trim()).filter(Boolean);
+            if (catArr.length > 0) {
+                values.push(catArr);
+                conditions.push(`p.categories::TEXT[] && $${values.length}`);
+            }
+        }
+
+        if (max_price) {
+            values.push(max_price);
+            conditions.push(`p.price_per_hour <= $${values.length}`);
+        }
+
+        if (min_rating) {
+            values.push(min_rating);
+            conditions.push(`COALESCE(p.rating_avg, p.rating, 5.0) >= $${values.length}`);
+        }
+
+        if (date) {
+            values.push(date);
+            conditions.push(`NOT EXISTS (
+                SELECT 1 FROM availability_blocks ab 
+                WHERE ab.photographer_id = p.signup_id 
+                AND ab.blocked_date = $${values.length}::DATE
+                AND ab.status IN ('booked', 'blocked')
+            )`);
+        }
+
+        let whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+        // Wrap for radius filter if lat/lng present
+        if (lat && lng && radius_km) {
+            query = `SELECT * FROM (${query} ${whereClause}) sub WHERE distance_km <= ${Number(radius_km)}`;
+            whereClause = ""; // already applied inside subquery or outer WHERE
+        }
+
+        // Sorting
+        let orderBy = "";
+        switch (sort_by) {
+            case 'top_rated':
+                orderBy = "ORDER BY final_rating DESC, review_count DESC";
+                break;
+            case 'price_asc':
+                orderBy = "ORDER BY price_per_hour ASC";
+                break;
+            case 'price_desc':
+                orderBy = "ORDER BY price_per_hour DESC";
+                break;
+            case 'nearest':
+                orderBy = lat && lng ? "ORDER BY distance_km ASC" : "ORDER BY p.id DESC";
+                break;
+            case 'recommended':
+            default:
+                orderBy = "ORDER BY final_rating DESC, review_count DESC, p.id DESC";
+                break;
+        }
+
+        const finalQuery = `${query} ${whereClause} ${orderBy} LIMIT ${Number(limit)} OFFSET ${offset}`;
+        const countQuery = `SELECT COUNT(*) FROM (${query} ${whereClause}) count_sub`;
+
+        const [results, totalCount] = await Promise.all([
+            pool.query(finalQuery, values),
+            pool.query(countQuery, values)
+        ]);
+
+        res.json({
+            photographers: results.rows,
+            total: parseInt(totalCount.rows[0].count),
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+
+    } catch (error) {
+        console.error("Advanced Search Error:", error);
+        res.status(500).json({ message: "Search failed", error: error.message });
+    }
+};
+
+const getMapMarkers = async (req, res) => {
+    try {
+        const { lat, lng, radius_km = 50 } = req.query;
+        if (!lat || !lng) return res.status(400).json({ message: "Lat/Lng required for map" });
+
+        const query = `
+            SELECT p.signup_id, p.full_name as name, p.lat, p.lng, 
+                   COALESCE(p.rating_avg, 5.0) as rating_avg, 
+                   u.profile_photo as avatar, 
+                   COALESCE(p.price_per_hour, 0) as price_per_hour,
+                   (6371 * acos(cos(radians($1)) * cos(radians(p.lat)) * cos(radians(p.lng) - radians($2)) + sin(radians($1)) * sin(radians(p.lat)))) AS distance_km
+            FROM photographers p
+            LEFT JOIN users u ON p.signup_id = u.id
+            WHERE p.profile_complete = true AND COALESCE(p.is_active, true) = true
+            AND (6371 * acos(cos(radians($1)) * cos(radians(p.lat)) * cos(radians(p.lng) - radians($2)) + sin(radians($1)) * sin(radians(p.lat)))) <= $3
+        `;
+
+        const result = await pool.query(query, [lat, lng, radius_km]);
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch map markers", error: error.message });
+    }
+};
+
+const getSearchCategories = async (req, res) => {
+    try {
+        // In a real app, this might come from a dedicated table or distinct values in photographers
+        const result = await pool.query("SELECT DISTINCT unnest(categories::TEXT[]) as cat FROM photographers WHERE categories IS NOT NULL AND categories != ''");
+        const categories = result.rows.map(r => r.cat.trim()).filter(Boolean);
+        // Fallback or union with fixed list if empty
+        const defaultCats = ["Wedding", "Portrait", "Events", "Fashion", "Product", "Travel", "Corporate", "Maternity"];
+        const uniqueCats = Array.from(new Set([...categories, ...defaultCats]));
+        res.json(uniqueCats);
+    } catch (error) {
+        res.json(["Wedding", "Portrait", "Events", "Fashion", "Product", "Travel", "Corporate", "Maternity"]);
+    }
+};
+
+const getSearchSuggestions = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.length < 2) return res.json([]);
+        
+        const result = await pool.query(
+            "SELECT full_name as name, signup_id FROM photographers WHERE full_name ILIKE $1 AND profile_complete = true LIMIT 5",
+            [`%${q}%`]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        res.json([]);
+    }
+};
+
 module.exports = { 
     createPhotographer, 
     getPhotographers, 
@@ -721,5 +890,9 @@ module.exports = {
     upsertPackage,
     deletePackage,
     upsertAchievement,
-    deleteAchievement
+    deleteAchievement,
+    advancedSearch,
+    getMapMarkers,
+    getSearchCategories,
+    getSearchSuggestions
 };

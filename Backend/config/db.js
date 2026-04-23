@@ -257,6 +257,18 @@ const initDatabase = async () => {
       );
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS availability_blocks (
+        id SERIAL PRIMARY KEY,
+        photographer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        blocked_date DATE NOT NULL,
+        status VARCHAR(20) DEFAULT 'booked', -- 'booked' or 'blocked'
+        reason TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(photographer_id, blocked_date)
+      );
+    `);
+
     console.log("PostgreSQL Connected");
   } catch (error) {
     console.error("PostgreSQL Connection Failed", error);

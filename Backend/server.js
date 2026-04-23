@@ -9,6 +9,7 @@ const reviewRoutes = require("./Paths/ourreview");
 const eventRoutes = require("./Paths/eventRoutes");
 const dashboardRoutes = require("./Paths/dashboardRoutes");
 const profileRoutes = require("./Paths/profileRoutes");
+const searchRoutes = require("./Paths/searchRoutes");
 const { initDatabase } = require("./config/db");
 
 dotenv.config();
@@ -31,6 +32,7 @@ app.use("/api", reviewRoutes)
 app.use("/calendar", eventRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/search", searchRoutes);
 
 const PORT = process.env.PORT || 5000;
 
