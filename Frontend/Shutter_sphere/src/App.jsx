@@ -34,11 +34,8 @@ import PhotographerBookingsManagement from "./Components/photographer-dashboard-
 import ClientBookingsPage from "./Components/ClientBookingsPage";
 import ClientOnboarding from "./Components/ClientOnboarding";
 import PhotographerOnboarding from "./Components/PhotographerOnboarding";
+import BookingFlow from "./Components/BookingFlow";
 
-const BookRouteRedirect = () => {
-  const { id } = useParams();
-  return <Navigate to={`/photographer/${id}?tab=Availability`} replace />;
-};
 
 // Protected Route Component
 const ProtectedRoute = ({ element, allowedRoles }) => {
@@ -186,7 +183,7 @@ function App() {
           {/* FrameBook Premium Routes */}
           <Route
             path="/book/:id"
-            element={<ProtectedRoute element={<BookRouteRedirect />} allowedRoles={["client"]} />}
+            element={<ProtectedRoute element={<BookingFlow />} allowedRoles={["client"]} />}
           />
           <Route
             path="/dashboard/client/bookings"

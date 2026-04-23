@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheck, FaCalendarAlt, FaStar, FaShieldAlt } from 'react-icons/fa';
+import { FaCheck, FaCalendarAlt, FaStar, FaShieldAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/apiBase';
 
@@ -53,16 +53,21 @@ const BookingFlow = () => {
     
     // Form State
     const [selectedDate, setSelectedDate] = useState(location.state?.selectedDate || '');
-    
-    useEffect(() => {
-        if (selectedDate) {
-            const date = new Date(selectedDate + 'T00:00:00');
-            const today = new Date().setHours(0, 0, 0, 0);
-            if (date < today) {
-                setSelectedDate('');
-            }
-        }
-    }, []);
+    const [selectedTime, setSelectedTime] = useState('');
+    const [isCustomRequest, setIsCustomRequest] = useState(false);
+    const [selectedAddons, setSelectedAddons] = useState([]); // Array of {name, price}
+    const [referencePhotos, setReferencePhotos] = useState([]); // URLs or base64
+    const [customBrief, setCustomBrief] = useState({
+        eventType: '',
+        duration: '',
+        peopleCount: '',
+        budget: '',
+        description: '',
+        location: '',
+        specialRequirements: ''
+    });
+
+    const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const [selectedPackage, setSelectedPackage] = useState(location.state?.package || null);
     const [eventDetails, setEventDetails] = useState({
@@ -125,19 +130,50 @@ const BookingFlow = () => {
         return photographer?.packages?.find(p => p.name === selectedPackage) || null;
     }, [photographer, selectedPackage]);
 
-    const calendarDays = useMemo(() => {
+    const totalPrice = useMemo(() => {
+        if (isCustomRequest) return 0; // "Quote Requested"
+        const pkgPrice = Number(currentPackageData?.price) || 0;
+        const addonsPrice = selectedAddons.reduce((sum, addon) => sum + (Number(addon.price) || 0), 0);
+        return pkgPrice + addonsPrice;
+    }, [isCustomRequest, currentPackageData, selectedAddons]);
+
+    const calendarGrid = useMemo(() => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startPadding = firstDay.getDay();
         const days = [];
-        const start = new Date();
-        for (let i = 0; i < 42; i += 1) {
-            const d = new Date(start);
-            d.setDate(start.getDate() + i);
+
+        // Padding
+        for (let i = 0; i < startPadding; i++) days.push(null);
+
+        // Month days
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const d = new Date(year, month, day);
             days.push({
                 value: d.toISOString().slice(0, 10),
-                day: d.getDate(),
+                day: day,
+                date: d
             });
         }
+
+        // End padding to keep grid consistent
+        while (days.length % 7 !== 0) days.push(null);
         return days;
-    }, []);
+    }, [currentMonth]);
+
+    const monthName = currentMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+    const handlePrevMonth = () => {
+        const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+        setCurrentMonth(prev);
+    };
+
+    const handleNextMonth = () => {
+        const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+        setCurrentMonth(next);
+    };
 
     const canProceedToReview =
         Boolean(selectedPackage) &&
@@ -159,11 +195,28 @@ const BookingFlow = () => {
                         </div>
                         
                         <div className="bg-[#121212] border border-white/5 rounded-2xl p-8 shadow-inner">
+                            <div className="flex items-center justify-between mb-8">
+                                <button 
+                                    onClick={handlePrevMonth}
+                                    className="p-3 rounded-full bg-[#191919] text-[#756C64] hover:text-white transition-colors"
+                                >
+                                    <FaChevronLeft size={14} />
+                                </button>
+                                <h3 className="font-cormorant text-2xl font-bold text-white">{monthName}</h3>
+                                <button 
+                                    onClick={handleNextMonth}
+                                    className="p-3 rounded-full bg-[#191919] text-[#756C64] hover:text-white transition-colors"
+                                >
+                                    <FaChevronRight size={14} />
+                                </button>
+                            </div>
                             <div className="grid grid-cols-7 gap-4 text-center">
                                 {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
                                     <div key={d} className="text-[10px] uppercase font-bold text-[#756C64] pb-4">{d}</div>
                                 ))}
-                                {calendarDays.map((calendarDay) => {
+                                {calendarGrid.map((calendarDay, index) => {
+                                    if (!calendarDay) return <div key={`empty-${index}`} className="h-14" />;
+                                    
                                     const isBlocked = blockedDates.has(calendarDay.value);
                                     const isPast = new Date(calendarDay.value + 'T00:00:00') < new Date().setHours(0, 0, 0, 0);
                                     const isDisabled = isBlocked || isPast;
@@ -174,9 +227,9 @@ const BookingFlow = () => {
                                         onClick={() => !isDisabled && setSelectedDate(calendarDay.value)}
                                         className={`h-14 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
                                             isDisabled
-                                            ? 'bg-[#191919] text-[#756C64] cursor-not-allowed opacity-30'
+                                            ? 'bg-[#191919] text-[#756C64] cursor-not-allowed opacity-30 shadow-none'
                                             : selectedDate === calendarDay.value
-                                                ? 'bg-[var(--gold)] text-black font-bold ring-4 ring-[var(--gold)]/20'
+                                                ? 'bg-[var(--gold)] text-black font-bold ring-4 ring-[var(--gold)]/20 shadow-[0_0_20px_rgba(212,168,83,0.3)]'
                                                 : 'bg-[#191919] text-white hover:bg-white/5'
                                         }`}
                                     >
@@ -184,23 +237,61 @@ const BookingFlow = () => {
                                     </div>
                                 )})}
                             </div>
-                            <p className="mt-4 text-[11px] text-[#756C64]">Dimmed dates are already booked or unavailable.</p>
+                            <div className="mt-8 flex gap-6 text-[11px] text-[#756C64]">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--gold)]"></span>
+                                    <span>Selected</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-[#191919] border border-white/5"></span>
+                                    <span>Available</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-[#191919] opacity-30"></span>
+                                    <span>Booked/Past</span>
+                                </div>
+                            </div>
                         </div>
 
+                        {selectedDate && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-4"
+                            >
+                                <h3 className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Select Start Time</h3>
+                                <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                                    {['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'].map(time => (
+                                        <button
+                                            key={time}
+                                            onClick={() => setSelectedTime(time)}
+                                            className={`py-3 rounded-lg text-xs font-bold font-outfit border transition-all ${
+                                                selectedTime === time
+                                                ? 'bg-[var(--gold)] border-[var(--gold)] text-black'
+                                                : 'bg-[#191919] border-white/5 text-[#B8AFA4] hover:border-white/20'
+                                            }`}
+                                        >
+                                            {time}
+                                        </button>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+
                         <AnimatePresence>
-                            {selectedDate && (
+                            {selectedDate && selectedTime && (
                                 <motion.div 
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="flex justify-end pt-8"
-                                >
-                                    <button 
-                                        onClick={() => setStep(2)}
-                                        className="bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black px-10 py-4 rounded-full font-bold text-sm shadow-xl hover:scale-105 transition-all"
-                                    >
-                                        Next: Choose Package →
-                                    </button>
-                                </motion.div>
+                                     initial={{ opacity: 0, y: 20 }}
+                                     animate={{ opacity: 1, y: 0 }}
+                                     className="flex justify-end pt-8"
+                                 >
+                                     <button 
+                                         onClick={() => setStep(2)}
+                                         className="bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black px-10 py-4 rounded-full font-bold text-sm shadow-xl hover:scale-105 transition-all"
+                                     >
+                                         Next: Choose Package →
+                                     </button>
+                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
@@ -208,120 +299,233 @@ const BookingFlow = () => {
             case 2:
                 return (
                     <div className="space-y-8">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                                <h1 className="font-cormorant text-[42px] font-bold leading-tight">Choose your package</h1>
-                                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 border border-[var(--gold)]/30 bg-[var(--gold)]/10 rounded-full text-[12px] text-[var(--gold)] font-bold">
-                                    <FaCalendarAlt size={12} /> {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} ✓
-                                </div>
+                                <h1 className="font-cormorant text-[42px] font-bold leading-tight">Define your shoot</h1>
+                                <p className="text-[#B8AFA4] text-sm">Select a curated package or describe your custom needs.</p>
+                            </div>
+                            <div className="flex bg-[#191919] p-1.5 rounded-2xl border border-white/5">
+                                <button 
+                                    onClick={() => setIsCustomRequest(false)}
+                                    className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${!isCustomRequest ? 'bg-white/5 text-[var(--gold)] shadow-xl' : 'text-[#756C64]'}`}
+                                >
+                                    Packages
+                                </button>
+                                <button 
+                                    onClick={() => setIsCustomRequest(true)}
+                                    className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${isCustomRequest ? 'bg-white/5 text-[var(--gold)] shadow-xl' : 'text-[#756C64]'}`}
+                                >
+                                    Custom Brief
+                                </button>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {(photographer?.packages || []).map((pkg) => (
-                                <div 
-                                    key={pkg.name}
-                                    onClick={() => setSelectedPackage(pkg.name)}
-                                    className={`relative p-6 rounded-2xl border transition-all cursor-pointer ${
-                                        selectedPackage === pkg.name 
-                                        ? 'bg-[var(--gold)]/5 border-[var(--gold)] shadow-[0_0_20px_rgba(212,168,83,0.1)]' 
-                                        : 'bg-[#191919] border-white/5 hover:border-white/10'
-                                    }`}
-                                >
-                                    {selectedPackage === pkg.name && (
-                                        <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[var(--gold)] flex items-center justify-center text-black">
-                                            <FaCheck size={10} />
-                                        </div>
-                                    )}
-                                    <h4 className="font-cormorant text-xl font-bold mb-1">{pkg.name}</h4>
-                                    <p className="text-[var(--gold)] font-bold text-lg mb-4">₹{pkg.price.toLocaleString('en-IN')}</p>
-                                    
-                                    <div className="space-y-2 mb-4">
-                                        <p className="text-[10px] text-[#756C64] uppercase font-bold tracking-widest">{pkg.duration}</p>
-                                        <div className="space-y-2">
-                                            {(pkg.deliverables || []).map((item, i) => (
-                                                <div key={i} className="flex items-start gap-2 text-[11px] text-[#B8AFA4]">
-                                                    <FaCheck className="text-[#52C98A] mt-1 shrink-0" size={8} />
-                                                    <span>{item}</span>
+                        {!isCustomRequest ? (
+                            <div className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {(photographer?.packages || fallbackPhotographer.packages).map((pkg) => (
+                                        <div 
+                                            key={pkg.id || pkg.name}
+                                            onClick={() => setSelectedPackage(pkg.name)}
+                                            className={`relative p-6 rounded-2xl border transition-all cursor-pointer overflow-hidden ${
+                                                selectedPackage === pkg.name 
+                                                ? 'bg-[var(--gold)]/5 border-[var(--gold)] shadow-[0_0_30px_rgba(212,168,83,0.15)]' 
+                                                : 'bg-[#191919] border-white/5 hover:border-white/10'
+                                            }`}
+                                        >
+                                            {selectedPackage === pkg.name && (
+                                                <div className="absolute top-4 right-4 bg-[var(--gold)] text-black rounded-full p-1.5 z-10">
+                                                    <FaCheck size={10} />
                                                 </div>
-                                            ))}
+                                            )}
+                                            <div className="relative z-10">
+                                                <h4 className="font-cormorant text-2xl font-bold mb-1 text-white">{pkg.name}</h4>
+                                                <p className="text-[var(--gold)] font-bold text-xl mb-4">₹{pkg.price.toLocaleString('en-IN')}</p>
+                                                
+                                                <div className="space-y-3 pt-4 border-t border-white/5">
+                                                    <p className="text-[10px] text-[#756C64] uppercase font-bold tracking-widest flex items-center gap-2">
+                                                        <FaShieldAlt size={10} /> {pkg.duration || 'Flexible duration'}
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        {(pkg.deliverables || ['High-quality coverage', 'Digital delivery', 'Quick turnaround']).slice(0, 4).map((item, i) => (
+                                                            <div key={i} className="flex items-start gap-2 text-[11px] text-[#B8AFA4] leading-tight">
+                                                                <FaCheck className="text-[#52C98A] mt-0.5 shrink-0" size={8} />
+                                                                <span>{item}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                                
+                                 {selectedPackage && (
+                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                                        {/* Recommended Add-ons */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Recommended Add-ons</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {[
+                                                    { name: "Extra Hour", price: 2000 },
+                                                    { name: "Second Photographer", price: 5000 },
+                                                    { name: "Express Delivery (48h)", price: 3000 },
+                                                    { name: "High-end Retouching", price: 1500 }
+                                                ].map(addon => (
+                                                    <label key={addon.name} className="flex items-center justify-between p-4 bg-[#191919] border border-white/5 rounded-xl cursor-pointer hover:border-white/10 transition-colors">
+                                                        <div className="flex items-center gap-3">
+                                                            <input 
+                                                                type="checkbox"
+                                                                checked={selectedAddons.some(a => a.name === addon.name)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) setSelectedAddons([...selectedAddons, addon]);
+                                                                    else setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
+                                                                }}
+                                                                className="accent-[var(--gold)]"
+                                                            />
+                                                            <span className="text-sm text-white font-medium">{addon.name}</span>
+                                                        </div>
+                                                        <span className="text-xs text-[var(--gold)] font-bold">+ ₹{addon.price}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
 
-                        <div className="space-y-8 pt-8">
-                            <h2 className="font-cormorant text-2xl font-bold border-b border-white/5 pb-4">Event Details</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Event Details for Package Path */}
+                                        <div className="space-y-6 pt-8 border-t border-white/5">
+                                            <h3 className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Event Details</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs text-[#B8AFA4]">Event Name *</label>
+                                                    <input 
+                                                        type="text"
+                                                        value={eventDetails.eventName}
+                                                        onChange={(e) => setEventDetails({...eventDetails, eventName: e.target.value})}
+                                                        placeholder="e.g. Rahul & Riya's Wedding"
+                                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[var(--gold)]"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs text-[#B8AFA4]">Event Type *</label>
+                                                    <select 
+                                                        value={eventDetails.eventType}
+                                                        onChange={(e) => setEventDetails({...eventDetails, eventType: e.target.value})}
+                                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[var(--gold)] outline-none"
+                                                    >
+                                                        <option value="">Select type</option>
+                                                        <option value="Wedding">Wedding</option>
+                                                        <option value="Product Shoot">Product Shoot</option>
+                                                        <option value="Event Coverage">Event Coverage</option>
+                                                        <option value="Personal Portrait">Personal Portrait</option>
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs text-[#B8AFA4]">Venue Name *</label>
+                                                    <input 
+                                                        type="text"
+                                                        value={eventDetails.venueName}
+                                                        onChange={(e) => setEventDetails({...eventDetails, venueName: e.target.value})}
+                                                        placeholder="e.g. Royal Heritage Hotel"
+                                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[var(--gold)]"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs text-[#B8AFA4]">Venue Address *</label>
+                                                    <input 
+                                                        type="text"
+                                                        value={eventDetails.venueAddress}
+                                                        onChange={(e) => setEventDetails({...eventDetails, venueAddress: e.target.value})}
+                                                        placeholder="Full address of the venue"
+                                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[var(--gold)]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </div>
+                        ) : (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Event Name</label>
-                                    <input 
-                                        type="text" 
-                                        value={eventDetails.eventName}
-                                        onChange={(e) => setEventDetails({...eventDetails, eventName: e.target.value})}
-                                        placeholder="e.g. Priya & Raj Wedding" 
-                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-5 py-4 focus:border-[var(--gold)] transition-colors text-white"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Event Type</label>
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Event Category</label>
                                     <select 
-                                        value={eventDetails.eventType}
-                                        onChange={(e) => setEventDetails({...eventDetails, eventType: e.target.value})}
-                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 focus:border-[var(--gold)] transition-colors text-white outline-none"
+                                        value={customBrief.eventType}
+                                        onChange={(e) => setCustomBrief({...customBrief, eventType: e.target.value})}
+                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 focus:border-[var(--gold)] text-white outline-none"
                                     >
                                         <option value="">Select type</option>
-                                        <option value="wedding">Wedding</option>
-                                        <option value="festival">Festival</option>
-                                        <option value="birthday">Birthday</option>
-                                        <option value="portrait">Portrait</option>
+                                        <option value="Wedding">Wedding</option>
+                                        <option value="Product Shoot">Product Shoot</option>
+                                        <option value="Event Coverage">Event Coverage</option>
+                                        <option value="Personal Portrait">Personal Portrait</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Venue Name</label>
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Shoot Location</label>
                                     <input 
                                         type="text" 
-                                        value={eventDetails.venueName}
-                                        onChange={(e) => setEventDetails({...eventDetails, venueName: e.target.value})}
-                                        placeholder="e.g. Marriott Hotel" 
-                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-5 py-4 focus:border-[var(--gold)] transition-colors text-white"
+                                        placeholder="Full address or Venue name"
+                                        value={customBrief.location}
+                                        onChange={(e) => setCustomBrief({...customBrief, location: e.target.value})}
+                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[var(--gold)]"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Venue Address</label>
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Duration Estimate</label>
                                     <input 
                                         type="text" 
-                                        value={eventDetails.venueAddress}
-                                        onChange={(e) => setEventDetails({...eventDetails, venueAddress: e.target.value})}
-                                        placeholder="Full address of venue" 
-                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-5 py-4 focus:border-[var(--gold)] transition-colors text-white"
+                                        placeholder="e.g. 6 hours / 3 days"
+                                        value={customBrief.duration}
+                                        onChange={(e) => setCustomBrief({...customBrief, duration: e.target.value})}
+                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[var(--gold)]"
                                     />
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Special Requests (Optional)</label>
-                                <textarea 
-                                    value={eventDetails.specialRequests}
-                                    onChange={(e) => setEventDetails({...eventDetails, specialRequests: e.target.value})}
-                                    rows={4} 
-                                    className="w-full bg-[#191919] border border-white/10 rounded-xl px-5 py-4 focus:border-[var(--gold)] transition-colors text-white"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between pt-12 items-center">
-                            <button onClick={() => setStep(1)} className="text-sm font-bold text-[#756C64] hover:text-white transition-colors underline underline-offset-8">← Previous</button>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Number of People/Subjects</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="e.g. 50 guests / 1 model"
+                                        value={customBrief.peopleCount}
+                                        onChange={(e) => setCustomBrief({...customBrief, peopleCount: e.target.value})}
+                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[var(--gold)]"
+                                    />
+                                </div>
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Detailed Requirements (Min 50 chars)</label>
+                                    <textarea 
+                                        rows={4}
+                                        value={customBrief.description}
+                                        onChange={(e) => setCustomBrief({...customBrief, description: e.target.value})}
+                                        placeholder="Tell the photographer exactly what you need..."
+                                        className="w-full bg-[#191919] border border-white/10 rounded-xl px-4 py-4 text-white focus:border-[var(--gold)]"
+                                    />
+                                    <div className="flex justify-between">
+                                        <span className={`text-[10px] ${customBrief.description.length >= 50 ? 'text-green-400' : 'text-[#756C64]'}`}>
+                                            {customBrief.description.length}/1000 characters
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-[10px] uppercase tracking-widest font-bold text-[#756C64]">Reference Photos (Coming soon)</label>
+                                    <div className="border border-dashed border-white/10 rounded-xl p-8 text-center text-[#756C64] bg-[#0E0E0E]">
+                                        Up to 5 images for inspiration
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                        
+                        <div className="flex justify-between pt-12 items-center border-t border-white/5">
+                            <button onClick={() => setStep(1)} className="text-sm font-bold text-[#756C64] hover:text-white transition-colors">← Previous</button>
                             <button 
                                 onClick={() => setStep(3)}
-                                disabled={!canProceedToReview}
+                                disabled={(isCustomRequest && customBrief.description.length < 50) || (!isCustomRequest && (!selectedPackage || !eventDetails.eventName.trim() || !eventDetails.venueName.trim()))}
                                 className={`px-10 py-5 rounded-full font-bold text-sm shadow-2xl transition-all ${
-                                    canProceedToReview
+                                    (!isCustomRequest && selectedPackage && eventDetails.eventName.trim() && eventDetails.venueName.trim()) || (isCustomRequest && customBrief.description.length >= 50)
                                     ? 'bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black hover:scale-105' 
                                     : 'bg-white/5 text-[#756C64] cursor-not-allowed opacity-40'
                                 }`}
                             >
-                                Next: Review & Confirm →
+                                Next: Review Request →
                             </button>
                         </div>
                     </div>
@@ -330,90 +534,115 @@ const BookingFlow = () => {
                 return (
                     <div className="space-y-8">
                         <div>
-                            <h1 className="font-cormorant text-[42px] font-bold leading-tight">Review your booking</h1>
-                            <p className="text-[#B8AFA4] mt-2">Almost there! Please verify your event details before sending the request.</p>
+                            <h1 className="font-cormorant text-[42px] font-bold leading-tight">Review your request</h1>
+                            <p className="text-[#B8AFA4] text-sm">Please verify the details below before sending to {photographer?.fullName}.</p>
                         </div>
 
-                        <div className="bg-[#121212] border border-white/10 rounded-[20px] p-10 shadow-2xl">
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                <div className="space-y-6">
-                                    <div className="flex justify-between items-start border-b border-white/5 pb-4">
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">📅 Event Date</p>
-                                            <p className="text-white font-medium">{new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                                        </div>
+                        <div className="bg-[#121212] border border-white/10 rounded-[24px] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.4)] backdrop-blur-3xl overflow-hidden relative">
+                             {/* Glass Backdrop Accent */}
+                             <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--gold)]/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
+                                <div className="space-y-8">
+                                    <div className="pb-6 border-b border-white/5 group">
+                                        <p className="text-[10px] uppercase font-bold text-[#756C64] mb-2 tracking-[0.2em]">📅 Event Date & Time</p>
+                                        <p className="text-white text-lg font-medium group-hover:text-[var(--gold)] transition-colors">
+                                            {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} at {selectedTime}
+                                        </p>
                                     </div>
-                                    <div className="flex justify-between items-start border-b border-white/5 pb-4">
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">🎉 Event</p>
-                                            <p className="text-white font-medium">{eventDetails.eventName}</p>
-                                        </div>
+                                    <div className="pb-6 border-b border-white/5 group">
+                                        <p className="text-[10px] uppercase font-bold text-[#756C64] mb-2 tracking-[0.2em]">📍 Shooting Location</p>
+                                        <p className="text-white text-lg font-medium group-hover:text-[var(--gold)] transition-colors">
+                                            {isCustomRequest ? customBrief.location : `${eventDetails.venueName}, ${eventDetails.venueAddress}`}
+                                        </p>
                                     </div>
-                                    <div className="flex justify-between items-start border-b border-white/5 pb-4">
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">📍 Venue</p>
-                                            <p className="text-white font-medium">{eventDetails.venueName}, {eventDetails.venueAddress}</p>
-                                        </div>
+                                    <div className="pb-6 border-b border-white/5 group">
+                                        <p className="text-[10px] uppercase font-bold text-[#756C64] mb-2 tracking-[0.2em]">📸 Event Type</p>
+                                        <p className="text-white text-lg font-medium group-hover:text-[var(--gold)] transition-colors">
+                                            {isCustomRequest ? customBrief.eventType : eventDetails.eventType}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="space-y-6">
-                                    <div className="flex justify-between items-start border-b border-white/5 pb-4">
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">💼 Package</p>
-                                            <p className="text-white font-medium">{selectedPackage} — {currentPackageData?.duration}</p>
-                                        </div>
+
+                                <div className="space-y-8">
+                                    <div className="pb-6 border-b border-white/5 group">
+                                        <p className="text-[10px] uppercase font-bold text-[#756C64] mb-2 tracking-[0.2em]">💼 Selected Route</p>
+                                        <p className="text-white text-lg font-medium group-hover:text-[var(--gold)] transition-colors">
+                                            {isCustomRequest ? 'Custom Request (Full Control)' : `${selectedPackage} Package`}
+                                        </p>
                                     </div>
-                                    <div className="flex justify-between items-start border-b border-white/5 pb-4">
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">✅ Includes</p>
-                                            <div className="flex flex-wrap gap-x-4 gap-y-1">
-                                                {(currentPackageData?.deliverables || []).map((d, i) => (
-                                                    <span key={i} className="text-[11px] text-[#B8AFA4]">✓ {d}</span>
-                                                ))}
+                                    {!isCustomRequest ? (
+                                        <div className="pb-6 border-b border-white/5">
+                                            <p className="text-[10px] uppercase font-bold text-[#756C64] mb-2 tracking-[0.2em]">➕ Selected Add-ons</p>
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {selectedAddons.length > 0 ? selectedAddons.map(a => (
+                                                    <span key={a.name} className="text-[11px] bg-[var(--gold)]/10 px-3 py-1.5 rounded-full text-[var(--gold)] border border-[var(--gold)]/20 font-bold tracking-wide">
+                                                        {a.name.toUpperCase()}
+                                                    </span>
+                                                )) : <span className="text-[11px] text-[#756C64] italic">No extra additions selected</span>}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex justify-between items-start border-b border-white/5 pb-4">
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">💰 Price</p>
-                                            <p className="text-[var(--gold)] font-bold text-xl">₹{Number(currentPackageData?.price).toLocaleString('en-IN')}</p>
+                                    ) : (
+                                        <div className="pb-6 border-b border-white/5">
+                                            <p className="text-[10px] uppercase font-bold text-[#756C64] mb-2 tracking-[0.2em]">⏳ Scope & Scale</p>
+                                            <p className="text-white text-lg font-medium">{customBrief.duration} • {customBrief.peopleCount} Subjects</p>
                                         </div>
+                                    )}
+                                    <div className="bg-[var(--gold)]/5 p-6 rounded-2xl border border-[var(--gold)]/10 border-dashed">
+                                        <p className="text-[10px] uppercase font-bold text-[#756C64] mb-3 tracking-[0.2em]">💰 Estimated Investment</p>
+                                        <p className="text-[var(--gold)] font-bold text-[32px] leading-none">
+                                            {isCustomRequest ? 'Quote Awaited' : `₹${totalPrice.toLocaleString('en-IN')}`}
+                                        </p>
+                                        <p className="text-[10px] text-[#756C64] mt-3 italic">* Final price confirmed by photographer after review.</p>
                                     </div>
                                 </div>
-                           </div>
-                           
-                           {eventDetails.specialRequests && (
-                               <div className="mt-10 p-6 bg-[#0E0E0E] rounded-xl border border-white/5">
-                                    <p className="text-[10px] uppercase font-bold text-[#756C64] mb-2 font-outfit">Note to photographer</p>
-                                    <p className="text-[#B8AFA4] text-sm italic">{eventDetails.specialRequests}</p>
-                               </div>
-                           )}
+                            </div>
 
-                           <div className="mt-10 pt-10 border-t border-dashed border-white/10 flex flex-col gap-6">
-                                <p className="text-[#756C64] text-[12px]">Free cancellation up to 7 days before event.</p>
+                            <div className="mt-12 p-8 bg-white/[0.02] rounded-3xl border border-white/5 relative z-10">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <FaCalendarAlt className="text-[var(--gold)]" size={12} />
+                                    <p className="text-[10px] uppercase font-bold text-[#756C64] tracking-[0.2em]">Specific Requirements & Notes</p>
+                                </div>
+                                <p className="text-[#B8AFA4] text-base leading-loose font-light">
+                                    {isCustomRequest ? customBrief.description : (eventDetails.specialRequests || 'The client has not specified any additional requirements.')}
+                                </p>
+                            </div>
+
+                           <div className="mt-12 pt-10 border-t border-white/5 flex flex-col gap-8 relative z-10">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-[var(--gold)]/10 flex items-center justify-center shrink-0 border border-[var(--gold)]/20">
+                                        <FaShieldAlt className="text-[var(--gold)]" size={14} />
+                                    </div>
+                                    <p className="text-[#756C64] text-xs leading-relaxed uppercase tracking-wider">
+                                        FrameBook Secure: Your payment is held in escrow until 24 hours after the event. 
+                                        Free cancellation up to 7 days before the shoot.
+                                    </p>
+                                </div>
+                                
                                 <label className="flex items-center gap-4 cursor-pointer group">
                                     <div 
                                         onClick={() => setTermsAgreed(!termsAgreed)}
-                                        className={`w-6 h-6 rounded-md border transition-all duration-300 flex items-center justify-center ${
-                                            termsAgreed ? 'bg-[var(--gold)] border-[var(--gold)] shadow-[0_0_10px_rgba(212,168,83,0.4)]' : 'border-white/10 bg-[#191919] group-hover:border-white/20'
+                                        className={`w-6 h-6 rounded-lg border-2 transition-all duration-300 flex items-center justify-center ${
+                                            termsAgreed ? 'bg-[var(--gold)] border-[var(--gold)] shadow-[0_0_20px_rgba(212,168,83,0.3)]' : 'border-white/10 bg-[#191919] group-hover:border-white/20'
                                         }`}
                                     >
-                                        {termsAgreed && <FaCheck size={12} className="text-black" />}
+                                        {termsAgreed && <FaCheck size={10} className="text-black" />}
                                     </div>
-                                    <span className="text-sm font-medium text-white/80 select-none">I agree to the booking terms and conditions</span>
+                                    <span className="text-sm font-semibold text-white/90 select-none group-hover:text-white transition-colors">I accept the service agreement and booking protocols</span>
                                 </label>
+                                
                                 <button 
                                     onClick={handleConfirmBooking}
                                     disabled={!termsAgreed || submitting}
-                                    className={`w-full py-5 rounded-full font-bold text-base shadow-2xl transition-all duration-500 ${
+                                    className={`w-full py-6 rounded-full font-bold text-lg uppercase tracking-widest shadow-2xl transition-all duration-700 ${
                                         termsAgreed && !submitting
-                                        ? 'bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(212,168,83,0.25)]' 
-                                        : 'bg-white/5 text-[#756C64] cursor-not-allowed opacity-40'
+                                        ? 'bg-gradient-to-r from-[#F0C560] via-[#D4A853] to-[#B8860B] text-black hover:scale-[1.01] hover:brightness-110 shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_60px_rgba(212,168,83,0.2)]' 
+                                        : 'bg-[#191919] text-[#444] cursor-not-allowed border border-white/5'
                                     }`}
                                 >
-                                    {submitting ? 'Sending request...' : 'Send Booking Request'}
+                                    {submitting ? 'Transmitting Request...' : 'Lock In Your Shoot'}
                                 </button>
-                                {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
+                                {errorMessage && <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} className="text-sm text-red-500 font-bold text-center mt-2">{errorMessage}</motion.p>}
                            </div>
                         </div>
                     </div>
@@ -434,35 +663,31 @@ const BookingFlow = () => {
             return;
         }
 
-        if (!canProceedToReview) {
-            setErrorMessage('Please fill all required event details before confirming.');
-            return;
-        }
-
         setSubmitting(true);
         setErrorMessage('');
 
         try {
             const photographerSignupId = Number(photographer?.signupId || photographer?.id || photographerId);
-            const response = await axios.post(`${API_BASE_URL}/calendar/event`, {
-                signupId: photographerSignupId,
-                photographerId: photographerSignupId,
+            
+            const bookingData = {
                 clientId: userId,
-                clientName: userName,
-                title: eventDetails.eventName.trim(),
-                date: selectedDate,
-                description: eventDetails.specialRequests?.trim() || null,
-                location: eventDetails.venueAddress.trim(),
-                status: 'Pending',
-                eventType: eventDetails.eventType,
-                packageName: selectedPackage,
-                amount: Number(currentPackageData?.price) || 0,
-                venueName: eventDetails.venueName.trim(),
-                venueAddress: eventDetails.venueAddress.trim(),
-                specialRequests: eventDetails.specialRequests?.trim() || null,
-            });
+                photographerId: photographerSignupId,
+                packageId: isCustomRequest ? null : (photographer?.packages?.find(p => p.name === selectedPackage)?.id || null),
+                eventDate: selectedDate,
+                eventStartTime: selectedTime,
+                eventLocation: isCustomRequest ? customBrief.location : eventDetails.venueAddress,
+                eventType: isCustomRequest ? customBrief.eventType : eventDetails.eventType,
+                description: isCustomRequest ? customBrief.description : (eventDetails.specialRequests || ''),
+                specialRequirements: isCustomRequest ? customBrief.specialRequirements : eventDetails.specialRequests,
+                selectedAddons: selectedAddons,
+                isCustomRequest: isCustomRequest,
+                totalPrice: isCustomRequest ? 0 : totalPrice,
+                referencePhotos: referencePhotos // Shared as empty array for now
+            };
 
-            setCreatedBookingId(response.data?.id || response.data?._id || null);
+            const response = await axios.post(`${API_BASE_URL}/api/bookings`, bookingData);
+
+            setCreatedBookingId(response.data?.booking?.id || null);
             setBlockedDates((prev) => new Set([...prev, selectedDate]));
             setIsSuccess(true);
             window.scrollTo(0, 0);
@@ -594,22 +819,22 @@ const BookingFlow = () => {
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-[#756C64]">📅 Date:</span>
                                 <span className={selectedDate ? "text-white font-medium" : "text-[#756C64] italic text-[12px]"}>
-                                    {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "— —"}
+                                    {selectedDate ? `${new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} @ ${selectedTime || '--'}` : "— —"}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-[#756C64]">💼 Package:</span>
-                                <span className={selectedPackage ? "text-white font-medium" : "text-[#756C64] italic text-[12px]"}>
-                                    {selectedPackage || "— —"}
+                                <span className="text-[#756C64]">💼 Path:</span>
+                                <span className="text-white font-medium">
+                                    {isCustomRequest ? "Custom Brief" : (selectedPackage || "— —")}
                                 </span>
                             </div>
                         </div>
 
                         <div className="border-t border-white/5 pt-6 mb-8">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-white font-medium">Total:</span>
+                                <span className="text-sm text-white font-medium">{isCustomRequest ? "Est. Budget:" : "Total:"}</span>
                                 <span className="font-cormorant text-2xl font-bold text-[var(--gold)]">
-                                    {selectedPackage ? `₹${Number(currentPackageData?.price).toLocaleString('en-IN')}` : "₹0"}
+                                    {isCustomRequest ? "Quote Req." : `₹${totalPrice.toLocaleString('en-IN')}`}
                                 </span>
                             </div>
                         </div>

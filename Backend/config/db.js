@@ -284,6 +284,32 @@ const initDatabase = async () => {
       );
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS bookings (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        photographer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        package_id INTEGER REFERENCES photographer_packages(id) ON DELETE SET NULL,
+        event_date DATE NOT NULL,
+        event_start_time TIME NOT NULL,
+        event_location TEXT,
+        event_lat DECIMAL(10, 7),
+        event_lng DECIMAL(10, 7),
+        event_type VARCHAR(100),
+        description TEXT,
+        special_requirements TEXT,
+        reference_photos TEXT[],
+        selected_addons JSONB DEFAULT '[]',
+        status VARCHAR(20) DEFAULT 'pending', -- 'pending' | 'confirmed' | 'rejected' | 'cancelled' | 'completed'
+        total_price INTEGER,
+        photographer_note TEXT,
+        is_custom_request BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        confirmed_at TIMESTAMP,
+        completed_at TIMESTAMP
+      );
+    `);
+
     console.log("PostgreSQL Connected");
   } catch (error) {
     console.error("PostgreSQL Connection Failed", error);

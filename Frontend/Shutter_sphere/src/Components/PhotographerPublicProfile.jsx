@@ -366,60 +366,8 @@ const PhotographerPublicProfile = () => {
     setSelectedMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1));
   };
 
-  const handleBookSelectedDate = async () => {
-    const clientId = Number(localStorage.getItem("userId"));
-    const clientName = localStorage.getItem("userName") || "Client";
-
-    if (!clientId) {
-      navigate("/login");
-      return;
-    }
-
-    if (!selectedDate) {
-      setBookingError("Please select an available date.");
-      return;
-    }
-
-    if (!bookingForm.eventName.trim() || !bookingForm.eventType || !bookingForm.venueName.trim() || !bookingForm.venueAddress.trim()) {
-      setBookingError("Please fill all required booking details.");
-      return;
-    }
-
-    const packageDetails = (profile.packages || fallbackPhotographer.packages).find((pkg) => pkg.name === activePackage);
-    const selectedDateTime = new Date(`${selectedDate}T${bookingForm.eventTime || "18:00"}`);
-
-    setBookingSubmitting(true);
-    setBookingError("");
-    try {
-      const photographerSignupId = Number(profile.signupId || profile.id);
-      await axios.post(`${API_BASE_URL}/calendar/event`, {
-        signupId: photographerSignupId,
-        photographerId: photographerSignupId,
-        clientId,
-        clientName,
-        title: bookingForm.eventName.trim(),
-        date: selectedDateTime.toISOString(),
-        description: bookingForm.specialRequests?.trim() || null,
-        location: bookingForm.venueAddress.trim(),
-        status: "Pending",
-        eventType: bookingForm.eventType,
-        packageName: activePackage,
-        amount: Number(packageDetails?.price || 0),
-        venueName: bookingForm.venueName.trim(),
-        venueAddress: bookingForm.venueAddress.trim(),
-        specialRequests: bookingForm.specialRequests?.trim() || null,
-      });
-
-      navigate("/client-dashboard?section=bookings");
-    } catch (error) {
-      setBookingError(error?.response?.data?.message || "Unable to submit booking request.");
-    } finally {
-      setBookingSubmitting(false);
-    }
-  };
-
   const handleBookNow = () => {
-    setActiveTab("Availability");
+    navigate(`/book/${id}`);
   };
 
   const heroAccent = profile.coverGradient || fallbackPhotographer.coverGradient;
@@ -815,8 +763,7 @@ const PhotographerPublicProfile = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          setActivePackage(pkg.name);
-                          setActiveTab("Availability");
+                          navigate(`/book/${id}`, { state: { package: pkg.name } });
                         }}
                         className={`mt-7 w-full rounded-full px-5 py-3 text-sm font-semibold transition ${
                           activePackage === pkg.name
@@ -840,200 +787,23 @@ const PhotographerPublicProfile = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.2 }}
-              className="space-y-5"
+              className="space-y-8"
             >
-              <div>
-                <h2 className="font-display text-[22px] text-[var(--ink-1)]">Check Availability</h2>
-                <p className="mt-2 text-[14px] text-[var(--ink-2)]">Select a date to book {profile.fullName || profile.name} for your event</p>
+              <div className="text-center py-20 bg-[var(--bg-card)] rounded-3xl border border-[var(--line-1)] shadow-2xl">
+                <div className="w-20 h-20 bg-[var(--gold-soft)] rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gold-border)]">
+                  <FaCalendarAlt className="text-[var(--gold)] text-3xl" />
+                </div>
+                <h2 className="font-display text-3xl font-bold text-white mb-4">Request a Booking</h2>
+                <p className="text-[var(--ink-2)] max-w-md mx-auto mb-10">
+                  Select a date and customize your shoot in our premium 3-step booking flow.
+                </p>
+                <button 
+                  onClick={() => navigate(`/book/${id}`)}
+                  className="bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black px-12 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-all"
+                >
+                  Enter Booking Flow
+                </button>
               </div>
-
-              <article className="rounded-[18px] border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.28)]">
-                <div className="mb-4 flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={setPrevMonth}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-raised)] text-[var(--ink-1)] transition hover:bg-[var(--gold)] hover:text-black"
-                  >
-                    <FaChevronLeft />
-                  </button>
-                  <h3 className="font-display text-[22px] text-[var(--ink-1)]">{monthName(selectedMonth)}</h3>
-                  <button
-                    type="button"
-                    onClick={setNextMonth}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-raised)] text-[var(--ink-1)] transition hover:bg-[var(--gold)] hover:text-black"
-                  >
-                    <FaChevronRight />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-7 gap-2 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--ink-3)]">
-                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                    <div key={day} className="py-2">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-3 grid grid-cols-7 gap-2">
-                  {monthGrid.map((slot, index) => {
-                    if (!slot) {
-                      return <div key={`empty-${index}`} className="h-16 rounded-xl" />;
-                    }
-
-                    const isBooked = slot.status === "booked";
-                    const isPending = slot.status === "pending";
-                    const isPast = slot.date < new Date().setHours(0, 0, 0, 0);
-                    const isSelected = selectedDate === slot.key;
-                    const baseClass = "flex h-16 flex-col justify-between rounded-xl border p-2 text-left transition duration-200";
-
-                    return (
-                      <button
-                        key={slot.key}
-                        type="button"
-                        disabled={isBooked || isPast}
-                        onClick={() => setSelectedDate(slot.key)}
-                        className={`${baseClass} ${
-                          isSelected
-                            ? "border-[var(--gold)] bg-[var(--gold)] text-black"
-                            : isBooked || isPast
-                              ? "cursor-not-allowed opacity-40 border-white/5 bg-transparent"
-                              : isPending
-                                ? "border-amber-500/30 bg-amber-500/10 text-amber-200 hover:border-amber-400/40"
-                                : "border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-1)] hover:border-[var(--gold-border)] hover:bg-[var(--gold-soft)]"
-                        } ${slot.isToday ? "ring-1 ring-[var(--gold)]" : ""}`}
-                      >
-                        <span className="text-xs text-inherit">{slot.day}</span>
-                        <span className="text-[10px] uppercase tracking-wide opacity-80">
-                          {isPast ? "Past" : isBooked ? "Booked" : isPending ? "Pending" : "Available"}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-5 flex flex-wrap items-center gap-4 text-[12px] text-[var(--ink-2)]">
-                  <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Available</span>
-                  <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#E05555]" /> Booked</span>
-                  <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#E09B35]" /> Pending</span>
-                </div>
-
-                <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-                  <div className="space-y-4 rounded-xl border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_12px_30px_rgba(0,0,0,0.25)]">
-                    <h4 className="font-display text-xl text-[var(--ink-1)]">Booking Request Details</h4>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-1">
-                        <label className="text-xs text-[var(--ink-3)]">Event Name *</label>
-                        <input
-                          value={bookingForm.eventName}
-                          onChange={(e) => setBookingForm((prev) => ({ ...prev, eventName: e.target.value }))}
-                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
-                          placeholder="Haldi Ceremony"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-[var(--ink-3)]">Event Type *</label>
-                        <select
-                          value={bookingForm.eventType}
-                          onChange={(e) => setBookingForm((prev) => ({ ...prev, eventType: e.target.value }))}
-                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
-                        >
-                          <option value="">Select type</option>
-                          <option value="Wedding">Wedding</option>
-                          <option value="Festival">Festival</option>
-                          <option value="Birthday">Birthday</option>
-                          <option value="Portrait">Portrait</option>
-                          <option value="Corporate">Corporate</option>
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-[var(--ink-3)]">Preferred Time *</label>
-                        <input
-                          type="time"
-                          value={bookingForm.eventTime}
-                          onChange={(e) => setBookingForm((prev) => ({ ...prev, eventTime: e.target.value }))}
-                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-[var(--ink-3)]">Package</label>
-                        <select
-                          value={activePackage}
-                          onChange={(e) => setActivePackage(e.target.value)}
-                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
-                        >
-                          {(profile.packages || fallbackPhotographer.packages).map((pkg) => (
-                            <option key={pkg.name} value={pkg.name}>
-                              {pkg.name} ({formatPrice(pkg.price)})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-[var(--ink-3)]">Venue Name *</label>
-                        <input
-                          value={bookingForm.venueName}
-                          onChange={(e) => setBookingForm((prev) => ({ ...prev, venueName: e.target.value }))}
-                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
-                          placeholder="Royal Garden"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-[var(--ink-3)]">Venue Address *</label>
-                        <input
-                          value={bookingForm.venueAddress}
-                          onChange={(e) => setBookingForm((prev) => ({ ...prev, venueAddress: e.target.value }))}
-                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
-                          placeholder="Rajkot, Gujarat"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-[var(--ink-3)]">Program Details / Notes</label>
-                      <textarea
-                        rows={3}
-                        value={bookingForm.specialRequests}
-                        onChange={(e) => setBookingForm((prev) => ({ ...prev, specialRequests: e.target.value }))}
-                        className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
-                        placeholder="Share schedule, shot requirements, and custom requests"
-                      />
-                    </div>
-
-                    {bookingError ? <p className="text-sm text-rose-400">{bookingError}</p> : null}
-
-                    <button
-                      type="button"
-                      onClick={handleBookSelectedDate}
-                      disabled={!selectedDate || bookingSubmitting}
-                      className={`inline-flex rounded-full px-6 py-3 text-sm font-semibold ${
-                        selectedDate && !bookingSubmitting
-                          ? "bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black"
-                          : "cursor-not-allowed border border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-3)]"
-                      }`}
-                    >
-                      {bookingSubmitting ? "Submitting..." : "Send Booking Request"}
-                    </button>
-                  </div>
-
-                  <div className="rounded-xl border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_12px_30px_rgba(0,0,0,0.25)] lg:sticky lg:top-28">
-                    <h4 className="font-display text-lg text-[var(--ink-1)]">Booking Summary</h4>
-                    <div className="mt-4 flex items-center gap-3">
-                      <img src={profile.avatar || fallbackPhotographer.avatar} alt={displayedName} className="h-10 w-10 rounded-full border border-[var(--gold-border)] object-cover" />
-                      <div>
-                        <p className="text-sm font-semibold text-[var(--ink-1)]">{displayedName}</p>
-                        <p className="text-xs text-[var(--ink-3)]">{profile.city || "City"}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 space-y-2 text-sm">
-                      <p className="text-[var(--ink-2)]">Date: <span className="text-[var(--ink-1)]">{selectedDate || "Not selected"}</span></p>
-                      <p className="text-[var(--ink-2)]">Time: <span className="text-[var(--ink-1)]">{bookingForm.eventTime || "Not selected"}</span></p>
-                      <p className="text-[var(--ink-2)]">Package: <span className="text-[var(--ink-1)]">{activePackage}</span></p>
-                      <p className="text-[var(--ink-2)]">Request Amount: <span className="text-[var(--gold)] font-semibold">{formatPrice(activePackageData?.price || 0)}</span></p>
-                      <p className="text-xs text-[var(--ink-3)]">Final estimate can be updated by photographer after request.</p>
-                    </div>
-                  </div>
-                </div>
-              </article>
             </motion.section>
           )}
 
