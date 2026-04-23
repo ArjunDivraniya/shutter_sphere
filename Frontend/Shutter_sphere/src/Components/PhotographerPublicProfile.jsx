@@ -205,7 +205,9 @@ const normalizePhotographer = (raw) => {
     id: raw.id || raw._id || fallbackPhotographer.id,
     name: raw.fullName || raw.name || fallbackPhotographer.name,
     fullName: raw.fullName || raw.name || fallbackPhotographer.fullName,
+    bio: raw.bio || raw.description || fallbackPhotographer.bio,
     city: raw.city || fallbackPhotographer.city,
+    state: raw.state || fallbackPhotographer.state,
     specialization: raw.specialization || fallbackPhotographer.specialization,
     specializations: raw.specializations?.length ? raw.specializations : fallbackPhotographer.specializations,
     experience: Number(raw.experience || fallbackPhotographer.experience),
@@ -216,7 +218,31 @@ const normalizePhotographer = (raw) => {
     basePrice: Number(raw.pricePerHour || fallbackPhotographer.basePrice),
     priceLabel: `\u20b9${Number(raw.pricePerHour || fallbackPhotographer.basePrice).toLocaleString("en-IN")}/event`,
     signupId: raw.signupId || raw.signup_id || raw.id,
-    packages: raw.packages?.length ? raw.packages : buildDefaultPackages(raw.pricePerHour || fallbackPhotographer.basePrice),
+    avatar: raw.profilePhoto || raw.profile_photo || fallbackPhotographer.avatar,
+    packages: Array.isArray(raw.packages) && raw.packages.length > 0 
+      ? raw.packages 
+      : [],
+    portfolio: Array.isArray(raw.portfolio) && raw.portfolio.length > 0 
+      ? raw.portfolio.map(p => ({
+          id: p.id,
+          imageUrl: p.image_url,
+          image_url: p.image_url,
+          caption: p.caption,
+          category: raw.specialization || "All"
+        }))
+      : [],
+    reviews: Array.isArray(raw.reviews) && raw.reviews.length > 0
+      ? raw.reviews.map(r => ({
+          id: r.id,
+          name: r.name,
+          rating: Number(r.rating) || 5,
+          text: r.review,
+          profilePhoto: r.profile_photo,
+          date: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+          verified: true
+        }))
+      : [],
+    achievements: Array.isArray(raw.achievements) ? raw.achievements : [],
     verified: true,
   };
 };
@@ -557,17 +583,26 @@ const PhotographerPublicProfile = () => {
 
               <div className="columns-1 gap-5 md:columns-2 xl:columns-3">
                 {portfolioRows.map((shot) => (
-                  <article key={shot.id} className={`group mb-5 break-inside-avoid overflow-hidden rounded-[12px] border border-[var(--line-2)] bg-[var(--bg-raised)] ${shot.style}`}>
-                    <div className={`relative h-full min-h-[220px] overflow-hidden ${shot.gradient}`}>
-                      <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-70">{shot.icon}</div>
+                  <article key={shot.id} className="group mb-5 break-inside-avoid overflow-hidden rounded-[12px] border border-[var(--line-2)] bg-[var(--bg-raised)]">
+                    <div className="relative overflow-hidden bg-[#1a1a1a]">
+                      <img 
+                        src={shot.imageUrl || shot.image_url} 
+                        alt={shot.caption || "Portfolio"} 
+                        className="w-full transition duration-500 group-hover:scale-110"
+                      />
                       <div className="absolute inset-0 bg-[rgba(0,0,0,0.0)] transition duration-300 group-hover:bg-[rgba(0,0,0,0.6)]" />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 transition duration-300 group-hover:opacity-100">
                         <span className="rounded-full border border-[var(--line-2)] bg-black/50 px-4 py-2 text-sm text-[var(--ink-1)] backdrop-blur-md">
                           🔍 View
                         </span>
                       </div>
+                      {shot.caption && (
+                        <div className="absolute bottom-3 left-3 right-3 translate-y-4 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                           <p className="text-[12px] text-[var(--ink-1)] font-medium bg-black/40 backdrop-blur-md px-2 py-1 rounded-md">{shot.caption}</p>
+                        </div>
+                      )}
                       <span className="absolute left-3 top-3 rounded-full border border-[var(--line-2)] bg-black/40 px-2.5 py-1 text-[11px] text-[var(--ink-1)]">
-                        {shot.category}
+                        {shot.category || "General"}
                       </span>
                     </div>
                   </article>
@@ -624,6 +659,23 @@ const PhotographerPublicProfile = () => {
                       ))}
                     </div>
                   </div>
+
+                  {profile.achievements && profile.achievements.length > 0 && (
+                    <div>
+                      <h3 className="font-display text-[18px] text-[var(--ink-1)]">Achievements</h3>
+                      <div className="mt-4 space-y-4">
+                        {profile.achievements.map((ach) => (
+                          <div key={ach.id} className="rounded-xl border border-[var(--line-1)] bg-[var(--bg-raised)] p-4">
+                            <div className="flex justify-between items-start">
+                              <h4 className="font-semibold text-sm text-[var(--ink-1)]">{ach.title}</h4>
+                              {ach.year && <span className="text-[11px] text-[var(--gold)]">{ach.year}</span>}
+                            </div>
+                            {ach.description && <p className="mt-2 text-xs text-[var(--ink-3)]">{ach.description}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -959,12 +1011,16 @@ const PhotographerPublicProfile = () => {
                   <article key={review.id} className="rounded-[14px] border border-[var(--line-1)] bg-[var(--bg-card)] p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-11 w-11 rounded-full bg-[linear-gradient(160deg,#343434,#1b1b1b)]" />
+                        <div className="h-11 w-11 rounded-full bg-[linear-gradient(160deg,#343434,#1b1b1b)] overflow-hidden">
+                          {review.profilePhoto ? (
+                            <img src={review.profilePhoto} alt={review.name} className="h-full w-full object-cover" />
+                          ) : null}
+                        </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="text-[13px] font-semibold text-[var(--ink-1)]">{review.name}</p>
                             <span className="rounded-full border border-[var(--line-2)] bg-[var(--bg-raised)] px-2 py-0.5 text-[11px] text-[var(--ink-2)]">
-                              {review.event}
+                              {review.event || "Event"}
                             </span>
                           </div>
                           <p className="mt-1 text-[12px] text-[var(--ink-3)]">{review.date}</p>
@@ -987,7 +1043,7 @@ const PhotographerPublicProfile = () => {
 
                     {review.reply ? (
                       <div className="mt-4 rounded-[10px] bg-[var(--bg-raised)] p-4">
-                        <p className="text-[12px] font-semibold text-[var(--gold)]">Rahul replied:</p>
+                        <p className="text-[12px] font-semibold text-[var(--gold)]">{profile.name} replied:</p>
                         <p className="mt-2 text-[13px] leading-7 text-[var(--ink-2)]">{review.reply}</p>
                       </div>
                     ) : null}

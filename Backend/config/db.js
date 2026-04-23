@@ -29,7 +29,7 @@ const initDatabase = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS photographers (
         id SERIAL PRIMARY KEY,
-        signup_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        signup_id INTEGER UNIQUE REFERENCES users(id) ON DELETE SET NULL,
         full_name VARCHAR(120),
         email VARCHAR(190) UNIQUE,
         phone_number VARCHAR(30),
@@ -51,6 +51,25 @@ const initDatabase = async () => {
 
     await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT '';`);
     await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS categories TEXT DEFAULT '';`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS studio_name VARCHAR(255);`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS state VARCHAR(120);`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS lat DECIMAL(10,7);`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS lng DECIMAL(10,7);`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS years_experience INTEGER DEFAULT 0;`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS languages TEXT DEFAULT '';`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT false;`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS rating_avg DECIMAL(3,2) DEFAULT 5.0;`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS review_count INTEGER DEFAULT 0;`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS profile_views INTEGER DEFAULT 0;`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`);
+    await pool.query(`ALTER TABLE photographers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`);
+    
+    // Ensure signup_id is UNIQUE
+    try {
+        await pool.query(`ALTER TABLE photographers ADD CONSTRAINT photographers_signup_id_key UNIQUE (signup_id);`);
+    } catch (e) {
+        // Ignore if constraint already exists
+    }
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS user_profiles (
@@ -203,6 +222,40 @@ const initDatabase = async () => {
     `);
 
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT false;`);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS photographer_portfolio (
+        id SERIAL PRIMARY KEY,
+        photographer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        image_url TEXT NOT NULL,
+        caption TEXT,
+        is_primary BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS photographer_packages (
+        id SERIAL PRIMARY KEY,
+        photographer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(100) NOT NULL,
+        price DECIMAL(10, 2) NOT NULL,
+        duration VARCHAR(100),
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS photographer_achievements (
+        id SERIAL PRIMARY KEY,
+        photographer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        year VARCHAR(20),
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
 
     console.log("PostgreSQL Connected");
   } catch (error) {

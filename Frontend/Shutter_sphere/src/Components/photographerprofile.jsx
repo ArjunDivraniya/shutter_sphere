@@ -18,6 +18,7 @@ import {
   FiPlus,
   FiSave,
   FiStar,
+  FiTrash2,
   FiUser,
   FiX,
 } from "react-icons/fi";
@@ -25,9 +26,6 @@ import {
 const sectionConfig = [
   { key: "personal", label: "Personal Details", icon: FiUser },
   { key: "portfolio", label: "Portfolio", icon: FiImage },
-  { key: "pastWork", label: "Past Work", icon: FiLayers },
-  { key: "topCategory", label: "Top Category Shoot", icon: FiCamera },
-  { key: "blogs", label: "Blogs & Stories", icon: FiBookOpen },
   { key: "review", label: "Review", icon: FiMessageSquare },
   { key: "bookings", label: "Bookings", icon: FiCalendar },
   { key: "packages", label: "Packages", icon: FiPackage },
@@ -36,52 +34,36 @@ const sectionConfig = [
 
 const initialData = {
   personal: {
-    fullName: "Arjun Divraniya",
-    email: "arjundivraniya8@gmail.com",
-    phone: "+91 98765 43210",
-    photographerType: "Wedding, Event, Fashion",
-    city: "Rajkot",
-    state: "Gujarat",
+    fullName: "",
+    email: "",
+    phone: "",
+    city: "",
+    state: "",
     country: "India",
-    experience: "5+ years",
+    photographerType: "",
+    experience: "",
   },
   portfolio: {
-    totalImages: "68",
-    totalReels: "12",
-    featured: ["Wedding Stories", "Festival Frames", "Birthday Highlights"],
+    totalImages: "0",
+    totalReels: "0",
+    images: [],
   },
-  pastWork: [
-    "Royal Wedding at Udaipur Palace",
-    "Navratri Festival Campaign",
-    "Corporate Annual Summit 2025",
-  ],
-  topCategory: ["Wedding", "Candid", "Festival", "Portrait"],
-  blogs: [
-    "How To Plan A Wedding Shoot Timeline",
-    "5 Lighting Setups For Indoor Events",
-    "Color Grading Workflow For Natural Skin Tones",
-  ],
+  achievements: [],
   review: {
-    rating: "4.9",
-    totalReviews: "287",
-    featuredReview: "Very professional and creative output.",
-    featuredClient: "Meera Joshi",
+    rating: "0.0",
+    totalReviews: "0",
+    featuredReview: "",
+    featuredClient: "",
   },
   bookings: {
-    upcoming: "4",
-    completed: "132",
-    pendingResponse: "3",
+    upcoming: "0",
+    completed: "0",
+    pendingResponse: "0",
   },
-  packages: [
-    { name: "Basic", price: "$299", duration: "4 Hours" },
-    { name: "Premium", price: "$649", duration: "8 Hours" },
-    { name: "Elite", price: "$1099", duration: "12 Hours" },
-  ],
-  achievements: [
-    "Top 10 Wedding Photographer - 2025",
-    "Best Candid Storytelling Award",
-    "Featured Artist in Gujarat Wedding Expo",
-  ],
+  pastWork: [],
+  topCategory: [],
+  blogs: [],
+  packages: [],
 };
 
 const decodeJwtPayload = (token) => {
@@ -113,22 +95,58 @@ const resolveSignupId = () => {
 
 const mapProfileApiToState = (apiProfile = {}) => {
   const next = JSON.parse(JSON.stringify(initialData));
-  next.personal.fullName = apiProfile.name || next.personal.fullName;
-  next.personal.email = apiProfile.email || next.personal.email;
-  next.personal.phone = apiProfile.phoneNumber || next.personal.phone;
-  next.personal.photographerType = apiProfile.specialization || next.personal.photographerType;
-  next.personal.city = apiProfile.location || next.personal.city;
-  next.personal.state = "";
-  next.personal.country = "";
-  next.personal.experience = apiProfile.experience || next.personal.experience;
+  next.personal.fullName = apiProfile.name || apiProfile.fullName || "";
+  next.personal.email = apiProfile.email || "";
+  next.personal.phone = apiProfile.phone || apiProfile.phoneNumber || "";
+  next.personal.photographerType = Array.isArray(apiProfile.categories) 
+    ? apiProfile.categories.join(", ") 
+    : (apiProfile.specialization || "");
+    
+  next.personal.city = apiProfile.location || apiProfile.city || "";
+  next.personal.state = apiProfile.state || "";
+  next.personal.experience = apiProfile.experience || "";
 
   const portfolio = Array.isArray(apiProfile.portfolio) ? apiProfile.portfolio : [];
   next.portfolio.totalImages = String(portfolio.length);
-  next.review.rating = String(apiProfile.rating || next.review.rating);
-  next.review.totalReviews = String(apiProfile.totalReviews || next.review.totalReviews);
+  next.portfolio.images = portfolio.map(p => ({
+    id: p.id,
+    url: p.image_url,
+    caption: p.caption
+  }));
+
+  // Map reviews
+  next.review.rating = String(apiProfile.rating || "0.0");
+  next.review.totalReviews = String(apiProfile.reviewCount || apiProfile.totalReviews || "0");
+  
   if (Array.isArray(apiProfile.reviews) && apiProfile.reviews.length > 0) {
-    next.review.featuredReview = apiProfile.reviews[0].review || next.review.featuredReview;
-    next.review.featuredClient = apiProfile.reviews[0].name || next.review.featuredClient;
+    next.review.featuredReview = apiProfile.reviews[0].review || "";
+    next.review.featuredClient = apiProfile.reviews[0].name || "";
+  }
+
+  // Handle categories
+  if (Array.isArray(apiProfile.categories)) {
+    next.topCategory = apiProfile.categories;
+  }
+
+  // Handle Packages
+  if (Array.isArray(apiProfile.packages) && apiProfile.packages.length > 0) {
+    next.packages = apiProfile.packages.map(p => ({
+      id: p.id,
+      name: p.name,
+      price: `₹${p.price}`,
+      duration: p.duration,
+      deliverables: p.deliverables || []
+    }));
+  }
+
+  // Handle Achievements
+  if (Array.isArray(apiProfile.achievements)) {
+    next.achievements = apiProfile.achievements.map(a => ({
+      id: a.id,
+      title: a.title,
+      year: a.year,
+      description: a.description
+    }));
   }
 
   return next;
@@ -244,21 +262,36 @@ const PhotographerProfile = () => {
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
-      await axios.put(
-        `${API_BASE_URL}/api/profile/${signupId}`,
-        {
-          name: draftData.personal.fullName,
-          phoneNumber: draftData.personal.phone,
-          location: draftData.personal.city,
-          specialization: draftData.personal.photographerType,
-          experience: draftData.personal.experience,
-          description: draftData.review.featuredReview,
-          pricePerHour: Number(String(draftData.packages?.[0]?.price || "").replace(/[^0-9]/g, "")) || 0,
-        },
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+      if (activeSection === "personal" || activeSection === "review") {
+        await axios.put(
+          `${API_BASE_URL}/api/profile/${signupId}`,
+          {
+            name: draftData.personal.fullName,
+            phoneNumber: draftData.personal.phone,
+            location: draftData.personal.city,
+            city: draftData.personal.city,
+            state: draftData.personal.state,
+            country: draftData.personal.country,
+            specialization: draftData.personal.photographerType,
+            experience: draftData.personal.experience,
+            description: draftData.review.featuredReview,
+            pricePerHour: Number(String(draftData.packages?.[0]?.price || "").replace(/[^0-9]/g, "")) || 0,
+          },
+          { headers }
+        );
+      } else if (activeSection === "packages") {
+        // Save each package
+        for (const pkg of draftData.packages) {
+          await axios.post(`${API_BASE_URL}/api/photographer/packages`, pkg, { headers });
         }
-      );
+      } else if (activeSection === "achievements") {
+        // Save each achievement
+        for (const ach of draftData.achievements) {
+          await axios.post(`${API_BASE_URL}/api/photographer/achievements`, ach, { headers });
+        }
+      }
 
       setProfileData(draftData);
       setIsEditing(false);
@@ -267,6 +300,49 @@ const PhotographerProfile = () => {
     } catch (error) {
       console.error("Failed to save photographer profile:", error);
       alert("Failed to save profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setSaving(true);
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("portfolio", file);
+
+      await axios.post(`${API_BASE_URL}/api/photographer/upload/portfolio`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      await loadProfile({ silent: true });
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Failed to upload image.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photoId) => {
+    if (!window.confirm("Are you sure you want to delete this photo?")) return;
+    try {
+      setSaving(true);
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_BASE_URL}/api/photographer/portfolio/${photoId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await loadProfile({ silent: true });
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Failed to delete photo.");
     } finally {
       setSaving(false);
     }
@@ -379,62 +455,43 @@ const PhotographerProfile = () => {
   const renderPortfolio = () => {
     const source = isEditing ? draftData.portfolio : profileData.portfolio;
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
+          {source.images.map((img) => (
+            <div key={img.id} className="group relative aspect-square overflow-hidden rounded-xl bg-[var(--bg-raised)] border border-[var(--line-1)]">
+              <img src={img.url} alt={img.caption || "Portfolio"} className="h-full w-full object-cover" />
+              {isEditing && (
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <button 
+                    onClick={() => handleDeletePhoto(img.id)}
+                    className="p-2 rounded-full bg-rose-500/20 text-rose-500 border border-rose-500/30 hover:bg-rose-500 hover:text-white transition-colors"
+                  >
+                    <FiTrash2 />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+          {isEditing && (
+            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-3)] transition hover:border-[var(--gold)] hover:text-[var(--gold)]">
+              <FiPlus className="text-3xl" />
+              <span className="mt-2 text-xs font-semibold">Upload Photo</span>
+              <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+            </label>
+          )}
+        </div>
+        
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className={cardStyle}>
             <Field label="Total Images">
-              {isEditing ? (
-                <input className={inputStyle} value={source.totalImages} onChange={(e) => updateObjectField("portfolio", "totalImages", e.target.value)} />
-              ) : (
-                <p className="mt-2 text-2xl font-semibold text-[var(--ink-1)]">{source.totalImages}</p>
-              )}
+              <p className="mt-2 text-2xl font-semibold text-[var(--ink-1)]">{source.totalImages}</p>
             </Field>
           </div>
           <div className={cardStyle}>
-            <Field label="Total Highlight Reels">
-              {isEditing ? (
-                <input className={inputStyle} value={source.totalReels} onChange={(e) => updateObjectField("portfolio", "totalReels", e.target.value)} />
-              ) : (
-                <p className="mt-2 text-2xl font-semibold text-[var(--ink-1)]">{source.totalReels}</p>
-              )}
+            <Field label="Portfolio Highlights">
+              <p className="mt-2 text-sm text-[var(--ink-2)]">Manage items in your visual portfolio grid above.</p>
             </Field>
           </div>
-        </div>
-
-        <div className={cardStyle}>
-          <p className="mb-3 text-xs font-medium tracking-wide text-[var(--ink-3)]">Featured Collections</p>
-          <div className="space-y-2">
-            {source.featured.map((item, index) => (
-              <div key={`${item}-${index}`} className="flex items-center gap-2">
-                {isEditing ? (
-                  <>
-                    <input
-                      className={inputStyle}
-                      value={item}
-                      onChange={(e) => {
-                        const next = [...source.featured];
-                        next[index] = e.target.value;
-                        updateObjectField("portfolio", "featured", next);
-                      }}
-                    />
-                    <button onClick={() => updateObjectField("portfolio", "featured", source.featured.filter((_, i) => i !== index))} className="rounded-lg border border-[var(--line-2)] px-2 py-2 text-[var(--ink-2)] hover:text-white">
-                      <FiX />
-                    </button>
-                  </>
-                ) : (
-                  <div className="w-full rounded-xl border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2.5 text-[var(--ink-1)]">{item}</div>
-                )}
-              </div>
-            ))}
-          </div>
-          {isEditing ? (
-            <button
-              onClick={() => updateObjectField("portfolio", "featured", [...source.featured, "New Collection"])}
-              className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--gold-border)] bg-[var(--gold-soft)] px-3 py-2 text-xs font-semibold text-[var(--gold)]"
-            >
-              <FiPlus /> Add Collection
-            </button>
-          ) : null}
         </div>
       </div>
     );
@@ -541,36 +598,129 @@ const PhotographerProfile = () => {
   const renderPackages = () => {
     const source = isEditing ? draftData.packages : profileData.packages;
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {source.map((pkg, index) => (
-          <div key={`${pkg.name}-${index}`} className={cardStyle}>
-            {isEditing ? (
-              <div className="space-y-2">
-                <input className={inputStyle} value={pkg.name} onChange={(e) => {
-                  const next = [...source];
-                  next[index] = { ...next[index], name: e.target.value };
-                  setDraftData((prev) => ({ ...prev, packages: next }));
-                }} />
-                <input className={inputStyle} value={pkg.duration} onChange={(e) => {
-                  const next = [...source];
-                  next[index] = { ...next[index], duration: e.target.value };
-                  setDraftData((prev) => ({ ...prev, packages: next }));
-                }} />
-                <input className={inputStyle} value={pkg.price} onChange={(e) => {
-                  const next = [...source];
-                  next[index] = { ...next[index], price: e.target.value };
-                  setDraftData((prev) => ({ ...prev, packages: next }));
-                }} />
-              </div>
-            ) : (
-              <>
-                <p className="text-lg font-semibold text-[var(--ink-1)]">{pkg.name}</p>
-                <p className="mt-2 text-sm text-[var(--ink-2)]">{pkg.duration}</p>
-                <p className="mt-1 text-2xl font-semibold text-[var(--gold)]">{pkg.price}</p>
-              </>
-            )}
-          </div>
-        ))}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {source.map((pkg, index) => (
+            <div key={`${pkg.name}-${index}`} className={`${cardStyle} relative group`}>
+              {isEditing && (
+                <button
+                  onClick={() => {
+                    const next = source.filter((_, i) => i !== index);
+                    setDraftData(prev => ({ ...prev, packages: next }));
+                  }}
+                  className="absolute top-2 right-2 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <FiX />
+                </button>
+              )}
+              {isEditing ? (
+                <div className="space-y-2">
+                  <input className={inputStyle} placeholder="Name" value={pkg.name} onChange={(e) => {
+                    const next = [...source];
+                    next[index] = { ...next[index], name: e.target.value };
+                    setDraftData((prev) => ({ ...prev, packages: next }));
+                  }} />
+                  <input className={inputStyle} placeholder="Duration" value={pkg.duration} onChange={(e) => {
+                    const next = [...source];
+                    next[index] = { ...next[index], duration: e.target.value };
+                    setDraftData((prev) => ({ ...prev, packages: next }));
+                  }} />
+                  <input className={inputStyle} placeholder="Price" value={pkg.price} onChange={(e) => {
+                    const next = [...source];
+                    next[index] = { ...next[index], price: e.target.value };
+                    setDraftData((prev) => ({ ...prev, packages: next }));
+                  }} />
+                </div>
+              ) : (
+                <>
+                  <p className="text-lg font-semibold text-[var(--ink-1)]">{pkg.name}</p>
+                  <p className="mt-2 text-sm text-[var(--ink-2)]">{pkg.duration}</p>
+                  <p className="mt-1 text-2xl font-semibold text-[var(--gold)]">{pkg.price}</p>
+                  <div className="mt-4 space-y-1">
+                    {(pkg.deliverables || []).map((d, i) => (
+                      <p key={i} className="text-xs text-[var(--ink-3)] flex items-center gap-1">
+                        <FiCheckCircle className="text-emerald-500" /> {d}
+                      </p>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+          {isEditing && (
+            <button
+              onClick={() => addArrayItem("packages", { name: "New Package", price: "₹0", duration: "1 Hour", deliverables: [] })}
+              className="flex flex-col items-center justify-center border-2 border-dashed border-[var(--line-2)] rounded-2xl p-6 text-[var(--ink-3)] hover:text-[var(--gold)] hover:border-[var(--gold)] transition-colors"
+            >
+              <FiPlus className="text-2xl mb-2" />
+              <span className="text-sm font-semibold">Add Package</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderAchievements = () => {
+    const source = isEditing ? draftData.achievements : profileData.achievements;
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {source.map((ach, index) => (
+            <div key={`${ach.id || index}`} className={`${cardStyle} relative group`}>
+              {isEditing && (
+                <button
+                  onClick={() => {
+                    const next = source.filter((_, i) => i !== index);
+                    setDraftData(prev => ({ ...prev, achievements: next }));
+                  }}
+                  className="absolute top-2 right-2 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <FiX />
+                </button>
+              )}
+              {isEditing ? (
+                <div className="space-y-2">
+                  <input className={inputStyle} placeholder="Title (e.g. Best Wedding Photographer)" value={ach.title} onChange={(e) => {
+                    const next = [...source];
+                    next[index] = { ...next[index], title: e.target.value };
+                    setDraftData((prev) => ({ ...prev, achievements: next }));
+                  }} />
+                  <input className={inputStyle} placeholder="Year" value={ach.year} onChange={(e) => {
+                    const next = [...source];
+                    next[index] = { ...next[index], year: e.target.value };
+                    setDraftData((prev) => ({ ...prev, achievements: next }));
+                  }} />
+                  <textarea className={inputStyle} placeholder="Short Description" rows={2} value={ach.description} onChange={(e) => {
+                    const next = [...source];
+                    next[index] = { ...next[index], description: e.target.value };
+                    setDraftData((prev) => ({ ...prev, achievements: next }));
+                  }} />
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start">
+                    <p className="text-lg font-semibold text-[var(--ink-1)]">{ach.title}</p>
+                    <span className="text-sm font-medium text-[var(--gold)]">{ach.year}</span>
+                  </div>
+                  <p className="mt-2 text-sm text-[var(--ink-3)] leading-relaxed">{ach.description}</p>
+                </>
+              )}
+            </div>
+          ))}
+          {isEditing && (
+            <button
+              onClick={() => {
+                const next = [...source, { title: "", year: new Date().getFullYear(), description: "" }];
+                setDraftData(prev => ({ ...prev, achievements: next }));
+              }}
+              className="flex flex-col items-center justify-center border-2 border-dashed border-[var(--line-2)] rounded-2xl p-6 text-[var(--ink-3)] hover:text-[var(--gold)] hover:border-[var(--gold)] transition-colors"
+            >
+              <FiPlus className="text-2xl mb-2" />
+              <span className="text-sm font-semibold">Add Achievement</span>
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -584,7 +734,8 @@ const PhotographerProfile = () => {
     if (activeSection === "review") return renderReview();
     if (activeSection === "bookings") return renderBookings();
     if (activeSection === "packages") return renderPackages();
-    return renderSimpleArraySection("achievements", "New Achievement");
+    if (activeSection === "achievements") return renderAchievements();
+    return renderSimpleArraySection(activeSection, `New ${activeSection}`);
   };
 
   if (loading) {

@@ -33,6 +33,7 @@ import PhotographerCommandCenter from "./Components/photographer-dashboard-v2/Ph
 import PhotographerBookingsManagement from "./Components/photographer-dashboard-v2/PhotographerBookingsManagement";
 import ClientBookingsPage from "./Components/ClientBookingsPage";
 import ClientOnboarding from "./Components/ClientOnboarding";
+import PhotographerOnboarding from "./Components/PhotographerOnboarding";
 
 const BookRouteRedirect = () => {
   const { id } = useParams();
@@ -54,9 +55,12 @@ const ProtectedRoute = ({ element, allowedRoles }) => {
     return <Navigate to="/" />;
   }
 
-  // Redirect client to onboarding if profile is incomplete
+  // Redirect to onboarding if profile is incomplete
   if (role === "client" && !profileComplete && window.location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" />;
+  }
+  if (role === "photographer" && !profileComplete && window.location.pathname !== "/photographer-onboarding") {
+    return <Navigate to="/photographer-onboarding" />;
   }
 
   return element;
@@ -93,6 +97,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/onboarding" element={<ProtectedRoute element={<ClientOnboarding />} allowedRoles={["client"]} />} />
+          <Route path="/photographer-onboarding" element={<ProtectedRoute element={<PhotographerOnboarding />} allowedRoles={["photographer"]} />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/photographer/:id" element={<PhotographerPublicProfile />} />

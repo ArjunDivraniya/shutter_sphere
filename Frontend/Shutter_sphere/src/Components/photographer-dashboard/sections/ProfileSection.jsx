@@ -41,8 +41,8 @@ const Field = ({ label, children }) => (
 
 const createDefaultProfileState = () => ({
   personal: {
-    fullName: "Rahul Sharma",
-    email: "rahul@example.com",
+    fullName: "",
+    email: "",
     phone: "",
     location: "",
     specialization: "",
@@ -56,19 +56,11 @@ const createDefaultProfileState = () => ({
     images: [],
     totalImages: 0,
   },
-  packages: [
-    { name: "Basic", price: "$299", duration: "4 Hours", deliverables: "100+ Edited Photos" },
-    { name: "Premium", price: "$649", duration: "8 Hours", deliverables: "250+ Edited Photos, 1 Reel" },
-    { name: "Elite", price: "$1099", duration: "12 Hours", deliverables: "500+ Edited Photos, 2 Reels, Album" },
-  ],
+  packages: [],
   reviews: [],
   rating: 0,
   totalReviews: 0,
-  achievements: [
-    "Top 10 Wedding Photographer - 2025",
-    "Best Candid Storytelling Award",
-    "Featured Artist in Gujarat Wedding Expo",
-  ],
+  achievements: [],
 });
 
 const ProfileSection = ({ signupId }) => {
@@ -102,24 +94,36 @@ const ProfileSection = ({ signupId }) => {
         ...fallbackState,
         personal: {
           ...fallbackState.personal,
-          fullName: data.name || fallbackState.personal.fullName,
+          fullName: data.name || data.full_name || fallbackState.personal.fullName,
           email: data.email || fallbackState.personal.email,
-          phone: data.phoneNumber || fallbackState.personal.phone,
-          location: data.location || fallbackState.personal.location,
+          phone: data.phoneNumber || data.phone_number || fallbackState.personal.phone,
+          location: data.location || data.city || fallbackState.personal.location,
           specialization: data.specialization || fallbackState.personal.specialization,
           experience: data.experience || fallbackState.personal.experience,
-          bio: data.description || fallbackState.personal.bio,
-          equipment: data.equipmentUsed || fallbackState.personal.equipment,
-          languages: data.languagesSpoken || fallbackState.personal.languages,
-          pricePerHour: data.pricePerHour || fallbackState.personal.pricePerHour,
+          bio: data.description || data.bio || fallbackState.personal.bio,
+          equipment: data.equipmentUsed || data.equipment_used || fallbackState.personal.equipment,
+          languages: data.languagesSpoken || data.languages_spoken || fallbackState.personal.languages,
+          pricePerHour: data.pricePerHour || data.price_per_hour || fallbackState.personal.pricePerHour,
         },
         portfolio: {
           images: data.portfolio || fallbackState.portfolio.images,
           totalImages: data.portfolio?.length || fallbackState.portfolio.totalImages,
         },
+        packages: Array.isArray(data.packages) 
+          ? data.packages.map(p => ({
+              id: p.id,
+              name: p.name,
+              price: `₹${p.price}`,
+              duration: p.duration,
+              deliverables: Array.isArray(p.deliverables) ? p.deliverables.join(", ") : p.deliverables || ""
+            }))
+          : fallbackState.packages,
         reviews: data.reviews || fallbackState.reviews,
         rating: data.rating || fallbackState.rating,
         totalReviews: data.totalReviews || fallbackState.totalReviews,
+        achievements: Array.isArray(data.achievements)
+          ? data.achievements.map(a => a.title || a)
+          : fallbackState.achievements,
       };
 
       setProfileData(profileState);
@@ -185,6 +189,9 @@ const ProfileSection = ({ signupId }) => {
 
     try {
       setSaving(true);
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
       const payload = {
         name: draftData.personal.fullName,
         phoneNumber: draftData.personal.phone,
@@ -196,11 +203,17 @@ const ProfileSection = ({ signupId }) => {
         languagesSpoken: draftData.personal.languages,
         pricePerHour: draftData.personal.pricePerHour,
         portfolio: draftData.portfolio.images,
+        packages: draftData.packages.map(p => ({
+          ...p,
+          price: Number(String(p.price).replace(/[^0-9]/g, "")) || 0
+        })),
+        achievements: draftData.achievements,
       };
 
-      await axios.put(`${API_BASE_URL}/api/profile/${signupId}`, payload);
+      await axios.put(`${API_BASE_URL}/api/profile/${signupId}`, payload, { headers });
       setProfileData(draftData);
       setIsEditing(false);
+      await loadProfile({ silent: true });
     } catch (error) {
       console.error("Failed to save profile:", error);
       alert("Failed to save profile. Please try again.");
@@ -366,39 +379,93 @@ const ProfileSection = ({ signupId }) => {
     const source = isEditing ? draftData.packages : profileData.packages;
     
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {source.map((pkg, index) => (
-          <motion.div
-            key={pkg.name}
-            whileHover={{ y: -5 }}
-            className={`${cardStyle} ${index === 1 ? "border-[var(--gold)] bg-[var(--gold-soft)]" : ""}`}
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {source.length > 0 ? (
+            source.map((pkg, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ y: -5 }}
+                className={`${cardStyle} ${index === 1 && source.length >= 2 ? "border-[var(--gold)] bg-[var(--gold-soft)]" : ""}`}
+              >
+                {index === 1 && source.length >= 2 && (
+                  <div className="mb-3 inline-block rounded-full bg-[var(--gold)] px-3 py-1 text-xs font-semibold text-black">
+                    Most Popular
+                  </div>
+                )}
+                <h3 className="text-xl font-semibold text-[var(--ink-1)]">{pkg.name}</h3>
+                <p className="mt-2 text-sm text-[var(--ink-2)]">{pkg.duration}</p>
+                <p className="mt-3 text-3xl font-bold text-[var(--gold)]">{pkg.price}</p>
+                <p className="mt-3 text-sm text-[var(--ink-2)]">{pkg.deliverables}</p>
+                
+                {isEditing && (
+                  <div className="mt-4 space-y-2">
+                    <Field label="Package Name">
+                      <input className={inputStyle} value={pkg.name} onChange={(e) => {
+                        const next = [...source];
+                        next[index] = { ...next[index], name: e.target.value };
+                        setDraftData((prev) => ({ ...prev, packages: next }));
+                      }} placeholder="e.g. Basic" />
+                    </Field>
+                    <Field label="Price">
+                      <input className={inputStyle} value={pkg.price} onChange={(e) => {
+                        const next = [...source];
+                        next[index] = { ...next[index], price: e.target.value };
+                        setDraftData((prev) => ({ ...prev, packages: next }));
+                      }} placeholder="e.g. ₹5000" />
+                    </Field>
+                    <Field label="Duration">
+                      <input className={inputStyle} value={pkg.duration} onChange={(e) => {
+                        const next = [...source];
+                        next[index] = { ...next[index], duration: e.target.value };
+                        setDraftData((prev) => ({ ...prev, packages: next }));
+                      }} placeholder="e.g. 4 Hours" />
+                    </Field>
+                    <Field label="Deliverables (comma separated)">
+                      <input className={inputStyle} value={pkg.deliverables} onChange={(e) => {
+                        const next = [...source];
+                        next[index] = { ...next[index], deliverables: e.target.value };
+                        setDraftData((prev) => ({ ...prev, packages: next }));
+                      }} placeholder="e.g. 100 Photos, 1 Reel" />
+                    </Field>
+                    <button 
+                      onClick={() => {
+                        const next = source.filter((_, i) => i !== index);
+                        setDraftData((prev) => ({ ...prev, packages: next }));
+                      }}
+                      className="mt-2 w-full rouded-xl border border-rose-500/30 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                    >
+                      Remove Package
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-full py-12 text-center border-2 border-dashed border-[var(--line-2)] rounded-2xl">
+              <FiPackage className="mx-auto mb-3 text-4xl text-[var(--ink-3)]" />
+              <p className="text-[var(--ink-2)]">No service packages yet</p>
+              {isEditing && (
+                <p className="mt-2 text-sm text-[var(--ink-3)]">Add packages to help clients know your pricing</p>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {isEditing && (
+          <button
+            onClick={() => {
+              setDraftData((prev) => ({
+                ...prev,
+                packages: [...prev.packages, { name: "New Package", price: "₹0", duration: "", deliverables: "" }],
+              }));
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--gold-border)] bg-[var(--gold-soft)] p-6 text-[var(--gold)] transition-all hover:bg-[var(--gold-soft-2)]"
           >
-            {index === 1 && (
-              <div className="mb-3 inline-block rounded-full bg-[var(--gold)] px-3 py-1 text-xs font-semibold text-black">
-                Most Popular
-              </div>
-            )}
-            <h3 className="text-xl font-semibold text-[var(--ink-1)]">{pkg.name}</h3>
-            <p className="mt-2 text-sm text-[var(--ink-2)]">{pkg.duration}</p>
-            <p className="mt-3 text-3xl font-bold text-[var(--gold)]">{pkg.price}</p>
-            <p className="mt-3 text-sm text-[var(--ink-2)]">{pkg.deliverables}</p>
-            
-            {isEditing && (
-              <div className="mt-4 space-y-2">
-                <input className={inputStyle} value={pkg.price} onChange={(e) => {
-                  const next = [...source];
-                  next[index] = { ...next[index], price: e.target.value };
-                  setDraftData((prev) => ({ ...prev, packages: next }));
-                }} placeholder="Price" />
-                <input className={inputStyle} value={pkg.duration} onChange={(e) => {
-                  const next = [...source];
-                  next[index] = { ...next[index], duration: e.target.value };
-                  setDraftData((prev) => ({ ...prev, packages: next }));
-                }} placeholder="Duration" />
-              </div>
-            )}
-          </motion.div>
-        ))}
+            <FiPlus className="text-xl" />
+            <span className="font-semibold">Add New Package</span>
+          </button>
+        )}
       </div>
     );
   };
@@ -455,45 +522,52 @@ const ProfileSection = ({ signupId }) => {
     
     return (
       <div className="space-y-3">
-        {source.map((achievement, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className={cardStyle}
-          >
-            <div className="flex items-start gap-3">
-              <FiAward className="mt-1 text-2xl text-[var(--gold)]" />
-              <div className="flex-1">
-                {isEditing ? (
-                  <input
-                    className={inputStyle}
-                    value={achievement}
-                    onChange={(e) => {
-                      const next = [...source];
-                      next[index] = e.target.value;
+        {source.length > 0 ? (
+          source.map((achievement, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={cardStyle}
+            >
+              <div className="flex items-start gap-3">
+                <FiAward className="mt-1 text-2xl text-[var(--gold)]" />
+                <div className="flex-1">
+                  {isEditing ? (
+                    <input
+                      className={inputStyle}
+                      value={achievement}
+                      onChange={(e) => {
+                        const next = [...source];
+                        next[index] = e.target.value;
+                        setDraftData((prev) => ({ ...prev, achievements: next }));
+                      }}
+                    />
+                  ) : (
+                    <p className="text-[var(--ink-1)]">{achievement}</p>
+                  )}
+                </div>
+                {isEditing && (
+                  <button
+                    onClick={() => {
+                      const next = source.filter((_, i) => i !== index);
                       setDraftData((prev) => ({ ...prev, achievements: next }));
                     }}
-                  />
-                ) : (
-                  <p className="text-[var(--ink-1)]">{achievement}</p>
+                    className="rounded-lg p-2 text-[var(--ink-3)] hover:text-white"
+                  >
+                    <FiX />
+                  </button>
                 )}
               </div>
-              {isEditing && (
-                <button
-                  onClick={() => {
-                    const next = source.filter((_, i) => i !== index);
-                    setDraftData((prev) => ({ ...prev, achievements: next }));
-                  }}
-                  className="rounded-lg p-2 text-[var(--ink-3)] hover:text-white"
-                >
-                  <FiX />
-                </button>
-              )}
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))
+        ) : (
+          <div className={`${cardStyle} py-12 text-center border-dashed`}>
+            <FiAward className="mx-auto mb-3 text-4xl text-[var(--ink-3)]" />
+            <p className="text-[var(--ink-2)]">No achievements added yet</p>
+          </div>
+        )}
         
         {isEditing && (
           <button

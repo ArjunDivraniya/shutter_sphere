@@ -40,10 +40,11 @@ const getRoleProfile = async (req, res) => {
       );
 
       const reviewResult = await pool.query(
-        `SELECT id, name, review, rating, created_at
-         FROM reviews
-         WHERE photographer_id = $1
-         ORDER BY created_at DESC`,
+        `SELECT r.id, r.name, r.review, r.rating, r.created_at, u.profile_photo
+         FROM reviews r
+         LEFT JOIN users u ON r.client_id = u.id
+         WHERE r.photographer_id = $1
+         ORDER BY r.created_at DESC`,
         [signupId]
       );
 
@@ -52,6 +53,21 @@ const getRoleProfile = async (req, res) => {
                 COUNT(*)::int AS total_reviews
          FROM reviews
          WHERE photographer_id = $1`,
+        [signupId]
+      );
+
+      const packageResult = await pool.query(
+        "SELECT id, name, price, duration, description FROM photographer_packages WHERE photographer_id = $1",
+        [signupId]
+      );
+
+      const portfolioResultNew = await pool.query(
+        "SELECT id, image_url, caption FROM photographer_portfolio WHERE photographer_id = $1 ORDER BY created_at DESC",
+        [signupId]
+      );
+
+      const achievementResult = await pool.query(
+        "SELECT id, title, year, description FROM photographer_achievements WHERE photographer_id = $1 ORDER BY COALESCE(year, '0') DESC",
         [signupId]
       );
 
@@ -78,7 +94,16 @@ const getRoleProfile = async (req, res) => {
           equipmentUsed: profile?.equipment_used || "",
           availability: profile?.availability !== false,
           profilePhoto: user.profile_photo || "",
-          portfolio: splitCsv(profile?.portfolio_links),
+          portfolio: portfolioResultNew.rows.map(p => ({
+            id: p.id,
+            image_url: p.image_url,
+            caption: p.caption
+          })),
+          packages: packageResult.rows.map(pkg => ({
+            ...pkg,
+            deliverables: pkg.description ? pkg.description.split(",").map(d => d.trim()) : []
+          })),
+          achievements: achievementResult.rows,
           rating: avgRating,
           totalReviews,
           reviews: reviewResult.rows.map((row) => ({
@@ -86,6 +111,7 @@ const getRoleProfile = async (req, res) => {
             name: row.name,
             review: row.review,
             rating: Number(row.rating) || 0,
+            profile_photo: row.profile_photo,
             createdAt: row.created_at,
           })),
         },
@@ -174,6 +200,8 @@ const upsertRoleProfile = async (req, res) => {
       equipmentUsed,
       availability,
       portfolio,
+      packages,
+      achievements,
     } = req.body;
 
     if (!signupId) {
@@ -212,7 +240,7 @@ const upsertRoleProfile = async (req, res) => {
            equipment_used, reviews, price_per_hour, bio, categories
          )
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-         ON CONFLICT (email)
+         ON CONFLICT (signup_id)
          DO UPDATE SET
            full_name = COALESCE(EXCLUDED.full_name, photographers.full_name),
            phone_number = COALESCE(EXCLUDED.phone_number, photographers.phone_number),
@@ -234,8 +262,8 @@ const upsertRoleProfile = async (req, res) => {
           name || null,
           user.email,
           phoneNumber || null,
-          address || null,
           location || null,
+          city || null,
           specialization || null,
           experience || null,
           portfolioCsv || null,
@@ -249,6 +277,32 @@ const upsertRoleProfile = async (req, res) => {
           categoryCsv || null,
         ]
       );
+
+      // Save Packages
+      if (Array.isArray(packages)) {
+        // Simple approach: clear and re-insert
+        await pool.query("DELETE FROM photographer_packages WHERE photographer_id = $1", [signupId]);
+        for (const pkg of packages) {
+          await pool.query(
+            "INSERT INTO photographer_packages (photographer_id, name, price, duration, description) VALUES ($1, $2, $3, $4, $5)",
+            [signupId, pkg.name, pkg.price, pkg.duration, Array.isArray(pkg.deliverables) ? pkg.deliverables.join(",") : pkg.deliverables]
+          );
+        }
+      }
+
+      // Save Achievements
+      if (Array.isArray(achievements)) {
+        await pool.query("DELETE FROM photographer_achievements WHERE photographer_id = $1", [signupId]);
+        for (const ach of achievements) {
+          const title = typeof ach === "string" ? ach : ach.title;
+          const year = ach.year || null;
+          const desc = ach.description || null;
+          await pool.query(
+            "INSERT INTO photographer_achievements (photographer_id, title, year, description) VALUES ($1, $2, $3, $4)",
+            [signupId, title, year, desc]
+          );
+        }
+      }
     } else {
       await pool.query(
         `INSERT INTO client_profiles (

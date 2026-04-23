@@ -28,35 +28,24 @@ const Settings = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (role === "client") {
-      fetchClientProfile();
-    } else {
-      // Mock data for other roles
-      setProfile({
-        fullName: "Arjun Divraniya",
-        email: "arjun@example.com",
-        avatarUrl: "https://randomuser.me/api/portraits/men/75.jpg",
-        phone: "+91 98765 43210",
-        bio: "Professional photographer based in Rajkot.",
-      });
-      setIsLoading(false);
-    }
+    fetchProfile();
   }, [role]);
 
-  const fetchClientProfile = async () => {
+  const fetchProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_BASE_URL}/api/profile/client`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const userId = localStorage.getItem("userId");
+      const response = await axios.get(`${API_BASE_URL}/api/profile/${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined
       });
-      const data = response.data;
+      const data = response.data.profile;
       setProfile({
-        fullName: data.full_name || "",
+        fullName: data.name || "",
         email: data.email || localStorage.getItem("userEmail") || "",
-        phone: data.phone || "",
-        bio: data.bio || "",
-        avatarUrl: data.avatar_url || "",
-        city: data.city || "",
+        phone: data.phoneNumber || data.phone || "",
+        bio: data.bio || data.description || "",
+        avatarUrl: data.profilePhoto || data.avatarUrl || "",
+        city: data.city || data.location || "",
         state: data.state || "",
         lat: data.lat,
         lng: data.lng
@@ -74,23 +63,22 @@ const Settings = () => {
   };
 
   const saveProfile = async () => {
-    if (role !== "client") return;
     setIsSaving(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`${API_BASE_URL}/api/profile/client`, {
-        fullName: profile.fullName,
-        phone: profile.phone,
+      const userId = localStorage.getItem("userId");
+      await axios.put(`${API_BASE_URL}/api/profile/${userId}`, {
+        name: profile.fullName,
+        phoneNumber: profile.phone,
         bio: profile.bio,
-        avatarUrl: profile.avatarUrl,
+        profilePhoto: profile.avatarUrl,
         city: profile.city,
         state: profile.state,
         lat: profile.lat,
         lng: profile.lng
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined
       });
-      // Update local cache if needed
     } catch (error) {
       console.error("Save failed", error);
     } finally {
