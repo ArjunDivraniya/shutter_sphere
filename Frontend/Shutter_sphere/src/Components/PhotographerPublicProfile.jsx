@@ -263,6 +263,7 @@ const PhotographerPublicProfile = () => {
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
   const [bookingForm, setBookingForm] = useState({
     eventName: "",
     eventType: "",
@@ -286,6 +287,17 @@ const PhotographerPublicProfile = () => {
     };
 
     loadProfile();
+
+    // Log profile view
+    const logView = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.post(`${API_BASE_URL}/api/photographer/${id}/view`, {}, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+      } catch (e) {}
+    };
+    logView();
   }, [id]);
 
   useEffect(() => {
@@ -583,7 +595,11 @@ const PhotographerPublicProfile = () => {
 
               <div className="columns-1 gap-5 md:columns-2 xl:columns-3">
                 {portfolioRows.map((shot) => (
-                  <article key={shot.id} className="group mb-5 break-inside-avoid overflow-hidden rounded-[12px] border border-[var(--line-2)] bg-[var(--bg-raised)]">
+                  <article 
+                    key={shot.id} 
+                    className="group mb-5 break-inside-avoid overflow-hidden rounded-[12px] border border-[var(--line-2)] bg-[var(--bg-raised)] cursor-pointer"
+                    onClick={() => setSelectedImage(shot)}
+                  >
                     <div className="relative overflow-hidden bg-[#1a1a1a]">
                       <img 
                         src={shot.imageUrl || shot.image_url} 
@@ -611,12 +627,40 @@ const PhotographerPublicProfile = () => {
 
               <div className="mt-10 flex justify-center">
                 <button
-                  type="button"
-                  className="rounded-full border border-[var(--line-2)] px-6 py-3 text-sm text-[var(--ink-1)] transition hover:border-[var(--gold-border)] hover:text-[var(--gold)]"
+                   type="button"
+                   className="rounded-full border border-[var(--line-2)] px-6 py-3 text-sm text-[var(--ink-1)] transition hover:border-[var(--gold-border)] hover:text-[var(--gold)]"
                 >
-                  Load More Photos
+                   Load More Photos
                 </button>
               </div>
+
+              {/* Lightbox */}
+              <AnimatePresence>
+                {selectedImage && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setSelectedImage(null)}
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 md:p-10"
+                  >
+                    <button className="absolute top-6 right-6 text-white text-3xl">
+                      <FiX />
+                    </button>
+                    <motion.img 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      src={selectedImage.imageUrl || selectedImage.image_url} 
+                      className="max-h-full max-w-full object-contain shadow-2xl"
+                    />
+                    {selectedImage.caption && (
+                      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-6 py-3 rounded-xl border border-white/10">
+                        <p className="text-white text-sm font-medium">{selectedImage.caption}</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.section>
           )}
 
@@ -694,15 +738,30 @@ const PhotographerPublicProfile = () => {
                   </div>
 
                   <article className="rounded-[12px] border border-[var(--line-1)] bg-[var(--bg-card)] p-4">
-                    <div className="flex items-start gap-3">
-                      <span className="mt-0.5 text-[var(--gold)]">
+                    <div className="flex items-start gap-4">
+                      <span className="mt-0.5 text-[var(--gold)] text-xl">
                         <FaMapMarkerAlt />
                       </span>
-                      <p className="text-[14px] text-[var(--ink-2)]">
-                        Travels up to {profile.travelRadiusKm || fallbackPhotographer.travelRadiusKm}km from {profile.city}
-                      </p>
+                      <div className="flex-1">
+                        <p className="text-[14px] text-[var(--ink-2)] font-semibold">
+                          Travels up to {profile.travelRadiusKm || fallbackPhotographer.travelRadiusKm}km from {profile.city}
+                        </p>
+                        <p className="text-[12px] text-[var(--ink-3)] mt-1">Based in {profile.city}, {profile.state}</p>
+                      </div>
                     </div>
                   </article>
+
+                  <div className="rounded-2xl border border-[var(--line-1)] bg-[var(--bg-card)] overflow-hidden h-[300px] shadow-2xl grayscale transition-all hover:grayscale-0">
+                    <iframe 
+                      title="Studio Location"
+                      width="100%" 
+                      height="100%" 
+                      frameBorder="0" 
+                      style={{ border: 0 }}
+                      src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(profile.studioName || profile.city + " photographer")}`}
+                      allowFullScreen
+                    ></iframe>
+                  </div>
                 </div>
               </div>
             </motion.section>
@@ -747,6 +806,10 @@ const PhotographerPublicProfile = () => {
                             <FaCheck className="text-[#52C98A]" /> {item}
                           </div>
                         ))}
+                        <div className="mt-4 pt-4 border-t border-[var(--line-1)] flex flex-wrap gap-2">
+                           <span className="bg-blue-500/10 text-blue-300 text-[10px] px-2 py-0.5 rounded border border-blue-500/20">3 Revisions</span>
+                           <span className="bg-purple-500/10 text-purple-300 text-[10px] px-2 py-0.5 rounded border border-purple-500/20">Travel Included</span>
+                        </div>
                       </div>
 
                       <button
@@ -1064,6 +1127,29 @@ const PhotographerPublicProfile = () => {
           )}
         </AnimatePresence>
       </div>
+      <AnimatePresence>
+        {activeTab !== "Availability" && (
+           <motion.div 
+             initial={{ y: 100 }}
+             animate={{ y: 0 }}
+             exit={{ y: 100 }}
+             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-[400px]"
+           >
+             <div className="bg-[#1a1a1a]/80 backdrop-blur-2xl border border-white/10 rounded-full p-2 flex items-center justify-between shadow-2xl">
+                <div className="pl-6">
+                   <p className="text-[10px] text-[var(--ink-3)] font-bold uppercase tracking-widest">Starting Price</p>
+                   <p className="text-lg font-display font-bold text-[var(--gold)]">{formatPrice(profile.basePrice)}</p>
+                </div>
+                <button 
+                  onClick={() => setActiveTab("Availability")}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-8 py-3.5 rounded-full font-bold text-sm shadow-xl transition-all active:scale-95"
+                >
+                  BOOK NOW
+                </button>
+             </div>
+           </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 };

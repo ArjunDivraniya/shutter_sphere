@@ -261,10 +261,23 @@ const SearchSection = ({ navigate: dashNavigate, startChatFromCommunity }) => {
               [1, 2, 3, 4].map(i => <div key={i} className="h-[220px] rounded-[32px] surface-card animate-pulse" />)
             ) : photographers.length === 0 ? (
               <div className="col-span-full py-24 text-center surface-card border-dashed bg-transparent">
-                 <div className="text-6xl mb-6 opacity-20">📸</div>
-                 <h3 className="text-2xl font-display mb-3">No creatives found</h3>
-                 <p className="text-[var(--text-muted)] text-sm mb-10 max-w-md mx-auto">We couldn't find matches for these filters. Try expanding your radius or removing category limits.</p>
-                 <button onClick={() => setFilters(f => ({ ...f, radius_km: 150 }))} className="bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] text-white font-black px-10 py-4 rounded-full text-xs tracking-widest shadow-2xl">EXPAND SEARCH AREA</button>
+                 <div className="text-6xl mb-6 opacity-20 group-hover:rotate-12 transition-transform duration-500">📸</div>
+                 <h3 className="text-2xl font-display mb-3">No creatives found nearby</h3>
+                 <p className="text-[var(--text-muted)] text-sm mb-10 max-w-sm mx-auto">We couldn't find matches for these filters. Try expanding your radius or resetting your filter settings.</p>
+                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <button 
+                      onClick={() => setFilters(f => ({ ...f, radius_km: 200 }))} 
+                      className="bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] text-white font-black px-10 py-4 rounded-full text-xs tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all"
+                    >
+                      EXPAND TO 200KM
+                    </button>
+                    <button 
+                      onClick={() => setFilters(DEFAULT_FILTERS)} 
+                      className="text-[var(--text-muted)] hover:text-white font-black px-8 py-4 rounded-full text-xs tracking-widest transition-all"
+                    >
+                      RESET ALL FILTERS
+                    </button>
+                 </div>
               </div>
             ) : (
               photographers.map((p, i) => (

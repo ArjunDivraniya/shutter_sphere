@@ -285,10 +285,11 @@ const getPhotographerById = async (req, res) => {
         );
 
         const reviews = await pool.query(
-            `SELECT id, name, review, rating, created_at, profile_photo 
-             FROM reviews 
-             WHERE photographer_id = $1 
-             ORDER BY created_at DESC`,
+            `SELECT r.id, r.name, r.review, r.rating, r.created_at, u.profile_photo
+             FROM reviews r
+             LEFT JOIN users u ON r.client_id = u.id
+             WHERE r.photographer_id = $1 
+             ORDER BY r.created_at DESC`,
             [signupId]
         );
 
@@ -725,25 +726,15 @@ const advancedSearch = async (req, res) => {
         const values = [];
         const conditions = [];
 
-        // Base query
-        let query = `
-            SELECT p.*, 
-                   u.profile_photo,
-                   COALESCE(p.rating_avg, p.rating, 5.0) as final_rating,
-                   (6371 * acos(cos(radians($1)) * cos(radians(p.lat)) * cos(radians(p.lng) - radians($2)) + sin(radians($1)) * sin(radians(p.lat)))) AS distance_km
-            FROM photographers p
-            LEFT JOIN users u ON p.signup_id = u.id
-        `;
+        // Fallback to Ahmedabad coordinates if not provided (for discovery testing)
+        const activeLat = Number(lat) || 23.0225;
+        const activeLng = Number(lng) || 72.5714;
         
-        values.push(lat || 0, lng || 0);
+        values.push(activeLat, activeLng);
 
         // Filters
         conditions.push("p.profile_complete = true");
         conditions.push("COALESCE(p.is_active, true) = true");
-
-        if (lat && lng && radius_km) {
-            // Radius filter logic is handled in the WHERE distance_km clause below using a subquery for performance
-        }
 
         if (category) {
             const catArr = Array.isArray(category) ? category.filter(Boolean) : category.split(',').map(c => c.trim()).filter(Boolean);
@@ -773,19 +764,14 @@ const advancedSearch = async (req, res) => {
             )`);
         }
 
+        const activeRadius = Number(radius_km) || 100;
         let whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
-        // Wrap for radius filter if lat/lng present
-        if (lat && lng && radius_km) {
-            query = `SELECT * FROM (${query} ${whereClause}) sub WHERE distance_km <= ${Number(radius_km)}`;
-            whereClause = ""; // already applied inside subquery or outer WHERE
-        }
-
-        // Sorting
+        // Standard sorting
         let orderBy = "";
         switch (sort_by) {
             case 'top_rated':
-                orderBy = "ORDER BY final_rating DESC, review_count DESC";
+                orderBy = "ORDER BY rating_avg DESC, review_count DESC";
                 break;
             case 'price_asc':
                 orderBy = "ORDER BY price_per_hour ASC";
@@ -794,20 +780,55 @@ const advancedSearch = async (req, res) => {
                 orderBy = "ORDER BY price_per_hour DESC";
                 break;
             case 'nearest':
-                orderBy = lat && lng ? "ORDER BY distance_km ASC" : "ORDER BY p.id DESC";
+                orderBy = "ORDER BY distance_km ASC";
                 break;
             case 'recommended':
             default:
-                orderBy = "ORDER BY final_rating DESC, review_count DESC, p.id DESC";
+                orderBy = "ORDER BY rating_avg DESC, review_count DESC, id DESC";
                 break;
         }
 
-        const finalQuery = `${query} ${whereClause} ${orderBy} LIMIT ${Number(limit)} OFFSET ${offset}`;
-        const countQuery = `SELECT COUNT(*) FROM (${query} ${whereClause}) count_sub`;
+        // Final query construction
+        const finalQuery = `
+            SELECT * FROM (
+                SELECT p.id, p.signup_id, p.full_name, p.studio_name, p.city, p.state, p.categories, p.price_per_hour,
+                       COALESCE(p.rating_avg, p.rating, 5.0) as rating_avg,
+                       COALESCE(p.review_count, 0) as review_count,
+                       u.profile_photo,
+                       (6371 * acos(
+                           LEAST(1.0, GREATEST(-1.0, 
+                               cos(radians($1)) * cos(radians(COALESCE(p.lat, p.latitude, 23.0225))) * 
+                               cos(radians(COALESCE(p.lng, p.longitude, 72.5714)) - radians($2)) + 
+                               sin(radians($1)) * sin(radians(COALESCE(p.lat, p.latitude, 23.0225)))
+                           ))
+                       )) AS distance_km
+                FROM photographers p
+                LEFT JOIN users u ON p.signup_id = u.id
+                ${whereClause}
+            ) sub 
+            WHERE distance_km <= $${values.length + 1}
+            ${orderBy} 
+            LIMIT ${Number(limit)} OFFSET ${offset}
+        `;
 
+        const countQuery = `
+            SELECT COUNT(*) FROM (
+                SELECT (6371 * acos(
+                           LEAST(1.0, GREATEST(-1.0, 
+                               cos(radians($1)) * cos(radians(COALESCE(p.lat, p.latitude, 23.0225))) * 
+                               cos(radians(COALESCE(p.lng, p.longitude, 72.5714)) - radians($2)) + 
+                               sin(radians($1)) * sin(radians(COALESCE(p.lat, p.latitude, 23.0225)))
+                           ))
+                       )) AS distance_km
+                FROM photographers p
+                ${whereClause}
+            ) sub WHERE distance_km <= $${values.length + 1}
+        `;
+
+        const queryValues = [...values, activeRadius];
         const [results, totalCount] = await Promise.all([
-            pool.query(finalQuery, values),
-            pool.query(countQuery, values)
+            pool.query(finalQuery, queryValues),
+            pool.query(countQuery, queryValues)
         ]);
 
         res.json({
@@ -876,6 +897,116 @@ const getSearchSuggestions = async (req, res) => {
     }
 };
 
+// Public Public Profile Specifics
+const getFullProfile = async (req, res) => {
+    // Already mostly covered by getPhotographerById, but we ensure it matches the new spec
+    return getPhotographerById(req, res);
+};
+
+const getPortfolio = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(
+            "SELECT id, image_url, caption FROM photographer_portfolio WHERE photographer_id = $1 ORDER BY created_at DESC",
+            [id]
+        );
+        res.json(result.rows);
+    } catch (e) {
+        res.status(500).json({ message: "Error", error: e.message });
+    }
+};
+
+const getPhotographerPackages = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(
+            "SELECT * FROM photographer_packages WHERE photographer_id = $1 ORDER BY price ASC",
+            [id]
+        );
+        res.json(result.rows.map(pkg => ({
+            ...pkg,
+            deliverables: pkg.description ? pkg.description.split(",").map(d => d.trim()) : []
+        })));
+    } catch (e) {
+        res.status(500).json({ message: "Error", error: e.message });
+    }
+};
+
+const getAvailability = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { month } = req.query; // Expecting YYYY-MM
+        let queryStr = "SELECT blocked_date, status FROM availability_blocks WHERE photographer_id = $1";
+        const vals = [id];
+
+        if (month) {
+            queryStr += " AND TO_CHAR(blocked_date, 'YYYY-MM') = $2";
+            vals.push(month);
+        }
+
+        const result = await pool.query(queryStr, vals);
+        res.json(result.rows);
+    } catch (e) {
+        res.status(500).json({ message: "Error", error: e.message });
+    }
+};
+
+const getReviews = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { page = 1, limit = 5 } = req.query;
+        const offset = (page - 1) * limit;
+
+        const reviews = await pool.query(
+            `SELECT r.id, r.name, r.review, r.rating, r.created_at, u.profile_photo as avatar
+             FROM reviews r
+             LEFT JOIN users u ON r.client_id = u.id
+             WHERE r.photographer_id = $1
+             ORDER BY r.created_at DESC
+             LIMIT $2 OFFSET $3`,
+            [id, limit, offset]
+        );
+
+        const stats = await pool.query(
+            `SELECT 
+                COUNT(*) as total,
+                AVG(rating) as average,
+                COUNT(*) FILTER (WHERE rating = 5) as r5,
+                COUNT(*) FILTER (WHERE rating = 4) as r4,
+                COUNT(*) FILTER (WHERE rating = 3) as r3,
+                COUNT(*) FILTER (WHERE rating = 2) as r2,
+                COUNT(*) FILTER (WHERE rating = 1) as r1
+             FROM reviews WHERE photographer_id = $1`,
+            [id]
+        );
+
+        res.json({
+            reviews: reviews.rows,
+            stats: stats.rows[0],
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+    } catch (e) {
+        res.status(500).json({ message: "Error", error: e.message });
+    }
+};
+
+const logProfileView = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const viewerId = req.user ? req.user.id : null;
+
+        // Simple increment for now. A more complex 24h check can be added with a tracking table.
+        await pool.query(
+            "UPDATE photographers SET profile_views = profile_views + 1 WHERE signup_id = $1",
+            [id]
+        );
+        res.status(200).json({ message: "View logged" });
+    } catch (e) {
+        res.status(500).json({ message: "Error", error: e.message });
+    }
+};
+
 module.exports = { 
     createPhotographer, 
     getPhotographers, 
@@ -894,5 +1025,11 @@ module.exports = {
     advancedSearch,
     getMapMarkers,
     getSearchCategories,
-    getSearchSuggestions
+    getSearchSuggestions,
+    getFullProfile,
+    getPortfolio,
+    getPhotographerPackages,
+    getAvailability,
+    getReviews,
+    logProfileView
 };

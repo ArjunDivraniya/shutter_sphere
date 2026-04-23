@@ -12,6 +12,14 @@ router.get("/photographer/:id", control.getPhotographerById);
 router.get("/search", control.searchPhotographer);
 router.get("/photographers/search", control.searchPhotographer);
 
+// Public Profile Specifics (Modular)
+router.get("/photographer/:id/full-profile", control.getFullProfile);
+router.get("/photographer/:id/portfolio", control.getPortfolio);
+router.get("/photographer/:id/packages", control.getPhotographerPackages);
+router.get("/photographer/:id/availability", control.getAvailability);
+router.get("/photographer/:id/reviews", control.getReviews);
+router.post("/photographer/:id/view", authMiddleware(["client", "photographer"]), control.logProfileView);
+
 // Protected profile routes
 router.get("/photographer/profile", authMiddleware(["photographer"]), control.getOwnProfile);
 router.post("/photographer/profile", authMiddleware(["photographer"]), control.upsertPhotographerProfile);
