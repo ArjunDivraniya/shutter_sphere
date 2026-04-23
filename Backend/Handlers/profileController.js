@@ -93,10 +93,8 @@ const getRoleProfile = async (req, res) => {
     }
 
     const clientProfileResult = await pool.query(
-      `SELECT id, signup_id, full_name, email, phone_number, profile_picture, city, state, country,
-              budget_range
-       FROM user_profiles
-       WHERE signup_id = $1
+      `SELECT * FROM client_profiles
+       WHERE user_id = $1
        LIMIT 1`,
       [signupId]
     );
@@ -124,11 +122,16 @@ const getRoleProfile = async (req, res) => {
       profile: {
         signupId,
         name: p?.full_name || user.name,
-        email: p?.email || user.email,
-        phoneNumber: p?.phone_number || "",
-        location: [p?.city, p?.state, p?.country].filter(Boolean).join(", "),
-        budgetRange: p?.budget_range || "",
-        profilePhoto: p?.profile_picture || user.profile_photo || "",
+        email: user.email,
+        phoneNumber: p?.phone || "",
+        location: [p?.city, p?.state].filter(Boolean).join(", "),
+        bio: p?.bio || "",
+        profilePhoto: p?.avatar_url || user.profile_photo || "",
+        city: p?.city || "",
+        state: p?.state || "",
+        lat: p?.lat,
+        lng: p?.lng,
+        profileComplete: p?.profile_complete || false,
         rating: 0,
         totalReviews: clientReviewResult.rows.length,
         reviews: clientReviewResult.rows.map((row) => ({
@@ -152,8 +155,15 @@ const upsertRoleProfile = async (req, res) => {
     const {
       name,
       phoneNumber,
+      phone,
       location,
-      address,
+      city,
+      state,
+      lat,
+      lng,
+      bio,
+      profilePhoto,
+      avatarUrl,
       specialization,
       categories,
       experience,
@@ -163,7 +173,6 @@ const upsertRoleProfile = async (req, res) => {
       languagesSpoken,
       equipmentUsed,
       availability,
-      profilePhoto,
       portfolio,
     } = req.body;
 
@@ -189,7 +198,7 @@ const upsertRoleProfile = async (req, res) => {
        SET name = COALESCE($1, name),
            profile_photo = COALESCE($2, profile_photo)
        WHERE id = $3`,
-      [name || null, profilePhoto || null, signupId]
+      [name || null, profilePhoto || avatarUrl || null, signupId]
     );
 
     if (user.role === "photographer") {
@@ -241,21 +250,24 @@ const upsertRoleProfile = async (req, res) => {
         ]
       );
     } else {
-      const city = location || null;
       await pool.query(
-        `INSERT INTO user_profiles (
-            signup_id, full_name, email, phone_number, profile_picture, city, budget_range, updated_at
+        `INSERT INTO client_profiles (
+            user_id, full_name, phone, avatar_url, bio, city, state, lat, lng, profile_complete, updated_at
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
-         ON CONFLICT (signup_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id)
          DO UPDATE SET
-            full_name = COALESCE(EXCLUDED.full_name, user_profiles.full_name),
-            phone_number = COALESCE(EXCLUDED.phone_number, user_profiles.phone_number),
-            profile_picture = COALESCE(EXCLUDED.profile_picture, user_profiles.profile_picture),
-            city = COALESCE(EXCLUDED.city, user_profiles.city),
-            budget_range = COALESCE(EXCLUDED.budget_range, user_profiles.budget_range),
+            full_name = COALESCE(EXCLUDED.full_name, client_profiles.full_name),
+            phone = COALESCE(EXCLUDED.phone, client_profiles.phone),
+            avatar_url = COALESCE(EXCLUDED.avatar_url, client_profiles.avatar_url),
+            bio = COALESCE(EXCLUDED.bio, client_profiles.bio),
+            city = COALESCE(EXCLUDED.city, client_profiles.city),
+            state = COALESCE(EXCLUDED.state, client_profiles.state),
+            lat = COALESCE(EXCLUDED.lat, client_profiles.lat),
+            lng = COALESCE(EXCLUDED.lng, client_profiles.lng),
+            profile_complete = true,
             updated_at = CURRENT_TIMESTAMP`,
-        [signupId, name || null, user.email, phoneNumber || null, profilePhoto || null, city, budgetRange || null]
+        [signupId, name || null, phone || phoneNumber || null, avatarUrl || profilePhoto || null, bio || null, city || null, state || null, lat || null, lng || null]
       );
     }
 

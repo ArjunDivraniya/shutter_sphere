@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_BASE_URL } from "../utils/apiBase";
+import { loginUser, registerUser, saveAuthSession } from "../utils/authApi";
 import { useTranslation } from "react-i18next";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -18,6 +17,7 @@ const LoginSignup = () => {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "",
   });
 
@@ -50,6 +50,10 @@ const LoginSignup = () => {
       showToast("Password must be at least 6 characters!", "error");
       return false;
     }
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      showToast("Passwords do not match!", "error");
+      return false;
+    }
     return true;
   };
 
@@ -59,28 +63,40 @@ const LoginSignup = () => {
 
     try {
       setLoading(true);
-      const endpoint = isLogin ? `${API_BASE_URL}/api/login` : `${API_BASE_URL}/api/signup`;
-      const response = await axios.post(endpoint, formData);
+      const responseData = isLogin
+        ? await loginUser({ email: formData.email, password: formData.password })
+        : await registerUser({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+          });
 
-      if (response.status === 200 || response.status === 201) {
-        const { role, token, userId } = response.data;
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
-        if (userId) {
-          localStorage.setItem("userId", String(userId));
-        }
-        localStorage.setItem("email", response.data.email || formData.email);
-        localStorage.setItem("userName", response.data.name || formData.name || "");
+      if (responseData) {
+        const { role, accessToken, token, userId } = responseData;
+        saveAuthSession({
+          accessToken: accessToken || token,
+          role,
+          userId,
+          email: responseData.email || formData.email,
+        });
+        localStorage.setItem("userName", responseData.name || formData.name || "");
+        localStorage.setItem("profileComplete", String(responseData.profileComplete || false));
 
         if (isLogin) {
           showToast("Login successful!", "success");
           if (role === "photographer") navigate("/photographer-dashboard");
-          else if (role === "client") navigate("/client-dashboard");
+          else if (role === "client") {
+            if (responseData.profileComplete === false) navigate("/onboarding");
+            else navigate("/client-dashboard");
+          }
           else navigate("/search");
         } else {
           showToast(`Welcome, ${formData.name}!`, "success");
           if (role === "photographer") navigate("/photographer-dashboard");
-          else if (role === "client") navigate("/client-dashboard");
+          else if (role === "client") {
+            navigate("/onboarding"); // Always onboarding after signup
+          }
           else navigate("/search");
         }
       }
@@ -289,6 +305,33 @@ const LoginSignup = () => {
                     className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 outline-none transition focus:border-[#ffb84d] focus:bg-white/10"
                   />
                 </div>
+
+                {!isLogin && (
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-200">Confirm Password</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 outline-none transition focus:border-[#ffb84d] focus:bg-white/10"
+                    />
+                  </div>
+                )}
+
+                {isLogin && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/forgot-password")}
+                      className="text-sm font-medium text-orange-300 hover:text-orange-200"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
 
                 <AppButton type="submit" className="w-full" size="lg" disabled={loading}>
                   {loading ? "Please wait..." : isLogin ? t("login.button") : t("signup.button")}

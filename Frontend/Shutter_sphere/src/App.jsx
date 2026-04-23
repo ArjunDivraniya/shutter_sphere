@@ -26,9 +26,13 @@ import Calendar from "./Components/calendar";
 import ErrorPage from "./Components/404";
 import AboutUs from "./Components/aboutus";
 import ContactUs from "./Components/contactus";
+import ForgotPassword from "./Components/ForgotPassword";
+import ResetPassword from "./Components/ResetPassword";
+import VerifyEmail from "./Components/VerifyEmail";
 import PhotographerCommandCenter from "./Components/photographer-dashboard-v2/PhotographerCommandCenter";
 import PhotographerBookingsManagement from "./Components/photographer-dashboard-v2/PhotographerBookingsManagement";
 import ClientBookingsPage from "./Components/ClientBookingsPage";
+import ClientOnboarding from "./Components/ClientOnboarding";
 
 const BookRouteRedirect = () => {
   const { id } = useParams();
@@ -40,12 +44,19 @@ const ProtectedRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
+  const profileComplete = localStorage.getItem("profileComplete") === "true";
+
   if (!token) {
     return <Navigate to="/login" />;
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
     return <Navigate to="/" />;
+  }
+
+  // Redirect client to onboarding if profile is incomplete
+  if (role === "client" && !profileComplete && window.location.pathname !== "/onboarding") {
+    return <Navigate to="/onboarding" />;
   }
 
   return element;
@@ -78,6 +89,10 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/onboarding" element={<ProtectedRoute element={<ClientOnboarding />} allowedRoles={["client"]} />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/photographer/:id" element={<PhotographerPublicProfile />} />
