@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import i18n from './i18n';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 import { PhotographerProvider } from "./Components/photographercontext";
 
@@ -27,8 +28,12 @@ import AboutUs from "./Components/aboutus";
 import ContactUs from "./Components/contactus";
 import PhotographerCommandCenter from "./Components/photographer-dashboard-v2/PhotographerCommandCenter";
 import PhotographerBookingsManagement from "./Components/photographer-dashboard-v2/PhotographerBookingsManagement";
-import BookingFlow from "./Components/BookingFlow";
 import ClientBookingsPage from "./Components/ClientBookingsPage";
+
+const BookRouteRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/photographer/${id}?tab=Availability`} replace />;
+};
 
 // Protected Route Component
 const ProtectedRoute = ({ element, allowedRoles }) => {
@@ -161,7 +166,7 @@ function App() {
           {/* FrameBook Premium Routes */}
           <Route
             path="/book/:id"
-            element={<ProtectedRoute element={<BookingFlow />} allowedRoles={["client"]} />}
+            element={<ProtectedRoute element={<BookRouteRedirect />} allowedRoles={["client"]} />}
           />
           <Route
             path="/dashboard/client/bookings"

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { FaCalendarAlt, FaMapMarkerAlt, FaComments, FaTimes, FaStar } from "react-icons/fa";
 
-const BookingsSection = ({ bookings, navigate }) => {
+const BookingsSection = ({ bookings, navigate, onViewDetails, openBookingsPage }) => {
   const statusColors = {
     Confirmed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
     Pending: "bg-amber-500/10 text-amber-400 border-amber-500/20",
@@ -17,7 +17,7 @@ const BookingsSection = ({ bookings, navigate }) => {
           <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-widest mt-1">Manage your photography sessions</p>
         </div>
         <div className="flex gap-3">
-            <button onClick={() => window.location.href='/dashboard/client/bookings'} className="rounded-xl border border-white/10 px-5 py-2.5 text-xs font-bold text-white hover:bg-white/5 transition-all">View All</button>
+            <button onClick={openBookingsPage} className="rounded-xl border border-white/10 px-5 py-2.5 text-xs font-bold text-white hover:bg-white/5 transition-all">View All</button>
             <button onClick={() => navigate("search")} className="rounded-xl bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] px-5 py-2.5 text-xs font-bold text-white shadow-lg">New Booking</button>
         </div>
       </div>

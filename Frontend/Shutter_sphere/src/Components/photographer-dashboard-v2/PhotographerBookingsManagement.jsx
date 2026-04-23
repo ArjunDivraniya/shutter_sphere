@@ -1,33 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FaCalendarAlt,
-  FaChevronDown,
   FaChevronLeft,
   FaChevronRight,
   FaFileExport,
   FaFilter,
-  FaMapMarkerAlt,
-  FaSearch,
   FaTimes,
 } from "react-icons/fa";
+import axios from "axios";
 import PhotographerDashboardLayout from "./PhotographerDashboardLayout";
-
-const bookingRows = [
-  { id: "BK-1001", client: "Priya Mehta", eventType: "Wedding", date: "2025-12-25", location: "Rajkot Marriott", packageName: "Premium", amount: 45000, status: "Confirmed", phone: "+91 98765 43210", email: "priya@example.com", guests: 450, specialRequest: "Need cinematic family entry shots and fast highlights.", timeline: "Confirmed" },
-  { id: "BK-1002", client: "Ravi Shah", eventType: "Birthday Party", date: "2025-12-28", location: "Junagarh", packageName: "Basic", amount: 18000, status: "Pending", phone: "+91 99887 66554", email: "ravi@example.com", guests: 120, specialRequest: "Please include candid reels.", timeline: "Requested" },
-  { id: "BK-1003", client: "TCS Corp", eventType: "Corporate Event", date: "2026-01-03", location: "Rajkot IT Hub", packageName: "Elite", amount: 62000, status: "Completed", phone: "+91 90000 11223", email: "events@tcs.com", guests: 300, specialRequest: "Brand board + stage coverage.", timeline: "Completed" },
-  { id: "BK-1004", client: "Anita Patel", eventType: "Pre-Wedding", date: "2026-01-08", location: "Aarav Farm", packageName: "Premium", amount: 35000, status: "Pending", phone: "+91 90909 34343", email: "anita@example.com", guests: 80, specialRequest: "Golden-hour outdoor aesthetic preferred.", timeline: "Requested" },
-  { id: "BK-1005", client: "Mehul Soni", eventType: "Engagement", date: "2025-12-20", location: "Kalawad Road", packageName: "Basic", amount: 22000, status: "Cancelled", phone: "+91 96543 22334", email: "mehul@example.com", guests: 150, specialRequest: "Indoor setup fallback needed.", timeline: "Requested" },
-  { id: "BK-1006", client: "Nisha Mehta", eventType: "Festival", date: "2025-12-15", location: "Race Course", packageName: "Premium", amount: 28000, status: "Confirmed", phone: "+91 91234 56780", email: "nisha@example.com", guests: 260, specialRequest: "Need event snippets for social posting.", timeline: "Confirmed" },
-];
-
-const statusTabs = [
-  { key: "All", count: 24 },
-  { key: "Confirmed", count: 14 },
-  { key: "Pending", count: 6 },
-  { key: "Completed", count: 38 },
-  { key: "Cancelled", count: 2 },
-];
+import { API_BASE_URL } from "../../utils/apiBase";
 
 const statusTone = {
   Confirmed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
@@ -78,7 +60,85 @@ const PhotographerBookingsManagement = () => {
   const [viewMode, setViewMode] = useState("table");
   const [activeBooking, setActiveBooking] = useState(null);
   const [sortBy, setSortBy] = useState("date");
-  const [calendarAnchor, setCalendarAnchor] = useState(new Date(2025, 11, 1));
+  const [calendarAnchor, setCalendarAnchor] = useState(new Date());
+  const [bookingRows, setBookingRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [estimateAmount, setEstimateAmount] = useState(0);
+
+  const signupId = localStorage.getItem("userId");
+
+  const loadBookings = async () => {
+    if (!signupId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/dashboard/photographer/${signupId}`);
+      const rows = (response.data?.bookings || []).map((booking) => ({
+        id: booking.id,
+        client: booking.clientName || "Client",
+        eventType: booking.eventType || booking.title || "Event",
+        date: booking.date,
+        location: booking.location || booking.venueAddress || "N/A",
+        packageName: booking.packageName || "Standard",
+        amount: Number(booking.amount || 0),
+        status: booking.status || "Pending",
+        phone: booking.clientPhone || "",
+        email: booking.clientEmail || "",
+        specialRequest: booking.specialRequests || "",
+        timeline: booking.status === "Completed" ? "Completed" : booking.status === "Confirmed" ? "Confirmed" : "Requested",
+      }));
+      setBookingRows(rows);
+    } catch (error) {
+      console.warn("Failed to fetch photographer bookings", error?.message);
+      setBookingRows([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBookings();
+  }, [signupId]);
+
+  const updateBookingStatus = async (bookingId, status) => {
+    try {
+      await axios.patch(`${API_BASE_URL}/calendar/event/${bookingId}/status`, {
+        status,
+        amount: Number(estimateAmount || 0),
+      });
+      await loadBookings();
+      if (activeBooking && Number(activeBooking.id) === Number(bookingId)) {
+        setActiveBooking((prev) => ({
+          ...prev,
+          status,
+          amount: Number(estimateAmount || prev.amount || 0),
+          timeline: status === "Completed" ? "Completed" : status === "Confirmed" ? "Confirmed" : "Requested",
+        }));
+      }
+    } catch (error) {
+      console.warn("Unable to update booking status", error?.message);
+    }
+  };
+
+  const statusTabs = useMemo(() => {
+    const counts = bookingRows.reduce(
+      (acc, row) => {
+        acc[row.status] = (acc[row.status] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    return [
+      { key: "All", count: bookingRows.length },
+      { key: "Confirmed", count: counts.Confirmed || 0 },
+      { key: "Pending", count: counts.Pending || 0 },
+      { key: "Completed", count: counts.Completed || 0 },
+      { key: "Cancelled", count: counts.Cancelled || 0 },
+    ];
+  }, [bookingRows]);
 
   const rows = useMemo(() => {
     let data = [...bookingRows];
@@ -89,16 +149,22 @@ const PhotographerBookingsManagement = () => {
     if (sortBy === "date") data.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     return data;
-  }, [activeStatus, sortBy]);
+  }, [activeStatus, sortBy, bookingRows]);
 
   const monthLabel = useMemo(
     () => calendarAnchor.toLocaleString("en-US", { month: "long", year: "numeric" }),
     [calendarAnchor]
   );
 
-  const gridCells = useMemo(() => buildMonthGrid(calendarAnchor, bookingRows), [calendarAnchor]);
+  const gridCells = useMemo(() => buildMonthGrid(calendarAnchor, bookingRows), [calendarAnchor, bookingRows]);
 
   const closePanel = () => setActiveBooking(null);
+
+  useEffect(() => {
+    if (activeBooking) {
+      setEstimateAmount(Number(activeBooking.amount || 0));
+    }
+  }, [activeBooking]);
 
   return (
     <PhotographerDashboardLayout activeKey="bookings" headerSearchPlaceholder="Search bookings...">
@@ -141,7 +207,9 @@ const PhotographerBookingsManagement = () => {
         ))}
       </section>
 
-      {viewMode === "table" ? (
+      {loading ? (
+        <section className="rounded-[18px] border border-[var(--line-1)] bg-[var(--card)] p-8 text-sm text-[var(--ink-3)]">Loading bookings...</section>
+      ) : viewMode === "table" ? (
         <section className="overflow-hidden rounded-[18px] border border-[var(--line-1)] bg-[var(--card)]">
           <div className="flex items-center justify-between bg-[var(--raised)] px-5 py-3">
             <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--ink-3)]">Bookings Table</p>
@@ -176,6 +244,11 @@ const PhotographerBookingsManagement = () => {
                 </tr>
               </thead>
               <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-5 py-8 text-center text-[var(--ink-3)]">No bookings found.</td>
+                  </tr>
+                ) : null}
                 {rows.map((row, idx) => {
                   const daysLeft = Math.max(0, Math.ceil((new Date(row.date) - new Date()) / (1000 * 60 * 60 * 24)));
                   return (
@@ -210,8 +283,8 @@ const PhotographerBookingsManagement = () => {
                           <button type="button" className="rounded-lg border border-[var(--line-2)] px-2.5 py-1 text-[11px] text-[var(--ink-2)]">Message</button>
                           {row.status === "Pending" ? (
                             <>
-                              <button type="button" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300">Accept</button>
-                              <button type="button" className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] text-rose-300">Decline</button>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); updateBookingStatus(row.id, "Confirmed"); }} className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300">Accept</button>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); updateBookingStatus(row.id, "Cancelled"); }} className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] text-rose-300">Decline</button>
                             </>
                           ) : null}
                         </div>
@@ -282,8 +355,8 @@ const PhotographerBookingsManagement = () => {
                     <div className="h-12 w-12 rounded-full bg-[linear-gradient(145deg,#333,#1b1b1b)]" />
                     <div>
                       <p className="text-[14px] font-semibold text-[var(--ink-1)]">{activeBooking.client}</p>
-                      <p className="text-[12px] text-[var(--ink-2)]">{activeBooking.phone}</p>
-                      <p className="text-[12px] text-[var(--ink-3)]">{activeBooking.email}</p>
+                      <p className="text-[12px] text-[var(--ink-2)]">{activeBooking.phone || "Phone not provided"}</p>
+                      <p className="text-[12px] text-[var(--ink-3)]">{activeBooking.email || "Email not provided"}</p>
                     </div>
                   </div>
                   <button type="button" className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[12px] text-blue-300">Message Client</button>
@@ -294,22 +367,31 @@ const PhotographerBookingsManagement = () => {
                   <p>📍 {activeBooking.location}</p>
                   <p>🎉 {activeBooking.eventType}</p>
                   <p>💼 {activeBooking.packageName}</p>
-                  <p>⏱ 8 Hours</p>
-                  <p>👥 {activeBooking.guests} Guests</p>
+                  <p>⏱ Package based</p>
+                  <p>👥 Guest details not provided</p>
                 </section>
 
                 <section className="rounded-xl border border-[var(--line-1)] bg-[var(--card)] p-4">
                   <p className="text-[11px] uppercase tracking-wide text-[var(--ink-3)]">Special Requests</p>
-                  <p className="mt-2 rounded-lg bg-[var(--raised)] p-3 text-[13px] italic text-[var(--ink-2)]">{activeBooking.specialRequest}</p>
+                  <p className="mt-2 rounded-lg bg-[var(--raised)] p-3 text-[13px] italic text-[var(--ink-2)]">{activeBooking.specialRequest || "No special request provided."}</p>
                 </section>
 
                 <section className="rounded-xl border border-[var(--line-1)] bg-[var(--card)] p-4">
                   <p className="text-[11px] uppercase tracking-wide text-[var(--ink-3)]">Payment</p>
+                  <div className="mt-3">
+                    <label className="mb-1 block text-[11px] text-[var(--ink-3)]">Estimated Budget (editable)</label>
+                    <input
+                      type="number"
+                      value={estimateAmount}
+                      onChange={(e) => setEstimateAmount(e.target.value)}
+                      className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--raised)] px-3 py-2 text-[13px] text-[var(--ink-1)] outline-none"
+                    />
+                  </div>
                   <div className="mt-2 space-y-1 text-[13px] text-[var(--ink-2)]">
-                    <p>Base Price: ₹{Math.round(activeBooking.amount * 0.9).toLocaleString("en-IN")}</p>
-                    <p>Travel Fee: ₹{Math.round(activeBooking.amount * 0.1).toLocaleString("en-IN")}</p>
+                    <p>Base Price: ₹{Math.round(Number(estimateAmount || 0) * 0.9).toLocaleString("en-IN")}</p>
+                    <p>Travel Fee: ₹{Math.round(Number(estimateAmount || 0) * 0.1).toLocaleString("en-IN")}</p>
                     <p className="font-display text-[20px] text-[var(--gold)]" style={{ fontFamily: "Cormorant Garamond, serif" }}>
-                      Total: ₹{activeBooking.amount.toLocaleString("en-IN")}
+                      Total: ₹{Number(estimateAmount || 0).toLocaleString("en-IN")}
                     </p>
                   </div>
                 </section>
@@ -334,12 +416,12 @@ const PhotographerBookingsManagement = () => {
                 <div className="flex flex-wrap gap-2">
                   {activeBooking.status === "Pending" ? (
                     <>
-                      <button type="button" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[12px] text-emerald-300">Accept</button>
-                      <button type="button" className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-300">Decline</button>
+                      <button type="button" onClick={() => updateBookingStatus(activeBooking.id, "Confirmed")} className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[12px] text-emerald-300">Accept</button>
+                      <button type="button" onClick={() => updateBookingStatus(activeBooking.id, "Cancelled")} className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-300">Decline</button>
                     </>
                   ) : (
                     <>
-                      <button type="button" className="rounded-lg border border-[var(--gold-border)] bg-[var(--gold-soft)] px-3 py-2 text-[12px] text-[var(--gold)]">Complete</button>
+                      <button type="button" onClick={() => updateBookingStatus(activeBooking.id, "Completed")} className="rounded-lg border border-[var(--gold-border)] bg-[var(--gold-soft)] px-3 py-2 text-[12px] text-[var(--gold)]">Complete</button>
                       <button type="button" className="rounded-lg border border-[var(--line-2)] px-3 py-2 text-[12px] text-[var(--ink-2)]">Message</button>
                     </>
                   )}

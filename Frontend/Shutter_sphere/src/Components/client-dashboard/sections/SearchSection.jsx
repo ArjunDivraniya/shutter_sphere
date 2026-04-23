@@ -208,13 +208,13 @@ const SearchSection = ({ community, startChatFromCommunity, navigate }) => {
 
                   <div className="mt-6 flex gap-3">
                     <button 
-                        onClick={() => window.location.href=`/photographer/${p.id}`}
+                      onClick={() => window.location.href=`/photographer/${p.userId || p.signupId || p.id}`}
                         className="px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-muted)] text-xs font-bold hover:text-white transition-all"
                     >
                         Profile
                     </button>
                     <button 
-                        onClick={() => window.location.href=`/book/${p.id}`}
+                      onClick={() => window.location.href=`/photographer/${p.userId || p.signupId || p.id}?tab=Availability`}
                         className="flex-1 rounded-xl bg-gradient-to-r from-[#ff7a45] to-[#ffb84d] py-2.5 text-xs font-bold text-white hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                       Book Now

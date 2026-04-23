@@ -12,10 +12,20 @@ const getClientDashboard = async (req, res) => {
     if (!signupId) return res.status(400).json({ message: "Valid signupId is required" });
 
     const bookingsResult = await pool.query(
-      `SELECT e.id, e.title, e.date, e.location, COALESCE(e.status, 'Pending') AS status,
+      `SELECT e.id, e.title, e.date,
+              COALESCE(e.location, e.venue_name, '') AS location,
+              COALESCE(e.status, 'Pending') AS status,
               COALESCE(e.client_name, u_client.name, 'Client Booking') AS client_name,
               COALESCE(p.full_name, u.name, 'Photographer') AS photographer_name,
-              e.created_at, e.photographer_id
+              COALESCE(u.profile_photo, '') AS photographer_avatar,
+              e.created_at,
+              e.photographer_id,
+              e.event_type,
+              e.package_name,
+              COALESCE(e.amount, 0) AS amount,
+              e.venue_name,
+              e.venue_address,
+              e.special_requests
        FROM events e
        LEFT JOIN users u_client ON u_client.id = e.client_id
        LEFT JOIN users u ON u.id = e.photographer_id
@@ -45,7 +55,14 @@ const getClientDashboard = async (req, res) => {
       status: row.status,
       clientName: row.client_name,
       photographerName: row.photographer_name,
+      photographerAvatar: row.photographer_avatar || null,
       photographerId: row.photographer_id,
+      eventType: row.event_type || row.title || "Event",
+      packageName: row.package_name || "Standard",
+      amount: Number(row.amount) || 0,
+      venueName: row.venue_name || "",
+      venueAddress: row.venue_address || "",
+      specialRequests: row.special_requests || "",
       createdAt: row.created_at,
     }));
 
@@ -90,9 +107,19 @@ const getClientRealtimeData = async (req, res) => {
 
     // 1. Stats and Bookings
     const bookingsResult = await pool.query(
-      `SELECT e.id, e.title, e.date, e.location, COALESCE(e.status, 'Pending') AS status,
+      `SELECT e.id, e.title, e.date,
+              COALESCE(e.location, e.venue_name, '') AS location,
+              COALESCE(e.status, 'Pending') AS status,
               COALESCE(p.full_name, u.name, 'Photographer') AS photographer_name,
-              e.photographer_id, e.created_at
+              COALESCE(u.profile_photo, '') AS photographer_avatar,
+              e.photographer_id,
+              e.created_at,
+              e.event_type,
+              e.package_name,
+              COALESCE(e.amount, 0) AS amount,
+              e.venue_name,
+              e.venue_address,
+              e.special_requests
        FROM events e
        LEFT JOIN users u ON u.id = e.photographer_id
        LEFT JOIN photographers p ON p.signup_id = e.photographer_id
@@ -182,10 +209,19 @@ const getClientRealtimeData = async (req, res) => {
       },
       bookings: bookingsResult.rows.map(b => ({
         id: b.id,
+        title: b.title,
         photographerName: b.photographer_name,
+        photographerAvatar: b.photographer_avatar || null,
         date: b.date,
         location: b.location,
         status: b.status,
+        eventType: b.event_type || b.title || "Event",
+        packageName: b.package_name || "Standard",
+        amount: Number(b.amount) || 0,
+        venueName: b.venue_name || "",
+        venueAddress: b.venue_address || "",
+        specialRequests: b.special_requests || "",
+        progress: b.status === "Completed" ? 3 : b.status === "Confirmed" ? 2 : 1,
       })),
       favorites: favoritesResult.rows.map(f => ({
         signupId: f.signup_id,
@@ -263,11 +299,22 @@ const getPhotographerDashboard = async (req, res) => {
     }
 
     const bookingsResult = await pool.query(
-      `SELECT e.id, e.title, e.date, e.location, COALESCE(e.status, 'Pending') AS status,
+      `SELECT e.id, e.title, e.date,
+              COALESCE(e.location, e.venue_name, '') AS location,
+              COALESCE(e.status, 'Pending') AS status,
               COALESCE(e.client_name, u_client.name, e.title, 'Client') AS client_name,
-              e.created_at
+              COALESCE(u_client.email, '') AS client_email,
+              COALESCE(up.phone_number, '') AS client_phone,
+              e.created_at,
+              e.event_type,
+              e.package_name,
+              COALESCE(e.amount, 0) AS amount,
+              e.venue_name,
+              e.venue_address,
+              e.special_requests
        FROM events e
        LEFT JOIN users u_client ON u_client.id = e.client_id
+       LEFT JOIN user_profiles up ON up.signup_id = e.client_id
        WHERE e.signup_id = $1 OR e.photographer_id = $1
        ORDER BY e.date ASC`,
       [signupId]
@@ -289,9 +336,17 @@ const getPhotographerDashboard = async (req, res) => {
       id: row.id,
       title: row.title,
       clientName: row.client_name,
+      clientEmail: row.client_email || "",
+      clientPhone: row.client_phone || "",
       date: row.date,
       location: row.location,
       status: row.status,
+      eventType: row.event_type || row.title || "Event",
+      packageName: row.package_name || "Standard",
+      amount: Number(row.amount) || 0,
+      venueName: row.venue_name || "",
+      venueAddress: row.venue_address || "",
+      specialRequests: row.special_requests || "",
       createdAt: row.created_at,
     }));
 

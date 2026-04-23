@@ -142,6 +142,7 @@ const normalizePhotographer = (raw, index) => {
 
   return {
     id: raw.id || raw._id || `P-${index + 1}`,
+    signupId: raw.signupId || raw.signup_id || raw.id || raw._id || null,
     name: raw.name || raw.fullName || "Photographer",
     city: raw.city || "Rajkot",
     specialization: raw.specialization || (Array.isArray(raw.specializations) ? raw.specializations[0] : "Professional Photography"),
@@ -820,13 +821,13 @@ const PhotographerSearch = () => {
                             </div>
                             <div className="flex gap-2">
                                 <button 
-                                    onClick={() => window.location.href=`/photographer/${photographer.id}`}
+                                    onClick={() => window.location.href=`/photographer/${photographer.signupId || photographer.id}`}
                                     className="h-9 px-4 rounded-lg bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 transition-all"
                                 >
                                     Profile
                                 </button>
                                 <button 
-                                    onClick={() => window.location.href=`/book/${photographer.id}`}
+                                    onClick={() => window.location.href=`/photographer/${photographer.signupId || photographer.id}?tab=Availability`}
                                     className="h-9 px-4 rounded-lg bg-[var(--gold)] text-black text-[11px] font-bold shadow-lg"
                                 >
                                     Book
@@ -874,13 +875,13 @@ const PhotographerSearch = () => {
                         </div>
                         <div className="flex gap-3">
                             <button 
-                                onClick={() => window.location.href=`/photographer/${photographer.id}`}
+                                onClick={() => window.location.href=`/photographer/${photographer.signupId || photographer.id}`}
                                 className="h-10 px-5 rounded-xl border border-white/10 bg-transparent text-xs font-bold text-white hover:bg-white/5 transition-all"
                             >
                                 View Profile
                             </button>
                             <button 
-                                onClick={() => window.location.href=`/book/${photographer.id}`}
+                                onClick={() => window.location.href=`/photographer/${photographer.signupId || photographer.id}?tab=Availability`}
                                 className="h-10 px-6 rounded-xl bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black text-xs font-bold shadow-lg"
                             >
                                 Book Now

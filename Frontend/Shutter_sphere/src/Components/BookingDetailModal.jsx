@@ -21,19 +21,19 @@ const BookingDetailModal = ({ booking, onClose }) => {
                             </div>
                             <div className="bg-[#121212] p-4 rounded-xl border border-white/5">
                                 <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">🎉 Event Type</p>
-                                <p className="text-sm font-medium text-white">{booking.eventType}</p>
+                                <p className="text-sm font-medium text-white">{booking.eventType || booking.title || 'Event'}</p>
                             </div>
                             <div className="bg-[#121212] p-4 rounded-xl border border-white/5 col-span-2">
                                 <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">📍 Venue</p>
-                                <p className="text-sm font-medium text-white">{booking.location}</p>
+                                <p className="text-sm font-medium text-white">{booking.location || booking.venueAddress || 'N/A'}</p>
                             </div>
                             <div className="bg-[#121212] p-4 rounded-xl border border-white/5">
                                 <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">💼 Package</p>
-                                <p className="text-sm font-medium text-white">{booking.packageName}</p>
+                                <p className="text-sm font-medium text-white">{booking.packageName || 'Standard'}</p>
                             </div>
                             <div className="bg-[#121212] p-4 rounded-xl border border-white/5">
                                 <p className="text-[10px] uppercase font-bold text-[#756C64] mb-1">💰 Total Amount</p>
-                                <p className="text-sm font-bold text-[var(--gold)]">₹{booking.amount.toLocaleString('en-IN')}</p>
+                                <p className="text-sm font-bold text-[var(--gold)]">₹{Number(booking.amount || 0).toLocaleString('en-IN')}</p>
                             </div>
                         </div>
                         <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 text-[12px] text-[#756C64]">
@@ -51,8 +51,8 @@ const BookingDetailModal = ({ booking, onClose }) => {
                             </div>
                             <div className="p-6 space-y-4">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-[#756C64]">Base Price ({booking.packageName})</span>
-                                    <span className="text-white">₹{booking.amount.toLocaleString('en-IN')}</span>
+                                    <span className="text-[#756C64]">Base Price ({booking.packageName || 'Standard'})</span>
+                                    <span className="text-white">₹{Number(booking.amount || 0).toLocaleString('en-IN')}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-[#756C64]">Platform Fee</span>
@@ -60,7 +60,7 @@ const BookingDetailModal = ({ booking, onClose }) => {
                                 </div>
                                 <div className="border-t border-white/5 pt-4 flex justify-between items-center font-bold text-lg">
                                     <span className="text-white">Total</span>
-                                    <span className="text-[var(--gold)]">₹{booking.amount.toLocaleString('en-IN')}</span>
+                                    <span className="text-[var(--gold)]">₹{Number(booking.amount || 0).toLocaleString('en-IN')}</span>
                                 </div>
                             </div>
                         </div>
@@ -72,10 +72,10 @@ const BookingDetailModal = ({ booking, onClose }) => {
                 );
             case 'Timeline':
                 const timeline = [
-                    { status: 'Request Sent', date: 'Jan 15, 10:30am', icon: <FaArrowRight />, color: 'bg-[#52C98A]' },
-                    { status: 'Confirmed by Photographer', date: 'Jan 15, 02:45pm', icon: <FaCheckCircle />, color: 'bg-[#52C98A]' },
-                    { status: 'Event Day', date: 'Dec 25', icon: <FaClock />, color: 'bg-[#EAB305]', active: true },
-                    { status: 'Completed', date: 'Upcoming', icon: <FaCheckCircle />, color: 'bg-white/10' },
+                    { status: 'Request Sent', date: new Date(booking.createdAt || booking.date).toLocaleString(), icon: <FaArrowRight />, color: 'bg-[#52C98A]' },
+                    { status: 'Confirmed by Photographer', date: booking.status === 'Confirmed' || booking.status === 'Completed' ? 'Updated' : 'Pending', icon: <FaCheckCircle />, color: booking.status === 'Confirmed' || booking.status === 'Completed' ? 'bg-[#52C98A]' : 'bg-white/10' },
+                    { status: 'Event Day', date: new Date(booking.date).toLocaleDateString(), icon: <FaClock />, color: 'bg-[#EAB305]', active: booking.status !== 'Completed' },
+                    { status: 'Completed', date: booking.status === 'Completed' ? 'Completed' : 'Upcoming', icon: <FaCheckCircle />, color: booking.status === 'Completed' ? 'bg-[#52C98A]' : 'bg-white/10' },
                     { status: 'Review Left', date: 'Upcoming', icon: <FaStar />, color: 'bg-white/10' },
                 ];
                 return (

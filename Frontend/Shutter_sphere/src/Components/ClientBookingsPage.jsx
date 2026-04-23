@@ -22,33 +22,7 @@ const ClientBookingsPage = () => {
                 setBookings(response.data.bookings || []);
             } catch (err) {
                 console.warn("Failed to fetch bookings:", err.message);
-                // Mock data for demo if API fails
-                setBookings([
-                    {
-                        id: 'FB-2024-0847',
-                        photographerName: 'Rahul Sharma',
-                        photographerAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200',
-                        date: '2025-12-25T10:30:00',
-                        location: 'Rajkot Marriott Hotel',
-                        eventType: 'Wedding',
-                        packageName: 'Premium Package',
-                        amount: 15000,
-                        status: 'Confirmed',
-                        progress: 2, // 1: Requested, 2: Confirmed, 3: Completed
-                    },
-                    {
-                        id: 'FB-2024-0912',
-                        photographerName: 'Priya Patel',
-                        photographerAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
-                        date: '2026-01-15T15:00:00',
-                        location: 'Crystal Mall, Rajkot',
-                        eventType: 'Birthday',
-                        packageName: 'Basic Package',
-                        amount: 8000,
-                        status: 'Pending',
-                        progress: 1,
-                    }
-                ]);
+                setBookings([]);
             } finally {
                 setLoading(false);
             }
@@ -63,8 +37,8 @@ const ClientBookingsPage = () => {
         if (activeTab === 'Upcoming') return b.status === 'Confirmed' && new Date(b.date) > new Date();
         return b.status === activeTab;
     }).filter(b => 
-        b.photographerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.id.toLowerCase().includes(searchQuery.toLowerCase())
+        String(b.photographerName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(b.id || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const getStatusColor = (status) => {
@@ -155,10 +129,10 @@ const ClientBookingsPage = () => {
                                 {/* Middle Section */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-3 mb-3">
-                                        <img src={booking.photographerAvatar} alt={booking.photographerName} className="w-10 h-10 rounded-full border-2 border-[var(--gold)]" />
+                                        <img src={booking.photographerAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200'} alt={booking.photographerName} className="w-10 h-10 rounded-full border-2 border-[var(--gold)] object-cover" />
                                         <div>
                                             <h3 className="font-cormorant text-xl font-bold leading-none">{booking.photographerName}</h3>
-                                            <p className="text-[11px] text-[#756C64] mt-1">{booking.eventType} • {booking.packageName}</p>
+                                            <p className="text-[11px] text-[#756C64] mt-1">{booking.eventType || booking.title || 'Event'} • {booking.packageName || 'Standard'}</p>
                                         </div>
                                     </div>
                                     
@@ -180,7 +154,7 @@ const ClientBookingsPage = () => {
                                 {/* Right Section */}
                                 <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-4 shrink-0">
                                     <div className="text-right">
-                                        <p className="font-cormorant text-2xl font-bold text-[var(--gold)]">₹{booking.amount.toLocaleString('en-IN')}</p>
+                                        <p className="font-cormorant text-2xl font-bold text-[var(--gold)]">₹{Number(booking.amount || 0).toLocaleString('en-IN')}</p>
                                         <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold mt-2 border ${getStatusColor(booking.status)}`}>
                                             {booking.status.toUpperCase()}
                                         </span>

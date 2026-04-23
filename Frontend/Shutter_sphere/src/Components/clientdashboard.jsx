@@ -10,7 +10,7 @@ import {
   FaStar,
   FaCog,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { API_BASE_URL } from "../utils/apiBase";
 import { pageStyle } from "./photographer-dashboard/constants";
 import Sidebar from "./photographer-dashboard/Sidebar";
@@ -28,7 +28,9 @@ import BookingDetailModal from "./BookingDetailModal";
 
 const ClientDashboard = () => {
     const navigate = useNavigate();
-    const [activeMenu, setActiveMenu] = useState("overview");
+    const location = useLocation();
+    const initialSection = new URLSearchParams(location.search).get("section") || "overview";
+    const [activeMenu, setActiveMenu] = useState(initialSection);
     const [globalSearch, setGlobalSearch] = useState("");
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -130,6 +132,7 @@ const ClientDashboard = () => {
                     <BookingsSection 
                         bookings={dashboardData.bookings} 
                         navigate={setActiveMenu} 
+                        openBookingsPage={() => navigate('/dashboard/client/bookings')}
                         onViewDetails={(booking) => {
                             setSelectedBooking(booking);
                             setIsModalOpen(true);

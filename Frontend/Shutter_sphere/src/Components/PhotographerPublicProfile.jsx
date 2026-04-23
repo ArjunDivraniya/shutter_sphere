@@ -23,6 +23,36 @@ import { API_BASE_URL } from "../utils/apiBase";
 const tabItems = ["Portfolio", "About", "Packages", "Reviews", "Availability"];
 const portfolioCategories = ["All", "Wedding", "Festival", "Birthday", "Portrait"];
 
+const buildDefaultPackages = (basePrice) => {
+  const base = Number(basePrice) || 8000;
+  return [
+    {
+      name: "Basic",
+      price: base,
+      duration: "4 hours coverage",
+      deliverables: ["200 edited photos", "1 photographer", "Online delivery in 7 days"],
+      popular: false,
+      cta: "Select Basic",
+    },
+    {
+      name: "Premium",
+      price: Math.round(base * 1.75),
+      duration: "8 hours coverage",
+      deliverables: ["500 edited photos", "2 photographers", "Fast delivery"],
+      popular: true,
+      cta: "Select Premium",
+    },
+    {
+      name: "Elite",
+      price: Math.round(base * 2.6),
+      duration: "Full day coverage",
+      deliverables: ["1000 photos + video", "Priority support", "Premium delivery"],
+      popular: false,
+      cta: "Select Elite",
+    },
+  ];
+};
+
 const fallbackPhotographer = {
   id: 1,
   name: "Rahul Sharma",
@@ -160,7 +190,7 @@ const buildMonthGrid = (cursorDate, availabilityMap) => {
       key,
       day,
       isToday: key === new Date().toISOString().slice(0, 10),
-      status: availabilityMap.get(key) || (day % 7 === 0 ? "booked" : day % 5 === 0 ? "pending" : "available"),
+      status: availabilityMap.get(key) || "available",
     });
   }
 
@@ -185,6 +215,8 @@ const normalizePhotographer = (raw) => {
     reviewCount: Number(raw.reviewCount || fallbackPhotographer.reviewCount),
     basePrice: Number(raw.pricePerHour || fallbackPhotographer.basePrice),
     priceLabel: `\u20b9${Number(raw.pricePerHour || fallbackPhotographer.basePrice).toLocaleString("en-IN")}/event`,
+    signupId: raw.signupId || raw.signup_id || raw.id,
+    packages: raw.packages?.length ? raw.packages : buildDefaultPackages(raw.pricePerHour || fallbackPhotographer.basePrice),
     verified: true,
   };
 };
@@ -193,7 +225,8 @@ const PhotographerPublicProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("Portfolio");
+  const initialTab = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("tab") || "Portfolio";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [portfolioFilter, setPortfolioFilter] = useState("All");
   const [activePackage, setActivePackage] = useState("Premium");
   const [selectedDate, setSelectedDate] = useState("");
@@ -201,6 +234,17 @@ const PhotographerPublicProfile = () => {
   const [selectedReviewCount, setSelectedReviewCount] = useState(3);
   const [profile, setProfile] = useState(fallbackPhotographer);
   const [loading, setLoading] = useState(true);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState("");
+  const [bookingForm, setBookingForm] = useState({
+    eventName: "",
+    eventType: "",
+    eventTime: "18:00",
+    venueName: "",
+    venueAddress: "",
+    specialRequests: "",
+  });
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -218,7 +262,41 @@ const PhotographerPublicProfile = () => {
     loadProfile();
   }, [id]);
 
-  const availabilityMap = useMemo(() => createDayStatusMap(profile.availability || fallbackPhotographer.availability), [profile]);
+  useEffect(() => {
+    const loadCalendarEvents = async () => {
+      const photographerSignupId = profile.signupId || profile.id;
+      if (!photographerSignupId) return;
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/calendar/event/${photographerSignupId}`);
+        setCalendarEvents(response.data || []);
+      } catch (error) {
+        setCalendarEvents([]);
+      }
+    };
+
+    if (!loading) {
+      loadCalendarEvents();
+    }
+  }, [profile, loading]);
+
+  const availabilityMap = useMemo(() => {
+    const statusMap = new Map();
+    (calendarEvents || []).forEach((event) => {
+      if (!event?.date) return;
+      const key = new Date(event.date).toISOString().slice(0, 10);
+      const currentStatus = statusMap.get(key);
+      if (event.status === "Confirmed" || event.status === "Completed") {
+        statusMap.set(key, "booked");
+      } else if (event.status === "Pending" && currentStatus !== "booked") {
+        statusMap.set(key, "pending");
+      }
+    });
+
+    return createDayStatusMap(
+      Array.from(statusMap.entries()).map(([date, status]) => ({ date, status }))
+    );
+  }, [calendarEvents]);
   const monthGrid = useMemo(() => buildMonthGrid(selectedMonth, availabilityMap), [selectedMonth, availabilityMap]);
 
   const portfolioRows = useMemo(() => {
@@ -250,19 +328,66 @@ const PhotographerPublicProfile = () => {
     setSelectedMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1));
   };
 
-  const handleBookSelectedDate = () => {
-    if (!selectedDate) return;
-    navigate(`/book/${id}`, { state: { selectedDate, package: activePackage } });
+  const handleBookSelectedDate = async () => {
+    const clientId = Number(localStorage.getItem("userId"));
+    const clientName = localStorage.getItem("userName") || "Client";
+
+    if (!clientId) {
+      navigate("/login");
+      return;
+    }
+
+    if (!selectedDate) {
+      setBookingError("Please select an available date.");
+      return;
+    }
+
+    if (!bookingForm.eventName.trim() || !bookingForm.eventType || !bookingForm.venueName.trim() || !bookingForm.venueAddress.trim()) {
+      setBookingError("Please fill all required booking details.");
+      return;
+    }
+
+    const packageDetails = (profile.packages || fallbackPhotographer.packages).find((pkg) => pkg.name === activePackage);
+    const selectedDateTime = new Date(`${selectedDate}T${bookingForm.eventTime || "18:00"}`);
+
+    setBookingSubmitting(true);
+    setBookingError("");
+    try {
+      const photographerSignupId = Number(profile.signupId || profile.id);
+      await axios.post(`${API_BASE_URL}/calendar/event`, {
+        signupId: photographerSignupId,
+        photographerId: photographerSignupId,
+        clientId,
+        clientName,
+        title: bookingForm.eventName.trim(),
+        date: selectedDateTime.toISOString(),
+        description: bookingForm.specialRequests?.trim() || null,
+        location: bookingForm.venueAddress.trim(),
+        status: "Pending",
+        eventType: bookingForm.eventType,
+        packageName: activePackage,
+        amount: Number(packageDetails?.price || 0),
+        venueName: bookingForm.venueName.trim(),
+        venueAddress: bookingForm.venueAddress.trim(),
+        specialRequests: bookingForm.specialRequests?.trim() || null,
+      });
+
+      navigate("/client-dashboard?section=bookings");
+    } catch (error) {
+      setBookingError(error?.response?.data?.message || "Unable to submit booking request.");
+    } finally {
+      setBookingSubmitting(false);
+    }
   };
 
   const handleBookNow = () => {
-    navigate(`/book/${id}`, { state: { package: activePackage } });
+    setActiveTab("Availability");
   };
 
   const heroAccent = profile.coverGradient || fallbackPhotographer.coverGradient;
   const portfolioCountText = `${portfolioRows.length} photos`;
 
-  const activePackageData = (profile.packages || fallbackPhotographer.packages).find((pkg) => pkg.name === activePackage) || fallbackPhotographer.packages[1];
+  const activePackageData = (profile.packages || fallbackPhotographer.packages).find((pkg) => pkg.name === activePackage) || (profile.packages || fallbackPhotographer.packages)[1];
   const displayedName = profile.fullName || profile.name;
   const displayedLocation = profile.locationLabel || `${profile.city}, ${profile.state || "Gujarat"}`;
   const displayedRole = profile.specialization || fallbackPhotographer.specialization;
@@ -287,6 +412,16 @@ const PhotographerPublicProfile = () => {
         background: "radial-gradient(circle at 10% 0%, #17130d 0%, #090909 40%, #070707 100%)",
         fontFamily: "Outfit, ui-sans-serif, system-ui, sans-serif",
         color: "var(--ink-1)",
+        "--gold": "#D4A853",
+        "--gold-soft": "rgba(212,168,83,0.1)",
+        "--gold-border": "rgba(212,168,83,0.22)",
+        "--line-1": "rgba(255,255,255,0.06)",
+        "--line-2": "rgba(255,255,255,0.1)",
+        "--ink-1": "#F0EAE0",
+        "--ink-2": "#B8AFA4",
+        "--ink-3": "#756C64",
+        "--bg-card": "#121212",
+        "--bg-raised": "#191919",
       }}
     >
       <style>{`
@@ -566,7 +701,7 @@ const PhotographerPublicProfile = () => {
                         type="button"
                         onClick={() => {
                           setActivePackage(pkg.name);
-                          navigate(`/book/${id}`, { state: { package: pkg.name } });
+                          setActiveTab("Availability");
                         }}
                         className={`mt-7 w-full rounded-full px-5 py-3 text-sm font-semibold transition ${
                           activePackage === pkg.name
@@ -597,7 +732,7 @@ const PhotographerPublicProfile = () => {
                 <p className="mt-2 text-[14px] text-[var(--ink-2)]">Select a date to book {profile.fullName || profile.name} for your event</p>
               </div>
 
-              <article className="rounded-[18px] border border-[var(--line-1)] bg-[var(--bg-card)] p-5">
+              <article className="rounded-[18px] border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.28)]">
                 <div className="mb-4 flex items-center justify-between">
                   <button
                     type="button"
@@ -616,7 +751,7 @@ const PhotographerPublicProfile = () => {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-7 gap-2 text-center text-[11px] uppercase tracking-[0.12em] text-[#3E3830]">
+                <div className="grid grid-cols-7 gap-2 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--ink-3)]">
                   {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
                     <div key={day} className="py-2">
                       {day}
@@ -633,7 +768,7 @@ const PhotographerPublicProfile = () => {
                     const isBooked = slot.status === "booked";
                     const isPending = slot.status === "pending";
                     const isSelected = selectedDate === slot.key;
-                    const baseClass = "flex h-16 flex-col justify-between rounded-xl border p-2 text-left transition";
+                    const baseClass = "flex h-16 flex-col justify-between rounded-xl border p-2 text-left transition duration-200";
 
                     return (
                       <button
@@ -645,10 +780,10 @@ const PhotographerPublicProfile = () => {
                           isSelected
                             ? "border-[var(--gold)] bg-[var(--gold)] text-black"
                             : isBooked
-                              ? "cursor-not-allowed border-[#e05555]/20 bg-[rgba(224,85,85,0.1)] text-[#E05555]"
+                              ? "cursor-not-allowed border-rose-500/30 bg-rose-500/10 text-rose-300"
                               : isPending
-                                ? "border-[#e09b35]/20 bg-[rgba(224,155,53,0.1)] text-[#E09B35] hover:bg-[rgba(212,168,83,0.1)]"
-                                : "border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-1)] hover:bg-[rgba(212,168,83,0.1)]"
+                                ? "border-amber-500/30 bg-amber-500/10 text-amber-200 hover:border-amber-400/40"
+                                : "border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-1)] hover:border-[var(--gold-border)] hover:bg-[var(--gold-soft)]"
                         } ${slot.isToday ? "ring-1 ring-[var(--gold)]" : ""}`}
                       >
                         <span className="text-xs text-inherit">{slot.day}</span>
@@ -666,21 +801,122 @@ const PhotographerPublicProfile = () => {
                   <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#E09B35]" /> Pending</span>
                 </div>
 
-                <AnimatePresence>
-                  {selectedDate ? (
-                    <motion.button
-                      key="book-proceed"
+                <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+                  <div className="space-y-4 rounded-xl border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_12px_30px_rgba(0,0,0,0.25)]">
+                    <h4 className="font-display text-xl text-[var(--ink-1)]">Booking Request Details</h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <label className="text-xs text-[var(--ink-3)]">Event Name *</label>
+                        <input
+                          value={bookingForm.eventName}
+                          onChange={(e) => setBookingForm((prev) => ({ ...prev, eventName: e.target.value }))}
+                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
+                          placeholder="Haldi Ceremony"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-[var(--ink-3)]">Event Type *</label>
+                        <select
+                          value={bookingForm.eventType}
+                          onChange={(e) => setBookingForm((prev) => ({ ...prev, eventType: e.target.value }))}
+                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
+                        >
+                          <option value="">Select type</option>
+                          <option value="Wedding">Wedding</option>
+                          <option value="Festival">Festival</option>
+                          <option value="Birthday">Birthday</option>
+                          <option value="Portrait">Portrait</option>
+                          <option value="Corporate">Corporate</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-[var(--ink-3)]">Preferred Time *</label>
+                        <input
+                          type="time"
+                          value={bookingForm.eventTime}
+                          onChange={(e) => setBookingForm((prev) => ({ ...prev, eventTime: e.target.value }))}
+                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-[var(--ink-3)]">Package</label>
+                        <select
+                          value={activePackage}
+                          onChange={(e) => setActivePackage(e.target.value)}
+                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
+                        >
+                          {(profile.packages || fallbackPhotographer.packages).map((pkg) => (
+                            <option key={pkg.name} value={pkg.name}>
+                              {pkg.name} ({formatPrice(pkg.price)})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-[var(--ink-3)]">Venue Name *</label>
+                        <input
+                          value={bookingForm.venueName}
+                          onChange={(e) => setBookingForm((prev) => ({ ...prev, venueName: e.target.value }))}
+                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
+                          placeholder="Royal Garden"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-[var(--ink-3)]">Venue Address *</label>
+                        <input
+                          value={bookingForm.venueAddress}
+                          onChange={(e) => setBookingForm((prev) => ({ ...prev, venueAddress: e.target.value }))}
+                          className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
+                          placeholder="Rajkot, Gujarat"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs text-[var(--ink-3)]">Program Details / Notes</label>
+                      <textarea
+                        rows={3}
+                        value={bookingForm.specialRequests}
+                        onChange={(e) => setBookingForm((prev) => ({ ...prev, specialRequests: e.target.value }))}
+                        className="w-full rounded-lg border border-[var(--line-2)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--ink-1)] outline-none focus:border-[var(--gold-border)] focus:ring-1 focus:ring-[var(--gold-border)]"
+                        placeholder="Share schedule, shot requirements, and custom requests"
+                      />
+                    </div>
+
+                    {bookingError ? <p className="text-sm text-rose-400">{bookingError}</p> : null}
+
+                    <button
                       type="button"
                       onClick={handleBookSelectedDate}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      className="mt-6 inline-flex rounded-full bg-gradient-to-r from-[#F0C560] to-[#D4A853] px-6 py-3 text-sm font-semibold text-black"
+                      disabled={!selectedDate || bookingSubmitting}
+                      className={`inline-flex rounded-full px-6 py-3 text-sm font-semibold ${
+                        selectedDate && !bookingSubmitting
+                          ? "bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black"
+                          : "cursor-not-allowed border border-[var(--line-2)] bg-[var(--bg-raised)] text-[var(--ink-3)]"
+                      }`}
                     >
-                      Proceed to Book →
-                    </motion.button>
-                  ) : null}
-                </AnimatePresence>
+                      {bookingSubmitting ? "Submitting..." : "Send Booking Request"}
+                    </button>
+                  </div>
+
+                  <div className="rounded-xl border border-[var(--line-1)] bg-[var(--bg-card)] p-5 shadow-[0_12px_30px_rgba(0,0,0,0.25)] lg:sticky lg:top-28">
+                    <h4 className="font-display text-lg text-[var(--ink-1)]">Booking Summary</h4>
+                    <div className="mt-4 flex items-center gap-3">
+                      <img src={profile.avatar || fallbackPhotographer.avatar} alt={displayedName} className="h-10 w-10 rounded-full border border-[var(--gold-border)] object-cover" />
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--ink-1)]">{displayedName}</p>
+                        <p className="text-xs text-[var(--ink-3)]">{profile.city || "City"}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-2 text-sm">
+                      <p className="text-[var(--ink-2)]">Date: <span className="text-[var(--ink-1)]">{selectedDate || "Not selected"}</span></p>
+                      <p className="text-[var(--ink-2)]">Time: <span className="text-[var(--ink-1)]">{bookingForm.eventTime || "Not selected"}</span></p>
+                      <p className="text-[var(--ink-2)]">Package: <span className="text-[var(--ink-1)]">{activePackage}</span></p>
+                      <p className="text-[var(--ink-2)]">Request Amount: <span className="text-[var(--gold)] font-semibold">{formatPrice(activePackageData?.price || 0)}</span></p>
+                      <p className="text-xs text-[var(--ink-3)]">Final estimate can be updated by photographer after request.</p>
+                    </div>
+                  </div>
+                </div>
               </article>
             </motion.section>
           )}

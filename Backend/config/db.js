@@ -97,6 +97,12 @@ const initDatabase = async () => {
     await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES users(id) ON DELETE SET NULL;`);
     await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS photographer_id INTEGER REFERENCES users(id) ON DELETE SET NULL;`);
     await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS client_name VARCHAR(180);`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS event_type VARCHAR(80);`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS package_name VARCHAR(120);`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS amount NUMERIC(12,2) DEFAULT 0;`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS venue_name VARCHAR(180);`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS venue_address TEXT;`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS special_requests TEXT;`);
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS user_settings (

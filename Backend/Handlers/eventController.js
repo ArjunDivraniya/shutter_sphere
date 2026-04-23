@@ -4,7 +4,23 @@ const { pool } = require("../config/db");
 // Create an event
  const createEvent = async (req, res) => {
     try {
-        const { signupId, title, date, description, location, status, clientId, photographerId, clientName } = req.body;
+        const {
+            signupId,
+            title,
+            date,
+            description,
+            location,
+            status,
+            clientId,
+            photographerId,
+            clientName,
+            eventType,
+            packageName,
+            amount,
+            venueName,
+            venueAddress,
+            specialRequests,
+        } = req.body;
 
         // Validate required fields
         if (!signupId || !title || !date) {
@@ -12,9 +28,25 @@ const { pool } = require("../config/db");
         }
 
         const inserted = await pool.query(
-            `INSERT INTO events (signup_id, title, date, description, location, status, client_id, photographer_id, client_name)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-             RETURNING id, signup_id, title, date, description, location, status, client_id, photographer_id, client_name, created_at`,
+            `INSERT INTO events (
+                signup_id,
+                title,
+                date,
+                description,
+                location,
+                status,
+                client_id,
+                photographer_id,
+                client_name,
+                event_type,
+                package_name,
+                amount,
+                venue_name,
+                venue_address,
+                special_requests
+            )
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+             RETURNING id, signup_id, title, date, description, location, status, client_id, photographer_id, client_name, event_type, package_name, amount, venue_name, venue_address, special_requests, created_at`,
             [
                 signupId,
                 title,
@@ -25,6 +57,12 @@ const { pool } = require("../config/db");
                 clientId || null,
                 photographerId || null,
                 clientName || null,
+                eventType || null,
+                packageName || null,
+                Number(amount) || 0,
+                venueName || null,
+                venueAddress || null,
+                specialRequests || null,
             ]
         );
 
@@ -43,6 +81,12 @@ const { pool } = require("../config/db");
             clientId: newEvent.client_id,
             photographerId: newEvent.photographer_id,
             clientName: newEvent.client_name,
+            eventType: newEvent.event_type,
+            packageName: newEvent.package_name,
+            amount: Number(newEvent.amount) || 0,
+            venueName: newEvent.venue_name,
+            venueAddress: newEvent.venue_address,
+            specialRequests: newEvent.special_requests,
             createdAt: newEvent.created_at,
         });
     } catch (error) {
@@ -58,7 +102,7 @@ const { pool } = require("../config/db");
 
         // Fetch events for the photographer
         const result = await pool.query(
-            `SELECT id, signup_id, title, date, description, location, status, client_id, photographer_id, client_name, created_at
+            `SELECT id, signup_id, title, date, description, location, status, client_id, photographer_id, client_name, event_type, package_name, amount, venue_name, venue_address, special_requests, created_at
              FROM events
              WHERE signup_id = $1
              ORDER BY date ASC`,
@@ -77,6 +121,12 @@ const { pool } = require("../config/db");
             clientId: event.client_id,
             photographerId: event.photographer_id,
             clientName: event.client_name,
+            eventType: event.event_type,
+            packageName: event.package_name,
+            amount: Number(event.amount) || 0,
+            venueName: event.venue_name,
+            venueAddress: event.venue_address,
+            specialRequests: event.special_requests,
             createdAt: event.created_at,
         }));
 
@@ -103,7 +153,7 @@ const { pool } = require("../config/db");
         }
 
         const deletedEvent = await pool.query(
-            `DELETE FROM events WHERE id = $1 RETURNING id, signup_id, title, date, description, location, status, client_id, photographer_id, client_name, created_at`,
+            `DELETE FROM events WHERE id = $1 RETURNING id, signup_id, title, date, description, location, status, client_id, photographer_id, client_name, event_type, package_name, amount, venue_name, venue_address, special_requests, created_at`,
             [eventId]
         );
 
@@ -126,6 +176,12 @@ const { pool } = require("../config/db");
                 clientId: event.client_id,
                 photographerId: event.photographer_id,
                 clientName: event.client_name,
+                eventType: event.event_type,
+                packageName: event.package_name,
+                amount: Number(event.amount) || 0,
+                venueName: event.venue_name,
+                venueAddress: event.venue_address,
+                specialRequests: event.special_requests,
                 createdAt: event.created_at,
             },
         });
@@ -138,7 +194,7 @@ const { pool } = require("../config/db");
 const updateEventStatus = async (req, res) => {
     try {
         const { eventId } = req.params;
-        const { status } = req.body;
+        const { status, amount } = req.body;
 
         if (!eventId) {
             return res.status(400).json({ message: "Event ID is required." });
@@ -150,10 +206,11 @@ const updateEventStatus = async (req, res) => {
 
         const updated = await pool.query(
             `UPDATE events
-             SET status = $1
+             SET status = $1,
+                 amount = COALESCE($3, amount)
              WHERE id = $2
-             RETURNING id, signup_id, title, date, description, location, status, client_id, photographer_id, client_name, created_at`,
-            [status, eventId]
+             RETURNING id, signup_id, title, date, description, location, status, client_id, photographer_id, client_name, event_type, package_name, amount, venue_name, venue_address, special_requests, created_at`,
+            [status, eventId, amount !== undefined ? Number(amount) : null]
         );
 
         if (updated.rows.length === 0) {
@@ -175,6 +232,12 @@ const updateEventStatus = async (req, res) => {
                 clientId: event.client_id,
                 photographerId: event.photographer_id,
                 clientName: event.client_name,
+                eventType: event.event_type,
+                packageName: event.package_name,
+                amount: Number(event.amount) || 0,
+                venueName: event.venue_name,
+                venueAddress: event.venue_address,
+                specialRequests: event.special_requests,
                 createdAt: event.created_at,
             },
         });

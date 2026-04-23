@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaChevronLeft, FaCheck, FaCalendarAlt, FaBriefcase, FaMoneyBillWave, FaMapMarkerAlt, FaStar, FaShieldAlt } from 'react-icons/fa';
+import { FaCheck, FaCalendarAlt, FaStar, FaShieldAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/apiBase';
 
@@ -63,6 +63,13 @@ const BookingFlow = () => {
     });
     const [termsAgreed, setTermsAgreed] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [createdBookingId, setCreatedBookingId] = useState(null);
+    const [blockedDates, setBlockedDates] = useState(new Set());
+
+    const userId = Number(localStorage.getItem('userId')) || null;
+    const userName = localStorage.getItem('userName') || 'Client';
 
     useEffect(() => {
         const fetchPhotographer = async () => {
@@ -79,6 +86,24 @@ const BookingFlow = () => {
         fetchPhotographer();
     }, [photographerId]);
 
+    useEffect(() => {
+        const fetchBlockedDates = async () => {
+            if (!photographer) return;
+            const targetSignupId = photographer.signupId || photographer.id;
+            try {
+                const response = await axios.get(`${API_BASE_URL}/calendar/event/${targetSignupId}`);
+                const booked = (response.data || [])
+                    .filter((event) => event?.date && event?.status !== 'Cancelled')
+                    .map((event) => new Date(event.date).toISOString().slice(0, 10));
+                setBlockedDates(new Set(booked));
+            } catch (err) {
+                setBlockedDates(new Set());
+            }
+        };
+
+        fetchBlockedDates();
+    }, [photographer]);
+
     const steps = [
         { id: 1, label: 'Select Date' },
         { id: 2, label: 'Choose Package' },
@@ -88,6 +113,27 @@ const BookingFlow = () => {
     const currentPackageData = useMemo(() => {
         return photographer?.packages?.find(p => p.name === selectedPackage) || null;
     }, [photographer, selectedPackage]);
+
+    const calendarDays = useMemo(() => {
+        const days = [];
+        const start = new Date();
+        for (let i = 0; i < 42; i += 1) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            days.push({
+                value: d.toISOString().slice(0, 10),
+                day: d.getDate(),
+            });
+        }
+        return days;
+    }, []);
+
+    const canProceedToReview =
+        Boolean(selectedPackage) &&
+        Boolean(eventDetails.eventName.trim()) &&
+        Boolean(eventDetails.eventType) &&
+        Boolean(eventDetails.venueName.trim()) &&
+        Boolean(eventDetails.venueAddress.trim());
 
     if (loading) return <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center text-white">Loading...</div>;
 
@@ -106,20 +152,25 @@ const BookingFlow = () => {
                                 {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
                                     <div key={d} className="text-[10px] uppercase font-bold text-[#756C64] pb-4">{d}</div>
                                 ))}
-                                {Array.from({ length: 30 }).map((_, i) => (
+                                {calendarDays.map((calendarDay) => {
+                                    const isBlocked = blockedDates.has(calendarDay.value);
+                                    return (
                                     <div 
-                                        key={i} 
-                                        onClick={() => setSelectedDate(`2026-05-${String(i+1).padStart(2, '0')}`)}
+                                        key={calendarDay.value}
+                                        onClick={() => !isBlocked && setSelectedDate(calendarDay.value)}
                                         className={`h-14 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
-                                            selectedDate === `2026-05-${String(i+1).padStart(2, '0')}` 
-                                            ? 'bg-[var(--gold)] text-black font-bold ring-4 ring-[var(--gold)]/20' 
-                                            : 'bg-[#191919] text-white hover:bg-white/5'
+                                            isBlocked
+                                            ? 'bg-[#191919] text-[#756C64] cursor-not-allowed opacity-50'
+                                            : selectedDate === calendarDay.value
+                                                ? 'bg-[var(--gold)] text-black font-bold ring-4 ring-[var(--gold)]/20'
+                                                : 'bg-[#191919] text-white hover:bg-white/5'
                                         }`}
                                     >
-                                        {i + 1}
+                                        {calendarDay.day}
                                     </div>
-                                ))}
+                                )})}
                             </div>
+                            <p className="mt-4 text-[11px] text-[#756C64]">Dimmed dates are already booked or unavailable.</p>
                         </div>
 
                         <AnimatePresence>
@@ -249,9 +300,9 @@ const BookingFlow = () => {
                             <button onClick={() => setStep(1)} className="text-sm font-bold text-[#756C64] hover:text-white transition-colors underline underline-offset-8">← Previous</button>
                             <button 
                                 onClick={() => setStep(3)}
-                                disabled={!selectedPackage || !eventDetails.eventName}
+                                disabled={!canProceedToReview}
                                 className={`px-10 py-5 rounded-full font-bold text-sm shadow-2xl transition-all ${
-                                    selectedPackage && eventDetails.eventName 
+                                    canProceedToReview
                                     ? 'bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black hover:scale-105' 
                                     : 'bg-white/5 text-[#756C64] cursor-not-allowed opacity-40'
                                 }`}
@@ -339,15 +390,16 @@ const BookingFlow = () => {
                                 </label>
                                 <button 
                                     onClick={handleConfirmBooking}
-                                    disabled={!termsAgreed}
+                                    disabled={!termsAgreed || submitting}
                                     className={`w-full py-5 rounded-full font-bold text-base shadow-2xl transition-all duration-500 ${
-                                        termsAgreed 
+                                        termsAgreed && !submitting
                                         ? 'bg-gradient-to-r from-[#F0C560] to-[#D4A853] text-black hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(212,168,83,0.25)]' 
                                         : 'bg-white/5 text-[#756C64] cursor-not-allowed opacity-40'
                                     }`}
                                 >
-                                    📩 Send Booking Request
+                                    {submitting ? 'Sending request...' : 'Send Booking Request'}
                                 </button>
+                                {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
                            </div>
                         </div>
                     </div>
@@ -357,13 +409,54 @@ const BookingFlow = () => {
         }
     };
 
-    const handleConfirmBooking = () => {
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+    const handleConfirmBooking = async () => {
+        if (!userId) {
+            setErrorMessage('Please login again to continue booking.');
+            return;
+        }
+
+        if (!selectedDate || blockedDates.has(selectedDate)) {
+            setErrorMessage('Please select an available date.');
+            return;
+        }
+
+        if (!canProceedToReview) {
+            setErrorMessage('Please fill all required event details before confirming.');
+            return;
+        }
+
+        setSubmitting(true);
+        setErrorMessage('');
+
+        try {
+            const photographerSignupId = Number(photographer?.signupId || photographer?.id || photographerId);
+            const response = await axios.post(`${API_BASE_URL}/calendar/event`, {
+                signupId: photographerSignupId,
+                photographerId: photographerSignupId,
+                clientId: userId,
+                clientName: userName,
+                title: eventDetails.eventName.trim(),
+                date: selectedDate,
+                description: eventDetails.specialRequests?.trim() || null,
+                location: eventDetails.venueAddress.trim(),
+                status: 'Pending',
+                eventType: eventDetails.eventType,
+                packageName: selectedPackage,
+                amount: Number(currentPackageData?.price) || 0,
+                venueName: eventDetails.venueName.trim(),
+                venueAddress: eventDetails.venueAddress.trim(),
+                specialRequests: eventDetails.specialRequests?.trim() || null,
+            });
+
+            setCreatedBookingId(response.data?.id || response.data?._id || null);
+            setBlockedDates((prev) => new Set([...prev, selectedDate]));
             setIsSuccess(true);
             window.scrollTo(0, 0);
-        }, 1000);
+        } catch (error) {
+            setErrorMessage(error?.response?.data?.message || 'Unable to create booking. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     if (isSuccess) {
@@ -384,6 +477,10 @@ const BookingFlow = () => {
                 <p className="text-[#B8AFA4] text-xl max-w-lg mx-auto mb-8 font-outfit">
                     {photographer?.fullName || "Rahul Sharma"} will confirm within 24 hours. You&apos;ll get a notification via email.
                 </p>
+
+                {createdBookingId && (
+                    <p className="text-sm text-[#756C64] mb-6">Booking ID: #{createdBookingId}</p>
+                )}
 
                 <div className="bg-[#121212] border border-white/5 rounded-2xl p-6 mb-12 flex flex-wrap justify-center gap-6">
                     <span className="text-white font-medium">{new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
