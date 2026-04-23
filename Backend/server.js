@@ -10,6 +10,7 @@ const eventRoutes = require("./Paths/eventRoutes");
 const dashboardRoutes = require("./Paths/dashboardRoutes");
 const profileRoutes = require("./Paths/profileRoutes");
 const searchRoutes = require("./Paths/searchRoutes");
+const availabilityRoutes = require("./Paths/availabilityRoutes");
 const { initDatabase } = require("./config/db");
 
 dotenv.config();
@@ -33,6 +34,7 @@ app.use("/calendar", eventRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/availability", availabilityRoutes);
 
 const PORT = process.env.PORT || 5000;
 

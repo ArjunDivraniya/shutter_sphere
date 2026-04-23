@@ -17,13 +17,13 @@ import Sidebar from "./photographer-dashboard/Sidebar";
 import Topbar from "./photographer-dashboard/Topbar";
 import OverviewSection from "./photographer-dashboard/sections/OverviewSection";
 import BookingsSection from "./photographer-dashboard/sections/BookingsSection";
-import CalendarSection from "./photographer-dashboard/sections/CalendarSection";
 import EarningsSection from "./photographer-dashboard/sections/EarningsSection";
 import CommunitySection from "./photographer-dashboard/sections/CommunitySection";
 import ChatSection from "./photographer-dashboard/sections/ChatSection";
 import SettingsSection from "./photographer-dashboard/sections/SettingsSection";
 import ProfileSection from "./photographer-dashboard/sections/ProfileSection";
 import PackagesSection from "./photographer-dashboard/sections/PackagesSection";
+import AvailabilitySection from "./photographer-dashboard/sections/AvailabilitySection";
 
 const validSections = sidebarItems.map((item) => item.key);
 
@@ -200,33 +200,37 @@ const PhotographerDashboard = () => {
     let rows = [...allBookings];
 
     if (bookingFilters.status !== "All") {
-      if (bookingFilters.status === "Past") {
-        rows = rows.filter((booking) => new Date(booking.date) < new Date() || ["Completed", "Cancelled"].includes(booking.status));
+      const filterStatus = bookingFilters.status.toLowerCase();
+      if (filterStatus === "past") {
+        rows = rows.filter((booking) => new Date(booking.date) < new Date() || ["completed", "cancelled"].includes(booking.status.toLowerCase()));
       } else {
-        rows = rows.filter((booking) => booking.status === bookingFilters.status);
+        rows = rows.filter((booking) => booking.status.toLowerCase() === filterStatus);
       }
     }
 
     if (bookingFilters.eventType !== "All") {
-      rows = rows.filter((booking) => booking.eventType === bookingFilters.eventType);
+      const filterEt = bookingFilters.eventType.toLowerCase();
+      rows = rows.filter((booking) => (booking.eventType || "").toLowerCase() === filterEt);
     }
 
     if (bookingFilters.paymentStatus !== "All") {
-      rows = rows.filter((booking) => booking.paymentStatus === bookingFilters.paymentStatus);
+      const filterPs = bookingFilters.paymentStatus.toLowerCase();
+      rows = rows.filter((booking) => (booking.paymentStatus || "").toLowerCase() === filterPs);
     }
 
     if (bookingFilters.location !== "All") {
-      rows = rows.filter((booking) => booking.location === bookingFilters.location);
+      const filterLoc = bookingFilters.location.toLowerCase();
+      rows = rows.filter((booking) => (booking.location || "").toLowerCase() === filterLoc);
     }
 
     if (globalSearch.trim()) {
       const q = globalSearch.toLowerCase();
       rows = rows.filter(
         (booking) =>
-          booking.clientName.toLowerCase().includes(q) ||
-          booking.location.toLowerCase().includes(q) ||
-          booking.id.toString().toLowerCase().includes(q) ||
-          booking.eventType.toLowerCase().includes(q)
+          (booking.clientName || "").toLowerCase().includes(q) ||
+          (booking.location || "").toLowerCase().includes(q) ||
+          (booking.id || "").toString().toLowerCase().includes(q) ||
+          (booking.eventType || "").toLowerCase().includes(q)
       );
     }
 
@@ -358,6 +362,37 @@ const PhotographerDashboard = () => {
     }
   };
 
+  const onStartChat = (userId, userName) => {
+    if (!userId) {
+      // Fallback for community or items without concrete userId
+      startChatFromCommunity(userName);
+      return;
+    }
+    
+    // Check if we already have a conversation with this userId
+    const existing = conversations.find((c) => Number(c.userId) === Number(userId));
+    if (existing) {
+      setActiveConversationId(existing.id);
+      onSectionChange("chat");
+    } else {
+      // Create a temporary conversation object to switch to chat view
+      // The first message will trigger the real thread creation in the backend
+      const tempId = `temp-${userId}`;
+      const newTempChat = {
+        id: tempId,
+        userId: userId,
+        name: userName,
+        unread: 0,
+        online: false,
+        pinned: false,
+        messages: [],
+      };
+      setConversations((prev) => [newTempChat, ...prev]);
+      setActiveConversationId(tempId);
+      onSectionChange("chat");
+    }
+  };
+
   const startChatFromCommunity = (personName) => {
     const existing = conversations.find((conversation) => conversation.name === personName);
     if (existing) {
@@ -412,24 +447,13 @@ const PhotographerDashboard = () => {
           setBookingFilters={setBookingFilters}
           onBookingDecision={onBookingDecision}
           statusBadge={statusBadge}
+          onStartChat={onStartChat}
         />
       );
     }
 
     if (activeMenu === "calendar") {
-      return (
-        <CalendarSection
-          monthLabel={monthLabel}
-          cells={cells}
-          bookingDatesMap={bookingDatesMap}
-          selectedDateKey={selectedDateKey}
-          setSelectedDateKey={setSelectedDateKey}
-          selectedDateBookings={selectedDateBookings}
-          setCalendarAnchorDate={setCalendarAnchorDate}
-          bookingStatusColor={bookingStatusColor}
-          statusBadge={statusBadge}
-        />
-      );
+      return <AvailabilitySection signupId={signupId} />;
     }
 
     if (activeMenu === "earnings") {

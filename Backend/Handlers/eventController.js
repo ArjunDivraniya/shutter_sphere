@@ -218,6 +218,32 @@ const updateEventStatus = async (req, res) => {
         }
 
         const event = updated.rows[0];
+
+        // 3.2 -- Auto-booking on Confirm
+        if (status === "Confirmed") {
+            try {
+                await pool.query(
+                    `INSERT INTO availability_blocks (photographer_id, blocked_date, status, booking_id)
+                     VALUES ($1, $2, $3, $4)
+                     ON CONFLICT (photographer_id, blocked_date) 
+                     DO UPDATE SET status = 'booked', booking_id = EXCLUDED.booking_id`,
+                    [event.photographer_id || event.signup_id, new Date(event.date).toISOString().split('T')[0], 'booked', event.id]
+                );
+            } catch (availErr) {
+                console.error("Failed to update availability block on confirm:", availErr);
+            }
+        } else if (status === "Cancelled") {
+            try {
+                await pool.query(
+                    `DELETE FROM availability_blocks 
+                     WHERE photographer_id = $1 AND booking_id = $2 AND status = 'booked'`,
+                    [event.signup_id, event.id]
+                );
+            } catch (availErr) {
+                console.error("Failed to remove availability block on cancel:", availErr);
+            }
+        }
+
         return res.status(200).json({
             message: "Event status updated",
             event: {

@@ -35,7 +35,10 @@ const PackagesSection = ({ signupId }) => {
 
   const fetchPackages = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/packages/${signupId}`);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_BASE_URL}/api/packages/${signupId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setPackages(res.data || []);
     } catch (err) {
       console.error("Error fetching packages", err);
@@ -47,10 +50,15 @@ const PackagesSection = ({ signupId }) => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+
       if (editingPackage) {
-        await axios.put(`${API_BASE_URL}/api/packages/${editingPackage.id}`, formData);
+        await axios.put(`${API_BASE_URL}/api/packages/${editingPackage.id}`, formData, config);
       } else {
-        await axios.post(`${API_BASE_URL}/api/packages`, formData);
+        await axios.post(`${API_BASE_URL}/api/packages`, formData, config);
       }
       setIsModalOpen(false);
       setEditingPackage(null);
@@ -64,7 +72,10 @@ const PackagesSection = ({ signupId }) => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this package?")) return;
     try {
-      await axios.delete(`${API_BASE_URL}/api/packages/${id}`);
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_BASE_URL}/api/packages/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       fetchPackages();
     } catch (err) {
       console.error("Error deleting package", err);

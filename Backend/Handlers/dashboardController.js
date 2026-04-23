@@ -302,19 +302,20 @@ const getPhotographerDashboard = async (req, res) => {
       `SELECT e.id, e.title, e.date,
               COALESCE(e.location, e.venue_name, '') AS location,
               COALESCE(e.status, 'Pending') AS status,
-              COALESCE(e.client_name, u_client.name, e.title, 'Client') AS client_name,
+              COALESCE(cp.full_name, u_client.name, e.client_name, e.title, 'Client') AS client_name,
               COALESCE(u_client.email, '') AS client_email,
-              COALESCE(up.phone_number, '') AS client_phone,
+              COALESCE(cp.phone, '') AS client_phone,
               e.created_at,
               e.event_type,
               e.package_name,
               COALESCE(e.amount, 0) AS amount,
               e.venue_name,
               e.venue_address,
-              e.special_requests
+              e.special_requests,
+              e.client_id
        FROM events e
        LEFT JOIN users u_client ON u_client.id = e.client_id
-       LEFT JOIN user_profiles up ON up.signup_id = e.client_id
+       LEFT JOIN client_profiles cp ON cp.user_id = e.client_id
        WHERE e.signup_id = $1 OR e.photographer_id = $1
        ORDER BY e.date ASC`,
       [signupId]
@@ -347,6 +348,7 @@ const getPhotographerDashboard = async (req, res) => {
       venueName: row.venue_name || "",
       venueAddress: row.venue_address || "",
       specialRequests: row.special_requests || "",
+      clientId: row.client_id,
       createdAt: row.created_at,
     }));
 

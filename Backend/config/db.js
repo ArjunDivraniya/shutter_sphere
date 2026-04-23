@@ -264,8 +264,23 @@ const initDatabase = async () => {
         blocked_date DATE NOT NULL,
         status VARCHAR(20) DEFAULT 'booked', -- 'booked' or 'blocked'
         reason TEXT,
+        booking_id INTEGER,
+        start_time TIME,
+        end_time TIME,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(photographer_id, blocked_date)
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS recurring_schedule (
+        id SERIAL PRIMARY KEY,
+        photographer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        day_of_week INTEGER NOT NULL, -- 0 (Sun) to 6 (Sat)
+        start_time TIME,
+        end_time TIME,
+        is_active BOOLEAN DEFAULT false,
+        UNIQUE(photographer_id, day_of_week)
       );
     `);
 
